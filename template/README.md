@@ -31,7 +31,7 @@ pnpm typecheck
 │   ├── visual-design.md          # 视觉设计规范
 │   └── sprints/                  # ★ 版本层 — 每次迭代的完整设计容器
 │       ├── _template/            # 模板（含 6 个文档 + 原型）
-│       └── sprint-000_initial/   # v1.0 初始版本基线
+│       └── sprint-001_功能名/    # 每次迭代一个容器（cp _template 创建）
 │
 ├── apps/                         # 前端/客户端应用
 │   ├── {app-name}/

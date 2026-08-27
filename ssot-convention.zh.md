@@ -56,14 +56,8 @@ project-root/
 │       │   └── prototypes/           #   本版本的可交互 HTML 原型
 │       │       └── prototype.html
 │       │
-│       └── sprint-000_initial/       # ★ v1.0 初始版本基线（6 文件 + 原型）
-│           ├── SPRINT-features.md
-│           ├── functional-overview.md
-│           ├── user-scenarios.md
-│           ├── business-flows.md
-│           ├── uml-pack.md
-│           └── prototypes/
-│               └── prototype.html
+│       └── sprint-001_功能名/        # ✦ 后续版本 — 每次迭代一个 sprint 容器（cp _template 创建）
+│           └── ...
 │
 ├── ADR/                              # ★ 架构决策记录目录
 │   └── _template/ADR.md              # ★ ADR 模板
