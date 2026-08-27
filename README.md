@@ -251,10 +251,11 @@ SpecRocket/
 ├── SKILL.md          ← 标准 skill 文件（AI 斜杠命令入口）
 ├── init.sh           ← 手动 init 脚本（无 AI 时用）
 ├── spec-rocket       ← CLI 脚本（init / update / migrate）
-├── template/               ← 项目模板框架（含 AGENTS.md + ssot-convention）
-│   ├── ssot-convention.zh.md  ← 完整 SSOT 规范手册
+├── ssot-convention.zh.md   ← 完整 SSOT 规范手册（仅主仓库，不进入项目模板）
+├── SSOT-开发方法论-培训.pptx ← 培训 PPT（仅主仓库）
+├── template/               ← 项目模板框架（init/migrate 复制此目录）
 │   ├── AGENTS.md              ← AI 协作规则
-│   ├── SSOT-开发方法论-培训.pptx ← 培训 PPT
+│   ├── CLAUDE.md              ← Claude Code 协作规则
 │   ├── docs/                  ← 产品文档模板
 │   ├── ADR/                   ← 架构决策模板
 │   ├── apps/businesses/tools/ ← 模块模板
@@ -369,8 +370,8 @@ cd SpecRocket
 
 | 资源 | 在哪 | 给谁 |
 |:----|:----|:----|
-| 📖 **SSOT 完整规范手册** | `template/ssot-convention.zh.md` | 所有成员首读 |
-| 📊 **培训 PPT** | `template/SSOT-开发方法论-培训.pptx` | 团队内训 |
+| 📖 **SSOT 完整规范手册** | `ssot-convention.zh.md`（主仓库根目录） | 所有成员首读 |
+| 📊 **培训 PPT** | `SSOT-开发方法论-培训.pptx`（主仓库根目录） | 团队内训 |
 | 🤖 **AI 协作规范** | `SKILL.md` | AI Agent |
 | 📋 **项目演示** | 跑 `/spec-rocket preview` 看！ | 给 PM/老板看 |
 

@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.6.0
+version: 2.7.0
 license: MIT
 ---
 
@@ -18,10 +18,11 @@ SpecRocket/                      ← 本仓库
 ├── SKILL.md                    ← 标准 skill 文件（AI 斜杠命令）
 ├── spec-rocket                 ← CLI 脚本（init / update / migrate）
 ├── init.sh                     ← 手动 init 脚本（无 AI 时用）
-├── template/               ← 项目模板框架（含 AGENTS.md + ssot-convention）
-│   ├── ssot-convention.zh.md   ← 完整 SSOT 规范手册
+├── ssot-convention.zh.md   ← 完整 SSOT 规范手册（仅主仓库，不进入项目模板）
+├── SSOT-开发方法论-培训.pptx ← 培训 PPT（仅主仓库）
+├── template/               ← 项目模板框架（init/migrate 复制此目录）
 │   ├── AGENTS.md               ← AI 协作规则
-│   ├── SSOT-开发方法论-培训.pptx ← 培训 PPT
+│   ├── CLAUDE.md               ← Claude Code 协作规则
 │   ├── docs/                   ← 产品文档模板
 │   ├── ADR/                    ← 架构决策模板
 │   ├── apps/businesses/tools/  ← 模块模板
@@ -173,7 +174,6 @@ SpecRocket/                      ← 本仓库
    | 源（template/ 内） | 目标 |
    |:-----------------|:-----|
    | `AGENTS.md` | `./AGENTS.md` |
-   | `ssot-convention.zh.md` | `./ssot-convention.zh.md` |
    | `.gitignore` | `./.gitignore` |
    | `docs/sprints/_template/` | `docs/sprints/_template/` |
    | `apps/_template/` | `apps/_template/` |
@@ -194,6 +194,7 @@ SpecRocket/                      ← 本仓库
 脚本会：
 - 检测旧版文件：`ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` / 全局 `spec/` + `_catalog.yaml`
 - **规整 sprints 结构**：检测废弃的 `sprint-000_initial/`（v2.5.0 起废弃）——纯模板副本（文件仍含占位符）直接删除；含真实内容则重命名为 `sprint-000_initial.legacy/` 保留待转移
+- **清理方法论残留**：项目根 `ssot-convention*.md` 自动归档到 `archive/`（此文档仅应存在于 SpecRocket 主仓库）
 - 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
 - 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
 

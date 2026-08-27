@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.6.0"
+VERSION="2.7.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -190,6 +190,15 @@ cmd_migrate() {
       LEGACY_FILES+=("[目录] docs/sprints/sprint-000_initial/ → .legacy/")
       FOUND_LEGACY=1
     fi
+  fi
+
+  # 项目根残留 ssot-convention（方法论本体文档，仅应存在于 SpecRocket 主仓库）
+  if ls ssot-convention*.md >/dev/null 2>&1; then
+    mkdir -p archive
+    for f in ssot-convention*.md; do
+      mv "$f" "archive/$f"
+      ok "已归档: $f → archive/$f（方法论本体文档，最新版见 SpecRocket GitHub 主仓库）"
+    done
   fi
 
   if [ "$FOUND_LEGACY" = "0" ]; then
