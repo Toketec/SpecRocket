@@ -18,7 +18,7 @@
 │       │   ├── SPRINT-features.md      # 冲刺目标 + 功能清单 + 验收条件
 │       │   ├── functional-overview.md  # 版本功能总览 + 路线图
 │       │   ├── user-scenarios.md       # 用户旅程 + 用例
-│       │   ├── user-journey-flows.md # 用户旅程总览 + 核心流程图
+│       │   ├── business-flows.md     # 核心业务流程图（泳道/时序/状态）
 │       │   ├── uml-pack.md           # UML 图表包（按需，最小化原则）
 │       │   └── prototypes/             # 可交互 HTML 原型
 │       │       └── prototype.html

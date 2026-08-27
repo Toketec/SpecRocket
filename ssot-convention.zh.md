@@ -51,7 +51,7 @@ project-root/
 │       │   ├── SPRINT-features.md    #   冲刺目标 + 功能清单 + 业务验收条件
 │       │   ├── functional-overview.md #   本版本功能总览 + 路线图
 │       │   ├── user-scenarios.md     #   本版本用户旅程 + 用例
-│       │   ├── user-journey-flows.md #   用户旅程总览 + 核心流程图（必写）
+│       │   ├── business-flows.md     #   核心业务流程图（泳道/时序/状态，必写）
 │       │   ├── uml-pack.md           #   UML 图表包（按需，最小化原则）
 │       │   └── prototypes/           #   本版本的可交互 HTML 原型
 │       │       └── prototype.html
@@ -60,7 +60,7 @@ project-root/
 │           ├── SPRINT-features.md
 │           ├── functional-overview.md
 │           ├── user-scenarios.md
-│           ├── user-journey-flows.md
+│           ├── business-flows.md
 │           ├── uml-pack.md
 │           └── prototypes/
 │               └── prototype.html
@@ -157,8 +157,8 @@ project-root/
 | `product-overview.md` | ⭐⭐⭐ | 用户画像、核心场景、术语表。所有后续文档的锚点 |
 | `functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
 | `non-functional-reqs.md` | ⭐⭐ | 有性能基线/合规要求时必写 |
-| `user-scenarios.md` | ⭐⭐⭐ | 核心流程的用例清单。Dev 理解业务的基础 |
-| `user-journey-flows.md` | ⭐⭐⭐ | 用户旅程总览 + 核心流程图（泳道/时序/状态）。**业务闭环一眼可见** |
+| `user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
+| `business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态）。**业务闭环一眼可见** |
 | `uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制** |
 | `prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示** |
 | `sprints/sprint-NNN/*.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
@@ -310,7 +310,7 @@ Step 1 中文档按以下顺序编辑，每步完成后再进入下一步：
 
 > 占位原则：说清楚**为什么不需要**，不留"可能是忘了"的疑问。
 
-> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、用户旅程与流程图（user-journey-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sprint-NNN/` 目录，一个版本一个完整容器。
+> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、业务流程图（business-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sprint-NNN/` 目录，一个版本一个完整容器。
 
 对于有客户端的项目（Web/移动端），PM 应提供一个或多个纯 HTML 原型，放在对应 sprint 的 `prototypes/` 目录中：
 
@@ -342,8 +342,8 @@ docs/sprints/sprint-NNN_name/prototypes/
 docs/sprints/sprint-NNN_name/
 ├── SPRINT-features.md           # 冲刺目标 + 功能清单 + 业务流程 + 验收条件
 ├── functional-overview.md       # 本版本功能需求总览 + 版本路线图
-├── user-scenarios.md            # 本版本用户旅程 + 用例清单
-├── user-journey-flows.md        # 用户旅程总览 + 核心流程图（Mermaid，必写）
+├── user-scenarios.md            # 本版本用户旅程总览 + 用例清单
+├── business-flows.md            # 核心业务流程图（Mermaid，必写）
 ├── uml-pack.md                  # UML 图表包（用例/ER/类图/C4，按需最小化）
 └── prototypes/
     └── prototype.html           # 本版本可交互 HTML 原型（完整交互）

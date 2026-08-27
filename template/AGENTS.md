@@ -56,7 +56,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │ Step 1 │ PM 独作 — 产品设计阶段                                │
 │         │ 产出: docs/ + docs/sprints/ + prototypes/            │
-│         │ AI 角色: 协助润色、画 ASCII 图、生成原型模板          │
+│         │ AI 角色: 协助润色、画 Mermaid 流程图、生成原型模板          │
 ├─────────────────────────────────────────────────────────────────┤
 │ Step 2 │ Dev+AI 独作 — 架构设计与规格编写                      │
 │         │ 输入: docs/sprints/ 的功能描述                        │
@@ -107,8 +107,8 @@
 | `non-functional-reqs.md` | ⭐⭐⭐ | **必须存在**，无要求也要写一行占位。性能/SLA/安全/合规基线 |
 | `visual-design.md` | ⭐⭐⭐ | **必须存在**，无 UI 也要写一行占位。设计系统 token / UI 框架选型 |
 | `functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
-| `user-scenarios.md` | ⭐⭐⭐ | 核心流程的用例清单。Dev 理解业务的基础 |
-| `user-journey-flows.md` | ⭐⭐⭐ | 用户旅程总览 + 核心流程图（泳道/时序/状态）。**业务闭环一眼可见**，Dev 理解流程的关键 |
+| `user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
+| `business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态，Mermaid）。**业务闭环一眼可见**，Dev 理解流程的关键 |
 | `uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制**，极简项目可一行占位 |
 | `prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示**（原 ui-wireframes 职责） |
 | `sprints/sprint-NNN/*.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
@@ -270,7 +270,7 @@ project-root/
 │       │   ├── SPRINT-features.md    # 冲刺目标 + 功能清单 + 业务验收条件
 │       │   ├── functional-overview.md # 本版本功能总览 + 路线图
 │       │   ├── user-scenarios.md     # 本版本用户旅程 + 用例
-│       │   ├── user-journey-flows.md # 用户旅程总览 + 核心流程图（必写）
+│       │   ├── business-flows.md     # 核心业务流程图（泳道/时序/状态，Mermaid 必写）
 │       │   ├── uml-pack.md           # UML 图表包（按需，最小化原则）
 │       │   └── prototypes/           # 本版本的可交互 HTML 原型
 │       │       └── prototype.html
