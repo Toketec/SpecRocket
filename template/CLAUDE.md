@@ -18,8 +18,8 @@
 │       │   ├── SPRINT-features.md      # 冲刺目标 + 功能清单 + 验收条件
 │       │   ├── functional-overview.md  # 版本功能总览 + 路线图
 │       │   ├── user-scenarios.md       # 用户旅程 + 用例
-│       │   ├── ux-flows.md             # 业务流程
-│       │   ├── ui-wireframes.md        # 页面布局 + 组件
+│       │   ├── user-journey-flows.md # 用户旅程总览 + 核心流程图
+│       │   ├── uml-pack.md           # UML 图表包（按需，最小化原则）
 │       │   └── prototypes/             # 可交互 HTML 原型
 │       │       └── prototype.html
 │       │
@@ -107,6 +107,9 @@
    - 禁止自行探索项目目录来"理解项目"——必须按读顺序逐文件读取
    - Step 4 编码时，严格按 `plan.md` 的文件清单实现，不自动搜索其他位置
    - 跨模块引用仅通过 Context Contract（≤15 行）
+8. **按需读取（控制 token）**: P0 首次进入/架构级改动才全量读；P1 局部改动只读目标 specs + 受影响 docs；P2 微调只读目标文件。禁止每次任务全量重读 docs/
+9. **增量更新**: 只改受影响段落，禁止整篇重写或顺手全面刷新其他文件
+10. **图表规范**: 产品文档至少 1 个 Mermaid 流程图（业务闭环一眼可见）；`uml-pack.md` 按最小化数量原则按需绘制，不追求全量；环境不支持 Mermaid 时用 ASCII 备选
 
 ---
 

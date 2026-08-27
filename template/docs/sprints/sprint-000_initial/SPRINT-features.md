@@ -23,8 +23,8 @@
 |:----|:-----|
 | `functional-overview.md` | 功能需求总览 + 版本路线图 |
 | `user-scenarios.md` | 用户旅程 + 用例清单 |
-| `ux-flows.md` | 核心业务流程 |
-| `ui-wireframes.md` | 页面布局 + 组件清单 |
+| `user-journey-flows.md` | 用户旅程总览 + 核心流程图（必写） |
+| `uml-pack.md` | UML 图表包（用例/ER/类图/C4，按需最小化） |
 | `prototypes/prototype.html` | 可交互 HTML 原型 |
 
 ## 四、下一 Sprint

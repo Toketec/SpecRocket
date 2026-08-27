@@ -51,8 +51,8 @@ project-root/
 │       │   ├── SPRINT-features.md    #   冲刺目标 + 功能清单 + 业务验收条件
 │       │   ├── functional-overview.md #   本版本功能总览 + 路线图
 │       │   ├── user-scenarios.md     #   本版本用户旅程 + 用例
-│       │   ├── ux-flows.md           #   本版本业务流程
-│       │   ├── ui-wireframes.md      #   本版本页面布局 + 组件
+│       │   ├── user-journey-flows.md #   用户旅程总览 + 核心流程图（必写）
+│       │   ├── uml-pack.md           #   UML 图表包（按需，最小化原则）
 │       │   └── prototypes/           #   本版本的可交互 HTML 原型
 │       │       └── prototype.html
 │       │
@@ -60,8 +60,8 @@ project-root/
 │           ├── SPRINT-features.md
 │           ├── functional-overview.md
 │           ├── user-scenarios.md
-│           ├── ux-flows.md
-│           ├── ui-wireframes.md
+│           ├── user-journey-flows.md
+│           ├── uml-pack.md
 │           └── prototypes/
 │               └── prototype.html
 │
@@ -105,12 +105,12 @@ project-root/
 
 **核心原则**:
 - `docs/` = **稳定层** — 只放全版本通用的产品规划文档（产品概览、非功能需求、视觉规范）。**不动摇的设计决策放这里，每次迭代的细节放 sprint**。
-- `docs/sprints/sprint-NNN/` = **版本层** — 每次迭代的完整产品设计容器。PM 在每个版本中更新功能描述、场景、流程、线框图和可交互原型。**上次版本的原型和文档作为历史记录，不覆盖。**
+- `docs/sprints/sprint-NNN/` = **版本层** — 每次迭代的完整产品设计容器。PM 在每个版本中更新功能描述、场景、流程图、图表和可交互原型。**上次版本的原型和文档作为历史记录，不覆盖。**
 - `apps/` / `businesses/` / `tools/` = **代码实现域**，各自携带 specs
 - `ADR/` = **架构设计文档库** — 系统上下文、数据模型、核心流程、技术选型。AI 首次进入项目时先读此目录理解全局，一次性看清系统架构。
 - `AGENTS.md` = **AI 协作入口**，浓缩规范供 AI 读取
 
-> **关键约束**: `docs/` 根目录不存放版本迭代型文档（如场景、流程、线框图、原型）。迭代型产品文档必须随版本放入 `docs/sprints/sprint-NNN/`，一个版本一个完整的 sprint 容器。
+> **关键约束**: `docs/` 根目录不存放版本迭代型文档（如场景、流程、图表、原型）。迭代型产品文档必须随版本放入 `docs/sprints/sprint-NNN/`，一个版本一个完整的 sprint 容器。
 
 ---
 
@@ -158,9 +158,9 @@ project-root/
 | `functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
 | `non-functional-reqs.md` | ⭐⭐ | 有性能基线/合规要求时必写 |
 | `user-scenarios.md` | ⭐⭐⭐ | 核心流程的用例清单。Dev 理解业务的基础 |
-| `ux-flows.md` | ⭐⭐ | 复杂业务流程建议画 |
-| `ui-wireframes.md` | ⭐⭐⭐ | 前后端分离的项目必写，描述组件布局+状态 |
-| `prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互 |
+| `user-journey-flows.md` | ⭐⭐⭐ | 用户旅程总览 + 核心流程图（泳道/时序/状态）。**业务闭环一眼可见** |
+| `uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制** |
+| `prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示** |
 | `sprints/sprint-NNN/*.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
 
 **进入 Step 2 的条件**: 至少 `product-overview.md` + `user-scenarios.md` + `sprints/sprint-NNN/SPRINT-features.md` 就位并经过 TL 技术可行性评审。
@@ -276,7 +276,7 @@ QA 跑人工验收项。如果项目没有专职 QA，Dev 自行验收，PM 确�
 
 ### 3.1 docs/ — 稳定层：全版本通用的产品规划文档
 
-`docs/` 根目录只存放**变化极小或不常变的全版本通用文档**。每次大版本的迭代型产品文档（场景、流程、线框图、原型）必须在对应的 `docs/sprints/sprint-NNN/` 中。
+`docs/` 根目录只存放**变化极小或不常变的全版本通用文档**。每次大版本的迭代型产品文档（场景、流程、图表、原型）必须在对应的 `docs/sprints/sprint-NNN/` 中。
 
 | 文件/目录 | 内容 | 替代了什么 | 页数上限 | 必须 |
 |:---------|:----|:----------|:--------:|:----:|
@@ -310,7 +310,7 @@ Step 1 中文档按以下顺序编辑，每步完成后再进入下一步：
 
 > 占位原则：说清楚**为什么不需要**，不留"可能是忘了"的疑问。
 
-> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、流程图（ux-flows）、线框图（ui-wireframes）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sprint-NNN/` 目录，一个版本一个完整容器。
+> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、用户旅程与流程图（user-journey-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sprint-NNN/` 目录，一个版本一个完整容器。
 
 对于有客户端的项目（Web/移动端），PM 应提供一个或多个纯 HTML 原型，放在对应 sprint 的 `prototypes/` 目录中：
 
@@ -343,8 +343,8 @@ docs/sprints/sprint-NNN_name/
 ├── SPRINT-features.md           # 冲刺目标 + 功能清单 + 业务流程 + 验收条件
 ├── functional-overview.md       # 本版本功能需求总览 + 版本路线图
 ├── user-scenarios.md            # 本版本用户旅程 + 用例清单
-├── ux-flows.md                  # 本版本核心流程 ASCII 图
-├── ui-wireframes.md             # 本版本页面布局 + 组件清单 + 状态映射
+├── user-journey-flows.md        # 用户旅程总览 + 核心流程图（Mermaid，必写）
+├── uml-pack.md                  # UML 图表包（用例/ER/类图/C4，按需最小化）
 └── prototypes/
     └── prototype.html           # 本版本可交互 HTML 原型（完整交互）
 ```
