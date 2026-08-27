@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.5.0
+version: 2.6.0
 license: MIT
 ---
 
@@ -193,6 +193,7 @@ SpecRocket/                      ← 本仓库
 ```
 脚本会：
 - 检测旧版文件：`ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` / 全局 `spec/` + `_catalog.yaml`
+- **规整 sprints 结构**：检测废弃的 `sprint-000_initial/`（v2.5.0 起废弃）——纯模板副本（文件仍含占位符）直接删除；含真实内容则重命名为 `sprint-000_initial.legacy/` 保留待转移
 - 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
 - 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
 
@@ -203,6 +204,7 @@ SpecRocket/                      ← 本仓库
 | `ux-flows.md` | 旅程部分 → `user-scenarios.md` §1；流程部分 → `business-flows.md` |
 | `ui-wireframes.md` | 布局/交互 → `prototypes/prototype.html`；系统图表 → `uml-pack.md` |
 | `user-journey-flows.md` | 旅程总览 → `user-scenarios.md` §1；流程图 → `business-flows.md` |
+| `sprint-000_initial/` | v2.5.0 已废弃——纯模板副本脚本直接删除；含真实内容时 → 把 v1.0 基线设计转移到 `sprint-001/` 对应文件后删除 `.legacy` |
 | 全局 `spec/` + `_catalog.yaml` | 按模块迁移到 `{apps\|businesses\|tools}/*/specs/` 四文件（requirements/plan/tasks/check） |
 
 **第 3 步：AI 转移后清理**
