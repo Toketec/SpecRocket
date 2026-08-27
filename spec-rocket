@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.7.0"
+VERSION="2.8.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -190,6 +190,65 @@ cmd_migrate() {
       LEGACY_FILES+=("[目录] docs/sprints/sprint-000_initial/ → .legacy/")
       FOUND_LEGACY=1
     fi
+  fi
+
+  # 清理文档中的 sprint-000_initial 结构图残留（v2.8.0）
+  # 老项目从旧模板复制的 AGENTS.md/README.md 等，结构图仍画着 sprint-000_initial，
+  # 与实际目录（已删除/legacy）不统一 → 自动删除结构图中的 000 块，修正兄弟项前缀
+  DOC_000_FIXED=0
+  DOC_000_NOTE=()
+  for doc in AGENTS.md CLAUDE.md README.md README.en.md ssot-convention*.md docs/README.md; do
+    [ -f "$doc" ] || continue
+    case "$doc" in *.legacy.md) continue;; esac
+    if grep -q "sprint-000" "$doc" 2>/dev/null; then
+      # awk：删结构图中的 000 块；000 是最后兄弟时把前一个兄弟 ├── 改为 └──
+      # 注意：不用字符类 [├└] 等（gawk C locale 下多字节字符类不可靠），统一用 index() 字节匹配
+      awk '
+        function emit_pending() {
+          if (pending != "") {
+            if (fix_next && index(pending, "├──") > 0) sub(/├──/, "└──", pending)
+            print pending
+            pending = ""
+          }
+          fix_next = 0
+        }
+        index($0, "sprint-000_initial") > 0 && (index($0, "├──") > 0 || index($0, "└──") > 0) {
+          if (index($0, "└──") > 0) fix_next = 1
+          removed++
+          in000 = 1
+          next
+        }
+        in000 {
+          p1 = index($0, "│")
+          if (p1 > 0 && index(substr($0, p1 + 1), "│") > 0) { removed++; next }
+          if ($0 ~ /^[[:space:]]*$/) { removed++; next }
+          in000 = 0
+        }
+        index($0, "├──") > 0 || index($0, "└──") > 0 {
+          emit_pending()
+          pending = $0
+          next
+        }
+        { emit_pending(); print }
+        END { emit_pending(); if (removed > 0) print removed > "/dev/stderr" }
+      ' "$doc" > "${doc}.sr000" 2>/tmp/sr000_stat
+      REMOVED=$(cat /tmp/sr000_stat 2>/dev/null)
+      if [ -s "${doc}.sr000" ] && [ "${REMOVED:-0}" -gt 0 ] 2>/dev/null; then
+        mv "${doc}.sr000" "$doc"
+        DOC_000_FIXED=1
+        ok "已清理 $doc 中 sprint-000_initial 结构图残留（删除 ${REMOVED} 行）"
+      else
+        rm -f "${doc}.sr000"
+      fi
+      # 正文描述残留（非结构图）→ 记录待 AI 处理
+      BODY_HITS=$(grep -n "sprint-000" "$doc" 2>/dev/null | grep -v '[├└]──' | head -5 || true)
+      if [ -n "$BODY_HITS" ]; then
+        DOC_000_NOTE+=("$doc: $BODY_HITS")
+      fi
+    fi
+  done
+  if [ "$DOC_000_FIXED" = "1" ]; then
+    warn "已自动清理文档中的 sprint-000_initial 结构图残留（目录与文档保持一致）"
   fi
 
   # 项目根残留 ssot-convention（方法论本体文档，仅应存在于 SpecRocket 主仓库）

@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.7.0
+version: 2.8.0
 license: MIT
 ---
 
@@ -194,6 +194,7 @@ SpecRocket/                      ← 本仓库
 脚本会：
 - 检测旧版文件：`ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` / 全局 `spec/` + `_catalog.yaml`
 - **规整 sprints 结构**：检测废弃的 `sprint-000_initial/`（v2.5.0 起废弃）——纯模板副本（文件仍含占位符）直接删除；含真实内容则重命名为 `sprint-000_initial.legacy/` 保留待转移
+- **清理文档中的 000 残留**：AGENTS.md / CLAUDE.md / README.md / README.en.md / ssot-convention*.md / docs/README.md 结构图中的 `sprint-000_initial` 块自动删除（含兄弟节点前缀修正）；正文描述残留写入 MIGRATION-REPORT.md 由 AI 处理
 - **清理方法论残留**：项目根 `ssot-convention*.md` 自动归档到 `archive/`（此文档仅应存在于 SpecRocket 主仓库）
 - 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
 - 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
