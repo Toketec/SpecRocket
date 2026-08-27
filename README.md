@@ -210,8 +210,9 @@ AI：已进入 ~/projects/my-app（空目录）
 |:----|:-----|:-----|:---------|
 | `init` | 建空壳 + git init | ⚡ 1 秒 | 📟 手动 / 🤖 斜杠命令 |
 | `brainstorm` | 引导式填写产品文档 → 创建 sprint | 💬 5 问 | 🤖 AI 斜杠命令 |
-| `migrate` | 给现有项目嵌入骨架 | 🔄 不碰代码 | 🤖 AI 斜杠命令 |
+| `migrate` | 嵌入骨架 / 旧版项目升级到最新模板结构 | 🔄 不碰代码 | 🤖 AI 斜杠命令 |
 | `preview` | 生成项目全貌预览页 | 👁️ 即时 | 🤖 AI 斜杠命令 |
+| `update` | 一键更新本地 skill（自动检测 AI 工具） | ⚡ 即时 | 📟 手动 / 🤖 斜杠命令 |
 
 ---
 
@@ -249,6 +250,7 @@ AI：已进入 ~/projects/my-app（空目录）
 SpecRocket/
 ├── SKILL.md          ← 标准 skill 文件（AI 斜杠命令入口）
 ├── init.sh           ← 手动 init 脚本（无 AI 时用）
+├── spec-rocket       ← CLI 脚本（init / update / migrate）
 ├── template/               ← 项目模板框架（含 AGENTS.md + ssot-convention）
 │   ├── ssot-convention.zh.md  ← 完整 SSOT 规范手册
 │   ├── AGENTS.md              ← AI 协作规则
@@ -308,6 +310,7 @@ SpecRocket 设计为 **任何 AI 编码代理均可驱动**。只要你的 AI �
 |:----|:---------|
 | 🆕 **新项目启动** | 📟 手动 `./init.sh` 或 🤖 AI `/spec-rocket init` → 🤖 AI `brainstorm` → 五步流程 |
 | 🔄 **现有项目引入 AI 协作** | 🤖 AI `migrate` → 写 ADR → Retrospec |
+| ⬆️ **升级到最新方法论** | 📟 `./spec-rocket update` 更新 skill → 对项目执行 `migrate` 升级结构 |
 | 🏁 **Hackathon 快速验证** | 📟/🤖 `init` → 跳过 Step 1 → 直接 Step 4 AI 编码 |
 | 👥 **团队培训** | 📟 手动 `init` 看骨架 → 读 ssot-convention → PPT |
 | 🤖 **AI-only 项目** | 🤖 `/spec-rocket init` → AI 完成其余步骤。Dev 只做评审 |
@@ -332,7 +335,7 @@ SpecRocket 设计为 **任何 AI 编码代理均可驱动**。只要你的 AI �
 
 ## 🗺️ Roadmap
 
-- [x] `init` / `brainstorm` / `migrate` / `preview` 斜杠命令
+- [x] `init` / `brainstorm` / `migrate` / `preview` / `update` slash commands
 - [x] 五步开发流程 & 完整规范手册
 - [x] 中英双语文档结构
 - [ ] 英文版 ssot-convention

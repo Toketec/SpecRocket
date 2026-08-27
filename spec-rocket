@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# ============================================================
+# SpecRocket CLI — init / update / migrate
+# 规格驱动开发（SDD）框架的命令入口
+# Usage:
+#   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
+#   ./spec-rocket update          # 一键更新本地 skill（工具感知）
+#   ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构
+#   ./spec-rocket help            # 帮助
+# ============================================================
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="2.4.0"
+TEMPLATE="$SCRIPT_DIR/template"
+GH_REPO="https://github.com/Toketec/SpecRocket.git"
+
+# ---------- 颜色 ----------
+C_GREEN='\033[0;32m'; C_YELLOW='\033[1;33m'; C_RED='\033[0;31m'; C_CYAN='\033[0;36m'; C_NC='\033[0m'
+info()  { echo -e "${C_CYAN}[SpecRocket]${C_NC} $*"; }
+ok()    { echo -e "${C_GREEN}✅ $*${C_NC}"; }
+warn()  { echo -e "${C_YELLOW}⚠️  $*${C_NC}"; }
+err()   { echo -e "${C_RED}❌ $*${C_NC}" >&2; }
+
+# ============================================================
+# init — 初始化新项目（逻辑与 init.sh 一致）
+# ============================================================
+cmd_init() {
+  if [ ! -d "$TEMPLATE" ]; then
+    err "找不到 template/ 目录。请先 clone 本仓库：git clone $GH_REPO"
+    exit 1
+  fi
+  if [ $# -eq 0 ]; then
+    TARGET_DIR="."
+    info "在当前目录初始化骨架 ... ($(pwd))"
+  else
+    NAME="$1"
+    TARGET_DIR="${2:-$NAME}"
+    if [ -d "$TARGET_DIR" ]; then
+      err "目录 '$TARGET_DIR' 已存在"
+      exit 1
+    fi
+    info "创建 $TARGET_DIR ..."
+    mkdir -p "$TARGET_DIR"
+  fi
+  info "复制骨架 ..."
+  shopt -s dotglob
+  cp -r "$TEMPLATE"/* "$TARGET_DIR/"
+  shopt -u dotglob
+  cd "$TARGET_DIR"
+  if [ ! -d .git ]; then
+    info "初始化 Git ..."
+    git init >/dev/null
+    git add . >/dev/null
+    git commit -m "init: SpecRocket project skeleton" >/dev/null 2>&1 || warn "git commit 失败（可能未配置用户信息），可稍后手动提交"
+  fi
+  ok "项目已初始化"
+  echo "  下一步：运行 /spec-rocket brainstorm 引导写产品文档"
+}
+
+# ============================================================
+# update — 一键更新本地 skill（工具感知）
+# ============================================================
+cmd_update() {
+  info "SpecRocket update v$VERSION — 检测本地安装的 AI 工具并同步 skill ..."
+  echo ""
+
+  # ① 更新本地仓库（保证模板源头最新）
+  if git rev-parse --git-dir >/dev/null 2>&1 && git remote get-url origin 2>/dev/null | grep -qi specrocket; then
+    info "① 更新本地 SpecRocket 仓库 (git pull) ..."
+    git pull --ff-only 2>&1 | sed 's/^/    /' || warn "git pull 失败，跳过（可稍后手动 git pull）"
+  else
+    warn "① 当前不在 SpecRocket 仓库内，跳过仓库更新"
+  fi
+  echo ""
+
+  # ② 检测 AI 工具
+  info "② 检测 AI 工具 ..."
+  FOUND=()
+  for tool in hermes claude codex cursor windsurf cline aider; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      FOUND+=("$tool")
+      echo "    已检测: $tool"
+    fi
+  done
+  # 无 CLI 命令但存在配置目录也算
+  [ -d "$HOME/.hermes" ] && echo "    已检测: Hermes Agent (~/.hermes)"
+  [ -d "$HOME/.claude" ] && echo "    已检测: Claude Code (~/.claude)"
+  [ -d "$HOME/.codex" ] && echo "    已检测: Codex (~/.codex)"
+  [ -d "$HOME/.cursor" ] && echo "    已检测: Cursor (~/.cursor)"
+  [ -d "$HOME/.windsurf" ] && echo "    已检测: Windsurf (~/.windsurf)"
+  if [ ${#FOUND[@]} -eq 0 ]; then
+    warn "未检测到常见 AI 工具 CLI。仍将同步 Hermes skill 目录（若存在）。"
+  fi
+  echo ""
+
+  # ③ 按工具同步 skill / 规则文件
+  info "③ 按工具同步 skill ..."
+
+  # Hermes Agent → ~/.hermes/skills/spec-rocket/
+  if [ -d "$HOME/.hermes/skills" ]; then
+    SYNC_HERMES=1
+    if [ ! -f "$SCRIPT_DIR/SKILL.md" ]; then
+      err "仓库内缺少 SKILL.md，无法同步 Hermes skill"
+      SYNC_HERMES=0
+    fi
+    if [ "$SYNC_HERMES" = "1" ]; then
+      mkdir -p "$HOME/.hermes/skills/spec-rocket"
+      cp "$SCRIPT_DIR/SKILL.md" "$HOME/.hermes/skills/spec-rocket/SKILL.md"
+      [ -d "$SCRIPT_DIR/references" ] && { mkdir -p "$HOME/.hermes/skills/spec-rocket/references"; cp -r "$SCRIPT_DIR/references"/* "$HOME/.hermes/skills/spec-rocket/references/" 2>/dev/null || true; }
+      ok "Hermes skill 已同步 → ~/.hermes/skills/spec-rocket/ (v$VERSION)"
+    fi
+  else
+    info "    未发现 ~/.hermes/skills，跳过 Hermes 同步"
+  fi
+
+  # spec-rocket-light（若本地存在）
+  if [ -d "$HOME/.hermes/skills/spec-rocket-light" ]; then
+    LIGHT_SYNCED=0
+    for light_src in "$SCRIPT_DIR/../SpecRocket-light/SKILL.md" "$SCRIPT_DIR/../SpecRocketLight/SKILL.md"; do
+      if [ -f "$light_src" ]; then
+        cp "$light_src" "$HOME/.hermes/skills/spec-rocket-light/SKILL.md"
+        ok "spec-rocket-light skill 已同步 (来自 $light_src)"
+        LIGHT_SYNCED=1
+        break
+      fi
+    done
+    [ "$LIGHT_SYNCED" = "0" ] && warn "本地有 spec-rocket-light skill，但未找到 light 源仓库（SpecRocketLight/），跳过"
+  else
+    info "    spec-rocket-light 未安装，跳过"
+  fi
+
+  # Codex → ~/.codex/AGENTS.md（全局指令，谨慎：只更新已有 SpecRocket 片段，不强制写入）
+  if [ -f "$HOME/.codex/AGENTS.md" ] && grep -q "SpecRocket" "$HOME/.codex/AGENTS.md" 2>/dev/null; then
+    warn "检测到 ~/.codex/AGENTS.md 含 SpecRocket 内容——请手动更新该文件中的版本说明，或删除旧片段后由项目级 AGENTS.md 接管"
+  else
+    info "    Codex: 未发现全局 SpecRocket 配置（推荐用项目级 AGENTS.md，由 init/migrate 注入）"
+  fi
+
+  # Claude Code / Cursor / Windsurf / Cline → 项目级规则文件
+  info "    Claude Code / Cursor / Windsurf / Cline: 规则文件在项目内（CLAUDE.md / .cursorrules / .windsurf/rules），"
+  info "    由每个项目的 /spec-rocket migrate 或 init 注入最新版本，无需全局更新。"
+
+  echo ""
+  ok "update 完成"
+  echo "  版本: v$VERSION  |  变更摘要见 GitHub Release 或 README"
+  echo "  若本项目使用的模板已过时，请对项目执行 /spec-rocket migrate 升级结构"
+}
+
+# ============================================================
+# migrate — 旧版项目迁移到最新模板结构（结构层）
+# 内容层（拆分/转移语义内容）由 AI 斜杠命令按 SKILL.md 规则执行
+# ============================================================
+cmd_migrate() {
+  TARGET="${1:-.}"
+  if [ ! -d "$TARGET" ]; then
+    err "目标目录不存在: $TARGET"
+    exit 1
+  fi
+  cd "$TARGET"
+  info "SpecRocket migrate — 目标: $(pwd)"
+  echo ""
+
+  # 检测旧版文件（v2.1 ~ v2.3）
+  LEGACY_FILES=()
+  FOUND_LEGACY=0
+
+  # 旧 sprint 文件
+  while IFS= read -r f; do
+    LEGACY_FILES+=("$f")
+    FOUND_LEGACY=1
+  done < <(find docs -name "ux-flows.md" -o -name "ui-wireframes.md" -o -name "user-journey-flows.md" 2>/dev/null || true)
+
+  # 全局 spec/ 目录或 _catalog.yaml（v2.1 前）
+  if [ -d spec ] || [ -f _catalog.yaml ] || [ -f specs/_catalog.yaml ]; then
+    LEGACY_FILES+=("[全局] spec/ 目录 或 _catalog.yaml")
+    FOUND_LEGACY=1
+  fi
+
+  if [ "$FOUND_LEGACY" = "0" ]; then
+    ok "未检测到旧版文件，项目结构已是最新"
+  else
+    warn "检测到以下旧版文件，需要迁移："
+    for f in "${LEGACY_FILES[@]}"; do
+      echo "    - $f"
+    done
+    echo ""
+  fi
+
+  # 从模板补齐缺失的新 sprint 文件
+  if [ -d docs/sprints ]; then
+    info "从模板补齐缺失的 sprint 文件 ..."
+    SPRINT_DIRS=$(find docs/sprints -mindepth 1 -maxdepth 1 -type d ! -name "_template" 2>/dev/null || true)
+    if [ -z "$SPRINT_DIRS" ]; then
+      info "    无具体 sprint 目录（或只有 _template），跳过补齐"
+    fi
+    for sprint in $SPRINT_DIRS; do
+      for f in user-scenarios.md business-flows.md uml-pack.md; do
+        if [ ! -f "$sprint/$f" ] && [ -f "$SCRIPT_DIR/template/docs/sprints/_template/$f" ]; then
+          cp "$SCRIPT_DIR/template/docs/sprints/_template/$f" "$sprint/$f"
+          ok "    补齐: $sprint/$f"
+        fi
+      done
+    done
+  fi
+
+  # 旧文件重命名保留（内容留给 AI 转移），并生成迁移报告
+  if [ "$FOUND_LEGACY" = "1" ]; then
+    REPORT="MIGRATION-REPORT.md"
+    {
+      echo "# 迁移报告 — $(date +%Y-%m-%d)"
+      echo ""
+      echo "> 由 /spec-rocket migrate 生成。以下旧版文件已重命名为 *.legacy.md 保留内容，"
+      echo "> 请由 AI 按 SKILL.md 的迁移规则将内容转移到新模板文件，完成后删除 *.legacy.md。"
+      echo ""
+      echo "## 迁移规则速查"
+      echo ""
+      echo "| 旧文件 | 内容去向 |"
+      echo "|:-------|:---------|"
+      echo "| \`ux-flows.md\` | 旅程部分 → \`user-scenarios.md\`；流程部分 → \`business-flows.md\` |"
+      echo "| \`ui-wireframes.md\` | 布局/交互 → \`prototypes/\` 原型；系统图表 → \`uml-pack.md\` |"
+      echo "| \`user-journey-flows.md\` | 旅程总览 → \`user-scenarios.md\`；流程图 → \`business-flows.md\` |"
+      echo "| 全局 \`spec/\` + \`_catalog.yaml\` | 迁移到 \`{apps|businesses|tools}/*/specs/\` 四文件 |"
+      echo ""
+      echo "## 待迁移文件"
+      echo ""
+    } > "$REPORT"
+    for f in "${LEGACY_FILES[@]}"; do
+      if [[ "$f" != \[全局\]* ]] && [ -f "$f" ]; then
+        mv "$f" "${f%.md}.legacy.md"
+        echo "- \`$f\` → 内容转移到新文件后删除" >> "$REPORT"
+      else
+        echo "- $f（目录/文件，请 AI 处理）" >> "$REPORT"
+      fi
+    done
+    ok "已生成迁移报告: $REPORT（旧文件保留为 *.legacy.md，待 AI 内容转移）"
+  fi
+
+  # 提示
+  echo ""
+  info "migrate 结构层完成。内容层请："
+  echo "  1. 让 AI 读取 MIGRATION-REPORT.md"
+  echo "  2. AI 按规则把 *.legacy.md 内容转移到新文件"
+  echo "  3. 确认后删除 *.legacy.md"
+}
+
+# ============================================================
+# main
+# ============================================================
+case "${1:-help}" in
+  init)    shift; cmd_init "$@" ;;
+  update)  shift; cmd_update "$@" ;;
+  migrate) shift; cmd_migrate "$@" ;;
+  help|-h|--help|"")
+    echo "SpecRocket CLI v$VERSION"
+    echo "Usage:"
+    echo "  ./spec-rocket init [项目名]    # 初始化新项目（无参=当前目录）"
+    echo "  ./spec-rocket update          # 一键更新本地 skill（自动检测 AI 工具）"
+    echo "  ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构"
+    ;;
+  *)
+    err "未知命令: $1（可用: init / update / migrate / help）"
+    exit 1
+    ;;
+esac

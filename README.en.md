@@ -177,8 +177,9 @@ You: Enter ~/projects/legacy-app
 |:--------|:-------------|:---------|:----------|
 | `init` | Bootstrap skeleton + git init | ⚡ 1 second | 📟 Manual / 🤖 Slash command |
 | `brainstorm` | Guided product doc → sprint creation | 💬 5 questions | 🤖 AI slash command |
-| `migrate` | Embed skeleton into existing project | 🔄 Zero code touch | 🤖 AI slash command |
+| `migrate` | Embed skeleton / upgrade legacy project to latest structure | 🔄 Zero code touch | 🤖 AI slash command |
 | `preview` | Generate full project overview page | 👁️ Instant | 🤖 AI slash command |
+| `update` | One-click update local skill (auto-detect AI tools) | ⚡ Instant | 📟 Manual / 🤖 Slash command |
 
 ---
 
@@ -217,6 +218,7 @@ You: Enter ~/projects/legacy-app
 SpecRocket/
 ├── SKILL.md          ← Standard skill file (AI slash command entry)
 ├── init.sh           ← Manual init script (no AI)
+├── spec-rocket       ← CLI script (init / update / migrate)
 ├── template/               ← Project template framework (AGENTS.md + ssot-convention)
 │   ├── ssot-convention.zh.md  ← Full SSOT spec handbook
 │   ├── AGENTS.md              ← AI collaboration rules
@@ -276,6 +278,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 |:----|:---------|
 | 🆕 **New project** | 📟 Manual `./init.sh` or 🤖 AI `/spec-rocket init` → 🤖 `brainstorm` → 5-step flow |
 | 🔄 **Existing project + AI** | 🤖 AI `migrate` → write ADR → Retrospec |
+| ⬆️ **Upgrade to latest methodology** | 📟 `./spec-rocket update` → run `migrate` on project to upgrade structure |
 | 🏁 **Hackathon** | 📟/🤖 `init` → skip Step 1 → Step 4 AI coding |
 | 👥 **Team training** | 📟 Manual `init` → read ssot-convention → PPT |
 | 🤖 **AI-only project** | 🤖 `/spec-rocket init` → AI does the rest. Dev only reviews |
@@ -284,7 +287,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 
 ## 🗺️ Roadmap
 
-- [x] `init` / `brainstorm` / `migrate` / `preview` slash commands
+- [x] `init` / `brainstorm` / `migrate` / `preview` / `update` slash commands
 - [x] 5-step development flow & complete spec handbook
 - [x] Bilingual (Chinese + English) documentation
 - [ ] English ssot-convention

@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
-description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview。"
-version: 2.1.0
+description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
+version: 2.4.0
 license: MIT
 ---
 
@@ -16,6 +16,7 @@ license: MIT
 ```
 SpecRocket/                      ← 本仓库
 ├── SKILL.md                    ← 标准 skill 文件（AI 斜杠命令）
+├── spec-rocket                 ← CLI 脚本（init / update / migrate）
 ├── init.sh                     ← 手动 init 脚本（无 AI 时用）
 ├── template/               ← 项目模板框架（含 AGENTS.md + ssot-convention）
 │   ├── ssot-convention.zh.md   ← 完整 SSOT 规范手册
@@ -35,10 +36,11 @@ SpecRocket/                      ← 本仓库
 
 | 命令 | 用途 |
 |:----|:------|
-| `init [项目名]` | 从 template/ 子模块复制骨架。无参=当前目录，有参=新建项目目录 |
+| `init [项目名]` | 从 template/ 目录复制骨架。无参=当前目录，有参=新建项目目录 |
 | `brainstorm` | 引导用户描述产品 → 自动生成产品文档 + 创建 sprint |
-| `migrate` | 给现有项目嵌入骨架文件 |
+| `migrate` | ① 给现有项目嵌入骨架；② 旧版 SpecRocket 项目强制升级到最新模板结构（内容转移） |
 | `preview` | 扫描项目 → 生成 dark-theme 可视化预览页 |
+| `update` | 一键更新本地 skill（自动检测用户使用的 AI 工具，按工具安装位置同步） |
 
 ---
 
@@ -60,6 +62,39 @@ SpecRocket/                      ← 本仓库
 3. 复制 `template/` 全部内容到目标目录
 4. 执行 `git init` + 首次提交
 5. 完成初始化。告诉用户骨架已就位，建议下一步跑 `/spec-rocket brainstorm` 引导填写产品文档。
+
+---
+
+## `/spec-rocket update` — 一键更新本地 skill（工具感知）
+
+**用途：** 把本地 SpecRocket skill 更新到最新版本。**自动检测用户使用的 AI 产品**，按各产品的 skill/规则安装位置同步——不假设用户一定用某个工具。
+
+**推荐执行（有 CLI）：**
+```bash
+./spec-rocket update
+```
+
+**各 AI 产品的 skill 安装位置与同步方式：**
+
+| AI 产品 | skill/规则位置 | update 动作 |
+|:-------|:-------------|:-----------|
+| **Hermes Agent** | `~/.hermes/skills/spec-rocket/` | 复制最新 `SKILL.md` + `references/` |
+| **spec-rocket-light**（若安装） | `~/.hermes/skills/spec-rocket-light/` | 同步 light 版 SKILL.md |
+| **Codex** | 项目级 `AGENTS.md`（全局 `~/.codex/AGENTS.md` 谨慎） | 检测到全局含 SpecRocket 内容 → 提示手动同步；推荐项目级由 init/migrate 注入 |
+| **Claude Code** | 项目级 `CLAUDE.md`（每个项目一份） | 无需全局更新；项目升级用 `/spec-rocket migrate` |
+| **Cursor** | 项目级 `.cursor/rules/` 或 `.cursorrules` | 同上 |
+| **Windsurf** | 项目级 `.windsurf/rules/` | 同上 |
+| **Cline** | 项目级 `CLAUDE.md` | 同上 |
+
+> **核心原则**：SpecRocket 是纯文件约定。`update` 保证「本地源」最新（仓库 git pull + 有全局 skill 概念的工具同步），项目级规则文件（CLAUDE.md / AGENTS.md 等）随各项目执行 `migrate` 更新。
+
+**AI 斜杠命令执行时（无 CLI 环境）：**
+1. `git pull` 本地 SpecRocket 仓库（若为 clone）
+2. 检测用户工具：`command -v hermes claude codex cursor windsurf cline`
+3. 按上表同步对应位置：
+   - Hermes → 复制 `SKILL.md` 到 `~/.hermes/skills/spec-rocket/`
+   - 其他工具 → 告知用户项目级规则文件用 `/spec-rocket migrate` 更新
+4. 输出更新报告（版本号 + 各工具状态）
 
 ---
 
@@ -118,9 +153,13 @@ SpecRocket/                      ← 本仓库
 
 ---
 
-## `/spec-rocket migrate` — 嵌入骨架
+## `/spec-rocket migrate` — 嵌入骨架 / 旧版项目升级
 
-**用途：** 给已有项目（非 SpecRocket）添加骨架文件。
+**用途：** 两种模式：
+- **模式 1**：给已有项目（非 SpecRocket）添加骨架文件
+- **模式 2**：旧版 SpecRocket 项目强制升级到最新模板结构（含用户自定义文档的内容转移）
+
+### 模式 1：嵌入骨架（新增文件）
 
 **执行规则：** 只添加不存在的文件，不修改现有代码。从 template/ 中复制。
 
@@ -143,6 +182,34 @@ SpecRocket/                      ← 本仓库
    | `ADR/_template/` | `ADR/_template/` |
 
 4. 完成时列出添加的文件清单，告诉用户做了什么
+
+### 模式 2：旧版 SpecRocket 项目升级（结构迁移 + 内容转移）
+
+> 当项目由旧版本（v2.1 ~ v2.3）初始化，或用户自行添加了不符合模板结构的文档时使用。**强制更新到最新模板结构。**
+
+**第 1 步：结构迁移（脚本执行）**
+```bash
+./spec-rocket migrate [项目路径]     # 默认当前目录
+```
+脚本会：
+- 检测旧版文件：`ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` / 全局 `spec/` + `_catalog.yaml`
+- 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
+- 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
+
+**第 2 步：内容转移（AI 执行，按迁移规则）**
+
+| 旧文件 | 内容去向 |
+|:-------|:---------|
+| `ux-flows.md` | 旅程部分 → `user-scenarios.md` §1；流程部分 → `business-flows.md` |
+| `ui-wireframes.md` | 布局/交互 → `prototypes/prototype.html`；系统图表 → `uml-pack.md` |
+| `user-journey-flows.md` | 旅程总览 → `user-scenarios.md` §1；流程图 → `business-flows.md` |
+| 全局 `spec/` + `_catalog.yaml` | 按模块迁移到 `{apps\|businesses\|tools}/*/specs/` 四文件（requirements/plan/tasks/check） |
+
+**第 3 步：AI 转移后清理**
+- 确认 `*.legacy.md` 内容已全部转移 → 删除 `*.legacy.md` 和 `MIGRATION-REPORT.md`
+- 更新 AGENTS.md 目录结构描述（如有手动改动）
+
+> **用户自定义的不符合结构文档**：检测报告中列出 → AI 判断其内容归属（旅程/流程/图表/功能），转移到对应新文件；无法归类的与用户确认后归档到 `archive/`。
 
 ---
 
