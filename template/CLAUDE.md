@@ -31,6 +31,12 @@
 │   ├── ADR-001_database-choice.md # "为什么选 PostgreSQL"
 │   └── ADR-002_auth-scheme.md     # "JWT + refresh token"
 │
+├── assets/                        # ★ 运营资产 — 被系统/业务直接引用的文件
+│   ├── configs/                   # 配置模板库（.env.example、nginx 模板）
+│   ├── interfaces/                # 对外接口（OpenAPI、API 契约、SDK）
+│   ├── standards/                 # 规范库（编码规范、数据字典、术语表）
+│   └── manuals/                   # 说明文档（部署/运维手册、FAQ）
+│
 ├── apps/                          # ★ 前端/客户端应用（每个含 src/ + specs/）
 │   ├── _template/
 │   │   ├── src/                   # 代码目录
