@@ -5,13 +5,13 @@
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 一键更新本地 skill（工具感知）
-#   ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构
+#   ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构（不符合模板文件：先收敛 docs，否则收敛 assets）
 #   ./spec-rocket help            # 帮助
 # ============================================================
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.9.0"
+VERSION="2.10.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -268,15 +268,76 @@ cmd_migrate() {
       ok "已创建 assets/ 运营资产骨架（configs/interfaces/standards/manuals，详见 assets/README.md）"
     fi
   fi
-  # 检测项目已有运营资产目录（未归入 assets/）→ 提示 AI 处理，不自动移动（防误伤）
-  OPS_DIRS=()
-  for d in config api manual standards docs-manual; do
-    if [ -d "$d" ] && [ ! -d "assets/$d" ]; then
-      OPS_DIRS+=("$d/")
+  # 不符合模板文件的两级收敛策略（v2.10.0）
+  # 规则1: 优先收敛到 docs/ 设计相关文档（内容型 .md，由 AI 语义合并）
+  # 规则2: 相关性不大或无法收敛 → 转移并收敛到 assets/ 对应子目录（资产型）
+  # ── 规则2：运营资产目录自动转移归位（config/api/manual/standards → assets/ 对应子类）
+  OPS_MOVED=0
+  OPS_CONFLICT=()
+  move_ops_dir() { # $1=源目录 $2=目标子目录 $3=说明
+    local src="$1" dst="assets/$2"
+    [ -d "$src" ] || return 0
+    if [ ! -d "$dst" ]; then
+      mv "$src" "$dst"
+      ok "已转移: $src/ → $dst/（规则2：运营资产收敛 assets/）"
+      OPS_MOVED=1
+    elif [ -z "$(ls -A "$dst" | grep -v '^\.gitkeep$' 2>/dev/null)" ]; then
+      # 目标为空骨架（仅 .gitkeep）→ 合并转移
+      mv "$src"/* "$dst"/ 2>/dev/null || true
+      rmdir "$src" 2>/dev/null || true
+      ok "已转移: $src/ → $dst/（规则2：运营资产收敛 assets/，合并入骨架）"
+      OPS_MOVED=1
+    else
+      OPS_CONFLICT+=("$src/ → $dst/（目标已存在，内容请 AI 合并）")
     fi
-  done
-  if [ "${#OPS_DIRS[@]}" -gt 0 ]; then
-    warn "检测到项目已有运营资产目录（未归入 assets/）：${OPS_DIRS[*]} → 由 AI 按内容判断迁移到 assets/ 对应子目录"
+  }
+  move_ops_dir config configs "配置模板"
+  move_ops_dir api interfaces "对外接口"
+  move_ops_dir manual manuals "说明手册"
+  move_ops_dir docs-manual manuals "说明手册"
+  move_ops_dir standards standards "规范库"
+  if [ "${#OPS_CONFLICT[@]}" -gt 0 ]; then
+    for c in "${OPS_CONFLICT[@]}"; do
+      warn "目标已存在，跳过自动转移: $c"
+    done
+  fi
+  # ── 规则1：游离内容文档扫描（docs/ 散落 .md + 根目录非白名单 .md）→ 收敛到 docs 对应文档
+  # docs/ 模板只允许 product-overview / non-functional-reqs / visual-design / sprints/（及 preview.html）
+  is_legacy_file() { # $1=路径，判断是否已识别为旧版文件
+    local f="$1"
+    for lf in "${LEGACY_FILES[@]}"; do
+      case "$lf" in \[全局\]*) continue;; esac
+      [ "$f" = "$lf" ] && return 0
+    done
+    return 1
+  }
+  STRAY_DOCS=()
+  if [ -d docs ]; then
+    while IFS= read -r f; do
+      base=$(basename "$f")
+      case "$base" in
+        product-overview.md|non-functional-reqs.md|visual-design.md|README.md) continue ;;
+        *.legacy.md) continue ;;
+      esac
+      is_legacy_file "$f" && continue
+      STRAY_DOCS+=("$f")
+    done < <(find docs -maxdepth 1 -type f -name "*.md" 2>/dev/null || true)
+  fi
+  # 根目录非白名单 .md（排除模板文件/方法论本体/迁移报告）
+  while IFS= read -r f; do
+    base=$(basename "$f")
+    case "$base" in
+      AGENTS.md|CLAUDE.md|README.md|README.en.md|MIGRATION-REPORT.md|ssot-convention*.md|LICENSE) continue ;;
+      *.legacy.md) continue ;;
+    esac
+    is_legacy_file "${f#./}" && continue
+    STRAY_DOCS+=("$f")
+  done < <(find . -maxdepth 1 -type f -name "*.md" 2>/dev/null || true)
+  if [ "${#STRAY_DOCS[@]}" -gt 0 ]; then
+    warn "检测到不符合模板的游离文档（规则1：优先收敛到 docs/ 设计相关文档，由 AI 判断内容归属并合并）："
+    for f in "${STRAY_DOCS[@]}"; do
+      echo "    - $f"
+    done
   fi
 
   if [ "$FOUND_LEGACY" = "0" ]; then
@@ -307,7 +368,12 @@ cmd_migrate() {
   fi
 
   # 旧文件重命名保留（内容留给 AI 转移），并生成迁移报告
-  if [ "$FOUND_LEGACY" = "1" ]; then
+  # 报告生成条件：有旧版文件 或 有规则2已转移资产 或 有规则1游离文档
+  REPORT_NEEDED=$FOUND_LEGACY
+  [ "$OPS_MOVED" = "1" ] && REPORT_NEEDED=1
+  [ "${#OPS_CONFLICT[@]}" -gt 0 ] && REPORT_NEEDED=1
+  [ "${#STRAY_DOCS[@]}" -gt 0 ] && REPORT_NEEDED=1
+  if [ "$REPORT_NEEDED" = "1" ]; then
     REPORT="MIGRATION-REPORT.md"
     {
       echo "# 迁移报告 — $(date +%Y-%m-%d)"
@@ -325,6 +391,15 @@ cmd_migrate() {
       echo "| \`sprint-000_initial/\` | v2.5.0 已废弃（纯模板副本直接删；含真实内容 → 转移基线设计到 \`sprint-001/\` 后删 .legacy） |"
       echo "| 全局 \`spec/\` + \`_catalog.yaml\` | 迁移到 \`{apps|businesses|tools}/*/specs/\` 四文件 |"
       echo ""
+      echo "## 不符合模板文件处理规则（v2.10.0）"
+      echo ""
+      echo "升级过程中遇到不符合项目模板的文件，按两级策略处理："
+      echo ""
+      echo "1. **规则1 — 优先收敛到 docs/ 设计相关文档**：内容型文档（需求/设计/说明类 .md）由 AI 判断内容归属，合并进 \`docs/\` 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等）"
+      echo "2. **规则2 — 转移并收敛到 assets/**：相关性不大或无法收敛的资产型文件（配置/接口/手册/规范），转移到 \`assets/\` 对应子目录（configs / interfaces / standards / manuals）"
+      echo ""
+      echo "> 已在本次迁移中自动执行的规则2转移见下方「已转移资产」；未自动转移的冲突项由 AI 手动合并。"
+      echo ""
       echo "## 待迁移文件"
       echo ""
     } > "$REPORT"
@@ -336,16 +411,38 @@ cmd_migrate() {
         echo "- $f（目录/文件，请 AI 处理）" >> "$REPORT"
       fi
     done
+    # 追加规则2：已转移资产
+    if [ "$OPS_MOVED" = "1" ] || [ "${#OPS_CONFLICT[@]}" -gt 0 ]; then
+      echo "" >> "$REPORT"
+      echo "## 已转移资产（规则2，脚本自动执行）" >> "$REPORT"
+      echo "" >> "$REPORT"
+      if [ "$OPS_MOVED" = "1" ]; then
+        echo "- 运营资产目录已自动归位 \`assets/\` 对应子目录（configs / interfaces / standards / manuals）" >> "$REPORT"
+      fi
+      for c in "${OPS_CONFLICT[@]}"; do
+        echo "- 冲突待合并: $c" >> "$REPORT"
+      done
+    fi
+    # 追加规则1：游离文档（AI 收敛到 docs/）
+    if [ "${#STRAY_DOCS[@]}" -gt 0 ]; then
+      echo "" >> "$REPORT"
+      echo "## 游离文档（规则1，AI 收敛到 docs/）" >> "$REPORT"
+      echo "" >> "$REPORT"
+      echo "以下文档不符合模板结构，由 AI 判断内容归属并合并到 docs/ 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等），完成后删除原文件：" >> "$REPORT"
+      for f in "${STRAY_DOCS[@]}"; do
+        echo "- $f" >> "$REPORT"
+      done
+    fi
     ok "已生成迁移报告: $REPORT（旧文件保留为 *.legacy.md，待 AI 内容转移）"
   fi
 
   # 提示
   echo ""
   info "migrate 结构层完成。"
-  if [ "$FOUND_LEGACY" = "1" ]; then
+  if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. 让 AI 读取 MIGRATION-REPORT.md"
-    echo "  2. AI 按规则把 *.legacy.md 内容转移到新文件"
-    echo "  3. 确认后删除 *.legacy.md"
+    echo "  2. 按两级规则处理：规则1 游离文档 → 收敛到 docs/ 对应文档；规则2 已转移资产 → 确认归属"
+    echo "  3. 旧版文件（*.legacy.md）内容转移后删除"
   else
     echo "  项目结构已是最新。下一步：运行 /spec-rocket brainstorm 引导写产品文档（或按需完善 assets/）"
   fi
@@ -363,7 +460,7 @@ case "${1:-help}" in
     echo "Usage:"
     echo "  ./spec-rocket init [项目名]    # 初始化新项目（无参=当前目录）"
     echo "  ./spec-rocket update          # 一键更新本地 skill（自动检测 AI 工具）"
-    echo "  ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构"
+    echo "  ./spec-rocket migrate [路径]   # 旧版项目迁移（不符合模板文件：先收敛 docs，否则收敛 assets）"
     ;;
   *)
     err "未知命令: $1（可用: init / update / migrate / help）"
