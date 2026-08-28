@@ -177,7 +177,7 @@ You: Enter ~/projects/legacy-app
 |:--------|:-------------|:---------|:----------|
 | `init` | Bootstrap skeleton + git init | ⚡ 1 second | 📟 Manual / 🤖 Slash command |
 | `brainstorm` | Guided product doc → sprint creation | 💬 5 questions | 🤖 AI slash command |
-| `migrate` | Embed skeleton / upgrade legacy project to latest structure (non-template files: first fold into docs, else into assets) | 🔄 Zero code touch | 🤖 AI slash command |
+| `migrate` | Embed skeleton / upgrade legacy project to latest structure (non-template files: first fold into docs, else into assets; scans docs/ recursively + project root fully + assets/ internals) | 🔄 Zero code touch | 🤖 AI slash command |
 | `preview` | Generate full project overview page | 👁️ Instant | 🤖 AI slash command |
 | `update` | One-click update local skill (auto-detect AI tools) | ⚡ Instant | 📟 Manual / 🤖 Slash command |
 

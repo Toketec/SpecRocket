@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.10.0
+version: 2.11.0
 license: MIT
 ---
 
@@ -197,8 +197,9 @@ SpecRocket/                      ← 本仓库
 - **规整 sprints 结构**：检测废弃的 `sprint-000_initial/`（v2.5.0 起废弃）——纯模板副本（文件仍含占位符）直接删除；含真实内容则重命名为 `sprint-000_initial.legacy/` 保留待转移
 - **清理文档中的 000 残留**：AGENTS.md / CLAUDE.md / README.md / README.en.md / ssot-convention*.md / docs/README.md 结构图中的 `sprint-000_initial` 块自动删除（含兄弟节点前缀修正）；正文描述残留写入 MIGRATION-REPORT.md 由 AI 处理
 - **清理方法论残留**：项目根 `ssot-convention*.md` 自动归档到 `archive/`（此文档仅应存在于 SpecRocket 主仓库）
-- **补齐 assets/ 运营资产骨架**：项目无 `assets/` 时自动创建（configs/interfaces/standards/manuals 四类按需取用，详见 `assets/README.md`）；检测到项目已有 `config/` `api/` `manual/` 等运营资产目录 → **自动转移归位** `assets/` 对应子目录（configs/interfaces/standards/manuals；目标已有真实内容时不覆盖，报告标注由 AI 合并）——**规则2：相关性不大或无法收敛的文件收敛到 assets/**
-- **扫描游离文档（规则1）**：检测 `docs/` 根下散落的非模板 .md 及根目录非白名单 .md → 报告标记**优先收敛到 docs/ 对应文档**（由 AI 语义合并）
+- **补齐 assets/ 运营资产骨架**：项目无 `assets/` 时自动创建（configs/interfaces/standards/manuals 四类按需取用，详见 `assets/README.md`）；已有 `assets/` 时**对齐模板骨架**（补齐缺失子目录 + README）；检测到项目已有 `config/` `api/` `manual/` 等运营资产目录 → **自动转移归位** `assets/` 对应子目录（configs/interfaces/standards/manuals；目标已有真实内容时不覆盖，报告标注由 AI 合并）——**规则2：相关性不大或无法收敛的文件收敛到 assets/**
+- **扫描游离文档（规则1）**：检测 `docs/` 全递归（含子目录，排除 `sprints/`）散落的非模板 .md、根目录非白名单内容文档（.md/.txt/.docx/.pdf 等）→ 报告标记**优先收敛到 docs/ 对应文档**（由 AI 语义合并）
+- **扫描根目录非规范项（规则2）**：根目录非白名单的资产型文件（配置/接口等）及非规范目录 → 报告标记**转移并收敛到 assets/ 对应子目录**（由 AI 确认归属）
 - 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
 - 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
 
@@ -216,7 +217,7 @@ SpecRocket/                      ← 本仓库
 - 确认 `*.legacy.md` 内容已全部转移 → 删除 `*.legacy.md` 和 `MIGRATION-REPORT.md`
 - 更新 AGENTS.md 目录结构描述（如有手动改动）
 
-> **用户自定义的不符合模板文档（两级收敛策略 v2.10.0）**：检测报告中列出 → ① **规则1 优先收敛到 docs/**：内容型文档（需求/设计/说明类 .md）由 AI 判断内容归属，合并进 `docs/` 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等）；② **规则2 转移并收敛到 assets/**：相关性不大或无法收敛的资产型文件（配置/接口/手册/规范），转移到 `assets/` 对应子目录（configs / interfaces / standards / manuals）。
+> **用户自定义的不符合模板文档（两级收敛策略 v2.10.0，扫描范围 v2.11.0）**：检测报告中列出 → ① **规则1 优先收敛到 docs/**：内容型文档（需求/设计/说明类 .md/.txt/.docx/.pdf）由 AI 判断内容归属，合并进 `docs/` 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等）；② **规则2 转移并收敛到 assets/**：相关性不大或无法收敛的资产型文件（配置/接口/手册/规范），转移到 `assets/` 对应子目录（configs / interfaces / standards / manuals）。**检查范围**：`docs/` 全递归（排除 `sprints/` 整棵）、项目根目录全量（文件+目录，排除白名单/隐藏项）、`assets/` 内部（散落项归位四子目录）；`apps/` `businesses/` `tools/` 等**技术产出目录不干预**（技术结构遵循行业规范）。
 
 ---
 

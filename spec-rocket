@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.10.0"
+VERSION="2.11.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -260,13 +260,35 @@ cmd_migrate() {
     done
   fi
 
-  # 补齐 assets/ 运营资产骨架（v2.9.0）
+  # 补齐 assets/ 运营资产骨架（v2.9.0）+ 内部结构对齐（v2.11.0）
   # assets/ = 被系统/业务直接引用的工程资产（配置模板/对外接口/规范库/手册），由 Ops 角色产出
+  ASSETS_STRAY=()
   if [ ! -d assets ]; then
     if [ -d "$SCRIPT_DIR/template/assets" ]; then
       cp -r "$SCRIPT_DIR/template/assets" assets
       ok "已创建 assets/ 运营资产骨架（configs/interfaces/standards/manuals，详见 assets/README.md）"
     fi
+  else
+    # 已有 assets/ → 对齐模板骨架（补齐缺失子目录 + README）
+    if [ -d "$SCRIPT_DIR/template/assets" ]; then
+      for sub in configs interfaces standards manuals; do
+        if [ ! -d "assets/$sub" ]; then
+          mkdir -p "assets/$sub"
+          [ -f "$SCRIPT_DIR/template/assets/$sub/.gitkeep" ] && cp "$SCRIPT_DIR/template/assets/$sub/.gitkeep" "assets/$sub/"
+          ok "已补齐 assets/$sub/ 子目录（对齐模板骨架）"
+        fi
+      done
+      if [ ! -f assets/README.md ]; then
+        cp "$SCRIPT_DIR/template/assets/README.md" assets/README.md
+        ok "已补齐 assets/README.md（对齐模板骨架）"
+      fi
+    fi
+    # assets/ 内部散落项（不在四子目录内，且非 README.md）→ 规则2 标记 AI 归位
+    while IFS= read -r f; do
+      base=$(basename "$f")
+      [ "$base" = "README.md" ] && continue
+      ASSETS_STRAY+=("$f")
+    done < <(find assets -maxdepth 1 -mindepth 1 ! -name "configs" ! -name "interfaces" ! -name "standards" ! -name "manuals" 2>/dev/null || true)
   fi
   # 不符合模板文件的两级收敛策略（v2.10.0）
   # 规则1: 优先收敛到 docs/ 设计相关文档（内容型 .md，由 AI 语义合并）
@@ -301,7 +323,7 @@ cmd_migrate() {
       warn "目标已存在，跳过自动转移: $c"
     done
   fi
-  # ── 规则1：游离内容文档扫描（docs/ 散落 .md + 根目录非白名单 .md）→ 收敛到 docs 对应文档
+  # ── 规则1：游离内容文档扫描（docs/ 递归 + 根目录散落内容文档）→ 收敛到 docs 对应文档
   # docs/ 模板只允许 product-overview / non-functional-reqs / visual-design / sprints/（及 preview.html）
   is_legacy_file() { # $1=路径，判断是否已识别为旧版文件
     local f="$1"
@@ -313,17 +335,21 @@ cmd_migrate() {
   }
   STRAY_DOCS=()
   if [ -d docs ]; then
+    # v2.11.0：递归扫描 docs/ 全部 .md（排除 sprints/ 整棵 + 白名单四件套）
     while IFS= read -r f; do
       base=$(basename "$f")
       case "$base" in
         product-overview.md|non-functional-reqs.md|visual-design.md|README.md) continue ;;
         *.legacy.md) continue ;;
       esac
+      case "$f" in */sprints/*) continue ;; esac
       is_legacy_file "$f" && continue
       STRAY_DOCS+=("$f")
-    done < <(find docs -maxdepth 1 -type f -name "*.md" 2>/dev/null || true)
+    done < <(find docs -type f -name "*.md" 2>/dev/null || true)
   fi
-  # 根目录非白名单 .md（排除模板文件/方法论本体/迁移报告）
+  # 根目录非白名单内容文档（v2.11.0：全量扫描，不止 .md；排除隐藏文件/模板文件/方法论本体/迁移报告）
+  ROOT_STRAY_R1=()   # 规则1：内容型文档（.md/.txt/.docx/.pdf 等）→ 收敛 docs/
+  ROOT_STRAY_R2=()   # 规则2：资产型/未知（配置/接口/规范/目录）→ 归位 assets/
   while IFS= read -r f; do
     base=$(basename "$f")
     case "$base" in
@@ -331,11 +357,35 @@ cmd_migrate() {
       *.legacy.md) continue ;;
     esac
     is_legacy_file "${f#./}" && continue
-    STRAY_DOCS+=("$f")
-  done < <(find . -maxdepth 1 -type f -name "*.md" 2>/dev/null || true)
-  if [ "${#STRAY_DOCS[@]}" -gt 0 ]; then
-    warn "检测到不符合模板的游离文档（规则1：优先收敛到 docs/ 设计相关文档，由 AI 判断内容归属并合并）："
-    for f in "${STRAY_DOCS[@]}"; do
+    case "$base" in
+      *.md|*.txt|*.docx|*.doc|*.pdf|*.rst|*.tex) ROOT_STRAY_R1+=("$f") ;;
+      *) ROOT_STRAY_R2+=("$f") ;;
+    esac
+  done < <(find . -maxdepth 1 -type f ! -name ".*" 2>/dev/null || true)
+  # 根目录非规范目录 → 规则2（排除模板白名单目录 + ADR（Step 2 产出，SSOT 架构目录）+ 隐藏目录）
+  while IFS= read -r d; do
+    base=$(basename "$d")
+    case "$base" in
+      docs|apps|businesses|tools|assets|archive|ADR) continue ;;
+      .*) continue ;;
+    esac
+    ROOT_STRAY_R2+=("$d")
+  done < <(find . -maxdepth 1 -type d ! -name "." 2>/dev/null || true)
+  if [ "${#STRAY_DOCS[@]}" -gt 0 ] || [ "${#ROOT_STRAY_R1[@]}" -gt 0 ]; then
+    warn "检测到不符合模板的游离内容文档（规则1：优先收敛到 docs/ 设计相关文档，由 AI 判断内容归属并合并）："
+    for f in "${STRAY_DOCS[@]}" "${ROOT_STRAY_R1[@]}"; do
+      echo "    - $f"
+    done
+  fi
+  if [ "${#ROOT_STRAY_R2[@]}" -gt 0 ]; then
+    warn "检测到根目录非规范项（规则2：转移并收敛到 assets/ 对应子目录，由 AI 确认归属）："
+    for f in "${ROOT_STRAY_R2[@]}"; do
+      echo "    - $f"
+    done
+  fi
+  if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
+    warn "检测到 assets/ 内散落项（规则2：归位到对应子目录 configs/interfaces/standards/manuals，由 AI 确认归属）："
+    for f in "${ASSETS_STRAY[@]}"; do
       echo "    - $f"
     done
   fi
@@ -373,6 +423,9 @@ cmd_migrate() {
   [ "$OPS_MOVED" = "1" ] && REPORT_NEEDED=1
   [ "${#OPS_CONFLICT[@]}" -gt 0 ] && REPORT_NEEDED=1
   [ "${#STRAY_DOCS[@]}" -gt 0 ] && REPORT_NEEDED=1
+  [ "${#ROOT_STRAY_R1[@]}" -gt 0 ] && REPORT_NEEDED=1
+  [ "${#ROOT_STRAY_R2[@]}" -gt 0 ] && REPORT_NEEDED=1
+  [ "${#ASSETS_STRAY[@]}" -gt 0 ] && REPORT_NEEDED=1
   if [ "$REPORT_NEEDED" = "1" ]; then
     REPORT="MIGRATION-REPORT.md"
     {
@@ -423,13 +476,33 @@ cmd_migrate() {
         echo "- 冲突待合并: $c" >> "$REPORT"
       done
     fi
-    # 追加规则1：游离文档（AI 收敛到 docs/）
-    if [ "${#STRAY_DOCS[@]}" -gt 0 ]; then
+    # 追加规则1：游离文档（AI 收敛到 docs/）——docs/ 深层 + 根目录内容型
+    if [ "${#STRAY_DOCS[@]}" -gt 0 ] || [ "${#ROOT_STRAY_R1[@]}" -gt 0 ]; then
       echo "" >> "$REPORT"
       echo "## 游离文档（规则1，AI 收敛到 docs/）" >> "$REPORT"
       echo "" >> "$REPORT"
       echo "以下文档不符合模板结构，由 AI 判断内容归属并合并到 docs/ 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等），完成后删除原文件：" >> "$REPORT"
-      for f in "${STRAY_DOCS[@]}"; do
+      for f in "${STRAY_DOCS[@]}" "${ROOT_STRAY_R1[@]}"; do
+        echo "- $f" >> "$REPORT"
+      done
+    fi
+    # 追加规则2：根目录非规范项（AI 归位 assets/）
+    if [ "${#ROOT_STRAY_R2[@]}" -gt 0 ]; then
+      echo "" >> "$REPORT"
+      echo "## 根目录非规范项（规则2，AI 归位 assets/）" >> "$REPORT"
+      echo "" >> "$REPORT"
+      echo "以下根目录文件/目录不符合模板结构，由 AI 判断归属并转移到 assets/ 对应子目录（configs / interfaces / standards / manuals），完成后删除原文件：" >> "$REPORT"
+      for f in "${ROOT_STRAY_R2[@]}"; do
+        echo "- $f" >> "$REPORT"
+      done
+    fi
+    # 追加规则2：assets/ 待归位（AI 归位到四子目录）
+    if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
+      echo "" >> "$REPORT"
+      echo "## assets/ 待归位（规则2，AI 归位到四子目录）" >> "$REPORT"
+      echo "" >> "$REPORT"
+      echo "以下 assets/ 内散落项需归位到对应子目录（configs / interfaces / standards / manuals），由 AI 确认归属后移动：" >> "$REPORT"
+      for f in "${ASSETS_STRAY[@]}"; do
         echo "- $f" >> "$REPORT"
       done
     fi
@@ -441,7 +514,7 @@ cmd_migrate() {
   info "migrate 结构层完成。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. 让 AI 读取 MIGRATION-REPORT.md"
-    echo "  2. 按两级规则处理：规则1 游离文档 → 收敛到 docs/ 对应文档；规则2 已转移资产 → 确认归属"
+    echo "  2. 按两级规则处理：规则1 游离文档 → 收敛到 docs/ 对应文档；规则2 非规范项 → 归位 assets/ 对应子目录"
     echo "  3. 旧版文件（*.legacy.md）内容转移后删除"
   else
     echo "  项目结构已是最新。下一步：运行 /spec-rocket brainstorm 引导写产品文档（或按需完善 assets/）"

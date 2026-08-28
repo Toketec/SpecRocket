@@ -9,7 +9,7 @@
 |:----|:------|
 | `init [项目名]` | 从 template/ 目录复制骨架。**无参=当前目录，有参=新建项目目录** |
 | `brainstorm` | 引导用户描述产品 → 按固定顺序生成 4 组文档（产品概览 → 非功能需求 → 视觉设计 → sprint） |
-| `migrate` | ① 给现有项目嵌入骨架；② 旧版项目强制升级到最新模板结构（不符合模板文件：先收敛 docs，否则收敛 assets） |
+| `migrate` | ① 给现有项目嵌入骨架；② 旧版项目强制升级到最新模板结构（不符合模板文件：先收敛 docs，否则收敛 assets；扫描 docs/ 全递归 + 根目录全量 + assets/ 内部） |
 | `preview` | 扫描项目 → 生成 dark-theme 可视化预览页 |
 | `update` | 一键更新本地 skill（自动检测 AI 工具，按工具安装位置同步） |
 
@@ -40,7 +40,7 @@
 | 命令 | 说明 |
 |:----|:------|
 | `/spec-rocket brainstorm` | 按固定顺序生成 4 组文档：产品概览 → 非功能需求 → 视觉设计 → sprint |
-| `/spec-rocket migrate` | 给现有项目嵌入骨架 / 旧版项目升级到最新模板结构（不符合模板文件：规则1 收敛 docs，规则2 收敛 assets） |
+| `/spec-rocket migrate` | 给现有项目嵌入骨架 / 旧版项目升级到最新模板结构（不符合模板文件：规则1 收敛 docs，规则2 收敛 assets；扫描 docs/ 全递归 + 根目录全量 + assets/ 内部，技术产出目录不干预） |
 | `/spec-rocket preview` | 生成 dark-theme 可视化预览页 → `docs/preview.html` |
 | `/spec-rocket update` | 一键更新本地 skill（自动检测 AI 工具） |
 | `./spec-rocket` (CLI) | 脚本方式执行 init / update / migrate |
