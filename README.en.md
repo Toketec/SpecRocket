@@ -219,12 +219,12 @@ SpecRocket/
 ├── SKILL.md          ← Standard skill file (AI slash command entry)
 ├── init.sh           ← Manual init script (no AI)
 ├── spec-rocket       ← CLI script (init / update / migrate)
-├── template/               ← Project template framework (AGENTS.md + ssot-convention)
-│   ├── ssot-convention.zh.md  ← Full SSOT spec handbook
+├── template/               ← Project template framework
 │   ├── AGENTS.md              ← AI collaboration rules
-│   ├── SSOT-开发方法论-培训.pptx ← Training PPT
+│   ├── CLAUDE.md              ← Claude Code collaboration rules
 │   ├── docs/                  ← Product doc templates
 │   ├── ADR/                   ← Architecture decision record templates
+│   ├── assets/                ← Operations asset templates (configs/interfaces/standards/manuals)
 │   ├── apps/businesses/tools/ ← Module templates
 │   └── ...
 ├── README.md         ← 🇨🇳 Chinese version

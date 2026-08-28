@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.8.0"
+VERSION="2.9.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -260,6 +260,25 @@ cmd_migrate() {
     done
   fi
 
+  # 补齐 assets/ 运营资产骨架（v2.9.0）
+  # assets/ = 被系统/业务直接引用的工程资产（配置模板/对外接口/规范库/手册），由 Ops 角色产出
+  if [ ! -d assets ]; then
+    if [ -d "$SCRIPT_DIR/template/assets" ]; then
+      cp -r "$SCRIPT_DIR/template/assets" assets
+      ok "已创建 assets/ 运营资产骨架（configs/interfaces/standards/manuals，详见 assets/README.md）"
+    fi
+  fi
+  # 检测项目已有运营资产目录（未归入 assets/）→ 提示 AI 处理，不自动移动（防误伤）
+  OPS_DIRS=()
+  for d in config api manual standards docs-manual; do
+    if [ -d "$d" ] && [ ! -d "assets/$d" ]; then
+      OPS_DIRS+=("$d/")
+    fi
+  done
+  if [ "${#OPS_DIRS[@]}" -gt 0 ]; then
+    warn "检测到项目已有运营资产目录（未归入 assets/）：${OPS_DIRS[*]} → 由 AI 按内容判断迁移到 assets/ 对应子目录"
+  fi
+
   if [ "$FOUND_LEGACY" = "0" ]; then
     ok "未检测到旧版文件，项目结构已是最新"
   else
@@ -322,10 +341,14 @@ cmd_migrate() {
 
   # 提示
   echo ""
-  info "migrate 结构层完成。内容层请："
-  echo "  1. 让 AI 读取 MIGRATION-REPORT.md"
-  echo "  2. AI 按规则把 *.legacy.md 内容转移到新文件"
-  echo "  3. 确认后删除 *.legacy.md"
+  info "migrate 结构层完成。"
+  if [ "$FOUND_LEGACY" = "1" ]; then
+    echo "  1. 让 AI 读取 MIGRATION-REPORT.md"
+    echo "  2. AI 按规则把 *.legacy.md 内容转移到新文件"
+    echo "  3. 确认后删除 *.legacy.md"
+  else
+    echo "  项目结构已是最新。下一步：运行 /spec-rocket brainstorm 引导写产品文档（或按需完善 assets/）"
+  fi
 }
 
 # ============================================================

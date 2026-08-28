@@ -44,6 +44,12 @@ pnpm typecheck
 ├── tools/                        # 工作流类工具/脚本
 │   └── _template/
 │
+├── assets/                       # ★ 运营资产 — 被系统/业务直接引用的文件
+│   ├── configs/                  # 配置模板库（.env.example、nginx 模板）
+│   ├── interfaces/               # 对外接口（OpenAPI、API 契约、SDK）
+│   ├── standards/                # 规范库（编码规范、数据字典、术语表）
+│   └── manuals/                  # 说明文档（部署/运维手册、FAQ）
+│
 ├── scripts/                      # 项目工具脚本
 │   ├── bootstrap-project.sh      # ★ 核心脚本：创建新项目/迁移老项目
 │   └── make-pptx.js

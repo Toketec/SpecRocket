@@ -258,6 +258,7 @@ SpecRocket/
 │   ├── CLAUDE.md              ← Claude Code 协作规则
 │   ├── docs/                  ← 产品文档模板
 │   ├── ADR/                   ← 架构决策模板
+│   ├── assets/                ← 运营资产模板（configs/interfaces/standards/manuals）
 │   ├── apps/businesses/tools/ ← 模块模板
 │   └── ...
 ├── README.md         ← 🇨🇳 中文版

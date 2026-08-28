@@ -40,7 +40,15 @@
 | 命令 | 说明 |
 |:----|:------|
 | `/spec-rocket brainstorm` | 按固定顺序生成 4 组文档：产品概览 → 非功能需求 → 视觉设计 → sprint |
-| `/spec-rocket migrate` | 给现有项目嵌入骨架 / 旧版项目升级到最新模板结构 |
+| `/spec-rocket migrate` | 给现有项目嵌入骨架 / 旧版项目升级到最新模板结构（含 assets/ 运营资产骨架补齐） |
 | `/spec-rocket preview` | 生成 dark-theme 可视化预览页 → `docs/preview.html` |
 | `/spec-rocket update` | 一键更新本地 skill（自动检测 AI 工具） |
 | `./spec-rocket` (CLI) | 脚本方式执行 init / update / migrate |
+
+## 运营资产（assets/）
+
+`assets/` 存放**被系统/业务直接引用的工程资产**（配置模板、对外接口、规范库、说明手册），由 **Ops 运营角色**产出与维护。角色边界：`docs/` = PM 产出，`specs/` = Dev 产出，`assets/` = Ops 产出。
+
+- 四类按需取用：`configs/`（配置模板）、`interfaces/`（对外接口）、`standards/`（规范库）、`manuals/`（说明文档）
+- docs/specs 引用本目录文件用**相对链接**，不复制内容（SSOT）
+- 详见模板内 `assets/README.md`

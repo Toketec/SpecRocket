@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.8.0
+version: 2.9.0
 license: MIT
 ---
 
@@ -25,6 +25,7 @@ SpecRocket/                      ← 本仓库
 │   ├── CLAUDE.md               ← Claude Code 协作规则
 │   ├── docs/                   ← 产品文档模板
 │   ├── ADR/                    ← 架构决策模板
+│   ├── assets/                 ← 运营资产模板（configs/interfaces/standards/manuals）
 │   ├── apps/businesses/tools/  ← 模块模板
 │   └── ...
 ├── README.md                   ← 项目介绍
@@ -196,6 +197,7 @@ SpecRocket/                      ← 本仓库
 - **规整 sprints 结构**：检测废弃的 `sprint-000_initial/`（v2.5.0 起废弃）——纯模板副本（文件仍含占位符）直接删除；含真实内容则重命名为 `sprint-000_initial.legacy/` 保留待转移
 - **清理文档中的 000 残留**：AGENTS.md / CLAUDE.md / README.md / README.en.md / ssot-convention*.md / docs/README.md 结构图中的 `sprint-000_initial` 块自动删除（含兄弟节点前缀修正）；正文描述残留写入 MIGRATION-REPORT.md 由 AI 处理
 - **清理方法论残留**：项目根 `ssot-convention*.md` 自动归档到 `archive/`（此文档仅应存在于 SpecRocket 主仓库）
+- **补齐 assets/ 运营资产骨架**：项目无 `assets/` 时自动创建（configs/interfaces/standards/manuals 四类按需取用，详见 `assets/README.md`）；检测到项目已有 `config/` `api/` `manual/` 等运营资产目录 → 提示 AI 按内容判断迁移归入 assets/，**不自动移动**（防误伤）
 - 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
 - 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
 
@@ -233,7 +235,7 @@ SpecRocket/                      ← 本仓库
 |:----|:---------|:---------|
 | 🗺️ **产品地图** | `docs/product-overview.md` | 产品核心功能分区 → 可视化卡片 |
 | 🗺️ **业务地图** | `docs/product-overview.md` 核心场景 + `docs/sprints/` | 用户旅程 / 业务流转关系图 |
-| 🗺️ **架构地图** | `ADR/` 目录 + `apps/` `businesses/` `tools/` | 模块关系 + 技术选型 |
+| 🗺️ **架构地图** | `ADR/` 目录 + `apps/` `businesses/` `tools/` + `assets/` | 模块关系 + 技术选型 + 运营资产（配置/接口/规范/手册） |
 
 下方补充信息（按需展示，无则不显）：
 
