@@ -73,22 +73,30 @@ project-root/
 │
 ├── apps/                             # ★ 前端/客户端应用目录
 │   └── _template/                    # ★ 应用模板（创建新应用时 cp）
-│       └── specs/                    # ★ 规格四文件模板
-│           ├── requirements.md       #   技术方案 + 边界 + 验收条件
-│           ├── plan.md               #   实现步骤 + 文件清单
-│           ├── tasks.md              #   任务拆分 + 验证 + 审计追踪
-│           └── check.md              #   AI 自检 + 人工验收清单
+│       └── specs/                    # ★ 该应用的规格库
+│           ├── _template/            #   规格模板（创建新规格时 cp）
+│           │   ├── requirements.md   #   技术方案 + 边界 + 验收条件
+│           │   ├── plan.md           #   实现步骤 + 文件清单
+│           │   ├── tasks.md          #   任务拆分 + 验证 + 审计追踪
+│           │   └── check.md          #   AI 自检 + 人工验收清单
+│           └── SPEC-APP-001_用户登录/ # ✦ 具体规格（编号+描述，cp _template 创建）
+│               ├── requirements.md
+│               ├── plan.md
+│               ├── tasks.md
+│               └── check.md
 │       └── 应用名/                   # ✦ 开发中用 `cp _template 应用名` 创建
 │           ├── src/                  #   代码目录（开发者创建）
-│           └── specs/                #   该应用的规格文件
+│           └── specs/                #   该应用的规格库（含 _template + 各规格目录）
 │
 ├── businesses/                       # ★ 后端业务服务目录
 │   └── _template/                    # ★ 服务模板
 │       └── specs/
-│           ├── requirements.md
-│           ├── plan.md
-│           ├── tasks.md
-│           └── check.md
+│           ├── _template/
+│           │   ├── requirements.md
+│           │   ├── plan.md
+│           │   ├── tasks.md
+│           │   └── check.md
+│           └── SPEC-BIZ-001_xxx/     # ✦ 具体规格（编号+描述）
 │       └── 服务名/                   # ✦ 同上
 │           ├── src/
 │           └── specs/
@@ -96,10 +104,12 @@ project-root/
 ├── tools/                            # ★ 工具/脚本目录
 │   └── _template/                    # ★ 工具模板
 │       └── specs/
-│           ├── requirements.md
-│           ├── plan.md
-│           ├── tasks.md
-│           └── check.md
+│           ├── _template/
+│           │   ├── requirements.md
+│           │   ├── plan.md
+│           │   ├── tasks.md
+│           │   └── check.md
+│           └── SPEC-TOOL-001_xxx/    # ✦ 具体规格（编号+描述）
 │
 ├── .gitignore                        # ★
 └── LICENSE                           # ★ MIT
@@ -376,19 +386,27 @@ cp -r docs/sprints/sprint-001_xxx/* docs/sprints/sprint-002_xxx/
 
 ### 3.3 apps/ — 前端/客户端应用（Dev 产出）
 
-每个应用一个目录，包含自身代码和 specs：
+每个应用一个目录，包含自身代码和规格库：
 
 ```
 apps/app-name/
 ├── src/               # 应用代码
-└── specs/             # ★ 本应用的规格
-    ├── requirements.md   # 前端架构 + 组件设计 + API 对接方案
-    ├── plan.md           # 实现步骤 + 组件树 + 路由
-    ├── tasks.md          # 任务拆分 + Owner + 验证清单
-    └── check.md          # AI 自检 + 人工验收
+└── specs/             # ★ 本应用的规格库
+    ├── _template/             # 规格模板（cp 建新规格）
+    │   ├── requirements.md   # 前端架构 + 组件设计 + API 对接方案
+    │   ├── plan.md           # 实现步骤 + 组件树 + 路由
+    │   ├── tasks.md          # 任务拆分 + Owner + 验证清单
+    │   └── check.md          # AI 自检 + 人工验收
+    └── SPEC-APP-001_用户注册/  # ✦ 具体规格（编号+描述，cp _template 创建）
+        ├── requirements.md
+        ├── plan.md
+        ├── tasks.md
+        └── check.md
 ```
 
-**Spec ID 格式**: `APP-NNN_{name}`（如 `APP-001_user-registration`）
+**新建规格**: `cp -r apps/app-name/specs/_template apps/app-name/specs/SPEC-APP-001_功能名`
+
+**Spec ID 格式**: `SPEC-APP-NNN_{name}`（如 `SPEC-APP-001_user-registration`）
 
 ### 3.4 businesses/ — 后端业务服务（Dev 产出）
 
@@ -397,14 +415,22 @@ apps/app-name/
 ```
 businesses/service-name/
 ├── src/               # 服务代码
-└── specs/             # ★ 本服务的规格
-    ├── requirements.md   # 架构总览 + 数据模型 + API 设计 + DB 变更
-    ├── plan.md           # 数据层/路由层/业务逻辑层实现步骤
-    ├── tasks.md          # 任务拆分 + 验证清单
-    └── check.md          # AI 自检 + 人工验收
+└── specs/             # ★ 本服务的规格库
+    ├── _template/             # 规格模板
+    │   ├── requirements.md   # 架构总览 + 数据模型 + API 设计 + DB 变更
+    │   ├── plan.md           # 数据层/路由层/业务逻辑层实现步骤
+    │   ├── tasks.md          # 任务拆分 + 验证清单
+    │   └── check.md          # AI 自检 + 人工验收
+    └── SPEC-BIZ-001_用户API/   # ✦ 具体规格（编号+描述）
+        ├── requirements.md
+        ├── plan.md
+        ├── tasks.md
+        └── check.md
 ```
 
-**Spec ID 格式**: `BIZ-NNN_{name}`（如 `BIZ-001_user-api`）
+**新建规格**: `cp -r businesses/service-name/specs/_template businesses/service-name/specs/SPEC-BIZ-001_功能名`
+
+**Spec ID 格式**: `SPEC-BIZ-NNN_{name}`（如 `SPEC-BIZ-001_user-api`）
 
 ### 3.5 tools/ — 工作流工具（Dev 产出）
 
@@ -414,13 +440,21 @@ businesses/service-name/
 tools/tool-name/
 ├── src/               # 工具代码
 └── specs/             # ★ 多次迭代则应包含 specs
-    ├── requirements.md   # 问题定义 + 输入/输出 + 核心逻辑
-    ├── plan.md           # 简洁的执行步骤
-    ├── tasks.md          # 任务跟踪
-    └── check.md          # 命令行验收方式
+    ├── _template/             # 规格模板
+    │   ├── requirements.md   # 问题定义 + 输入/输出 + 核心逻辑
+    │   ├── plan.md           # 简洁的执行步骤
+    │   ├── tasks.md          # 任务跟踪
+    │   └── check.md          # 命令行验收方式
+    └── SPEC-TOOL-001_部署脚本/ # ✦ 具体规格（编号+描述）
+        ├── requirements.md
+        ├── plan.md
+        ├── tasks.md
+        └── check.md
 ```
 
-**Spec ID 格式**: `TOOL-NNN_{name}`（如 `TOOL-001_deploy-script`）
+**新建规格**: `cp -r tools/tool-name/specs/_template tools/tool-name/specs/SPEC-TOOL-001_功能名`
+
+**Spec ID 格式**: `SPEC-TOOL-NNN_{name}`（如 `SPEC-TOOL-001_deploy-script`）
 
 **单次工具**（一次性脚本）：不需要 specs，直接在 `src/` 中用 README 说明。
 **多次迭代的工具**：必须有 specs 四文件，走完整流程。
@@ -506,7 +540,23 @@ ADR-004_api-versioning      → 为什么用 URL prefix 版本化
 
 ### 5.2 四文件模板
 
-每个模块的 `specs/` 下包含 4 个文件：
+每个模块的 `specs/` 下包含 `_template/`（规格模板）和多个"编号+描述"规格目录，每个规格目录内是 4 个文件：
+
+```
+apps/app-name/specs/
+├── _template/                  # 规格模板（cp 建新规格）
+│   ├── requirements.md
+│   ├── plan.md
+│   ├── tasks.md
+│   └── check.md
+└── SPEC-APP-001_用户注册/      # 具体规格（编号+描述）
+    ├── requirements.md
+    ├── plan.md
+    ├── tasks.md
+    └── check.md
+```
+
+**新建规格**: `cp -r specs/_template specs/SPEC-{APP|BIZ|TOOL}-NNN_功能名`，编号三位数递增，描述用下划线连接。
 
 | 文件 | 编写者 | 读者 | 用途 |
 |:----|:-------|:----|:-----|
@@ -523,8 +573,8 @@ ADR-004_api-versioning      → 为什么用 URL prefix 版本化
 
 ```markdown
 ## 依赖项
-- BIZ-001: `businesses/user-service/specs/requirements.md`
-- APP-002: `apps/admin-panel/specs/requirements.md`
+- BIZ-001: `businesses/user-service/specs/SPEC-BIZ-001_用户API/requirements.md`
+- APP-002: `apps/admin-panel/specs/SPEC-APP-002_管理后台/requirements.md`
 ```
 
 在 `requirements.md` 末尾的 **Context from Dependencies** 小节中维护接口摘要（≤15 行）：
@@ -543,8 +593,8 @@ ADR-004_api-versioning      → 为什么用 URL prefix 版本化
 
 ```markdown
 ## 回归测试范围
-- `businesses/user-service/specs/` — 改动了认证接口格式
-- `apps/admin-panel/specs/` — 改动了共享 User 类型
+- `businesses/user-service/specs/SPEC-BIZ-001_用户API/` — 改动了认证接口格式
+- `apps/admin-panel/specs/SPEC-APP-002_管理后台/` — 改动了共享 User 类型
 ```
 
 ---

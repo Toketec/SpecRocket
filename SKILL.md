@@ -211,7 +211,7 @@ SpecRocket/                      ← 本仓库
 | `ui-wireframes.md` | 布局/交互 → `prototypes/prototype.html`；系统图表 → `uml-pack.md` |
 | `user-journey-flows.md` | 旅程总览 → `user-scenarios.md` §1；流程图 → `business-flows.md` |
 | `sprint-000_initial/` | v2.5.0 已废弃——纯模板副本脚本直接删除；含真实内容时 → 把 v1.0 基线设计转移到 `sprint-001/` 对应文件后删除 `.legacy` |
-| 全局 `spec/` + `_catalog.yaml` | 按模块迁移到 `{apps\|businesses\|tools}/*/specs/` 四文件（requirements/plan/tasks/check） |
+| 全局 `spec/` + `_catalog.yaml` | 按模块迁移到 `{apps\|businesses\|tools}/*/specs/` 规格库（每个规格一个"编号+描述"目录：`SPEC-{APP\|BIZ\|TOOL}-NNN_描述/`，内含 requirements/plan/tasks/check） |
 
 **第 3 步：AI 转移后清理**
 - 确认 `*.legacy.md` 内容已全部转移 → 删除 `*.legacy.md` 和 `MIGRATION-REPORT.md`

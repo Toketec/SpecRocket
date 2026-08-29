@@ -130,5 +130,5 @@ stateDiagram-v2
 
 ---
 
-> **写完后做什么**: 将本 sprint 的功能拆解为 spec 组（spec/SPEC-XXX/），由开发者补充架构设计和技术方案。
-> **下一个文档**: 前往 `spec/_template/` 开始为每个 spec 准备四文件。
+> **写完后做什么**: 将本 sprint 的功能拆解为 spec 组（每个规格一个"编号+描述"目录，如 `apps/my-app/specs/SPEC-APP-001_功能名/`），由开发者补充架构设计和技术方案。
+> **下一个文档**: 前往对应模块的 `specs/_template/` 开始为每个 spec 准备四文件（`cp -r specs/_template specs/SPEC-{APP|BIZ|TOOL}-NNN_功能名`）。

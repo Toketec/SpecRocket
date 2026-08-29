@@ -40,23 +40,29 @@
 ├── apps/                          # ★ 前端/客户端应用（每个含 src/ + specs/）
 │   ├── _template/
 │   │   ├── src/                   # 代码目录
-│   │   └── specs/                 # 规格四文件
-│   │       ├── requirements.md    # 技术方案 + 边界 + 验收
-│   │       ├── plan.md            # 实现步骤 + 文件清单
-│   │       ├── tasks.md           # 任务拆分 + 审计追踪
-│   │       └── check.md           # AI 自检 + 人工验收
+│   │   └── specs/                 # 该应用的规格库
+│   │       ├── _template/         # 规格模板（创建新规格时 cp）
+│   │       │   ├── requirements.md  # 技术方案 + 边界 + 验收
+│   │       │   ├── plan.md          # 实现步骤 + 文件清单
+│   │       │   ├── tasks.md         # 任务拆分 + 审计追踪
+│   │       │   └── check.md         # AI 自检 + 人工验收
+│   │       └── SPEC-APP-001_功能名/ # 具体规格（编号+描述，cp _template 创建）
 │   └── app-web/
 │
 ├── businesses/                    # ★ 后端业务服务（同上结构）
 │   ├── _template/
 │   │   ├── src/
 │   │   └── specs/
+│   │       ├── _template/
+│   │       └── SPEC-BIZ-001_功能名/
 │   └── user-service/
 │
 ├── tools/                         # ★ 工具/脚本
 │   └── _template/
 │       ├── src/
 │       └── specs/
+│           ├── _template/
+│           └── SPEC-TOOL-001_功能名/
 │
 ├── AGENTS.md                      # 五步开发流程 AI 规范 ← 先读
 ├── CLAUDE.md                      # 本文件
@@ -73,7 +79,7 @@
 | Step | 谁做 | 你的角色 |
 |:-----|:-----|:---------|
 | **Step 1** | PM | 辅助——润色文档、画 ASCII 流程图、生成 HTML 原型模板 |
-| **Step 2** | Dev + 你（主力） | Dev 给 4 个方向决策 → 你写 ADR + 规格四文件 |
+| **Step 2** | Dev + 你（主力） | Dev 给 4 个方向决策 → 你写 ADR + 规格四文件（`specs/_template/` 复制为 `specs/SPEC-{APP\|BIZ\|TOOL}-NNN_描述/`） |
 | **Step 3** | PM + Dev 评审 | `// 你不参与` |
 | **Step 4** | 你（执行） | 读 spec → 按 plan 实现 → 更新 tasks → 自检 |
 | **Step 5** | Dev 收尾 | 辅助修 bug |

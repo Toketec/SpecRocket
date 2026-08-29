@@ -442,7 +442,7 @@ cmd_migrate() {
       echo "| \`ui-wireframes.md\` | 布局/交互 → \`prototypes/\` 原型；系统图表 → \`uml-pack.md\` |"
       echo "| \`user-journey-flows.md\` | 旅程总览 → \`user-scenarios.md\`；流程图 → \`business-flows.md\` |"
       echo "| \`sprint-000_initial/\` | v2.5.0 已废弃（纯模板副本直接删；含真实内容 → 转移基线设计到 \`sprint-001/\` 后删 .legacy） |"
-      echo "| 全局 \`spec/\` + \`_catalog.yaml\` | 迁移到 \`{apps|businesses|tools}/*/specs/\` 四文件 |"
+      echo "| 全局 \`spec/\` + \`_catalog.yaml\` | 迁移到 \`{apps|businesses|tools}/*/specs/\` 规格库（每个规格一个\"编号+描述\"目录：\`SPEC-{APP|BIZ|TOOL}-NNN_描述/\`，内含 requirements/plan/tasks/check） |"
       echo ""
       echo "## 不符合模板文件处理规则（v2.10.0）"
       echo ""
