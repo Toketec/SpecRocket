@@ -2,6 +2,7 @@
 
 > **编写者**: Dev (后端业务)
 > **所属服务**: `businesses/{service-name}/`
+> **规格路径**: `businesses/{service-name}/specs/SPEC-BIZ-{XXX}_{功能名称}/`（新建规格 = `cp specs/_template/ specs/SPEC-BIZ-{XXX}_{功能名称}/`）
 > **基于冲刺**: `sprints/sprint-NNN/SPRINT-features.md` 中的功能 F{X}
 > **本文档包含架构设计和技术方案**
 

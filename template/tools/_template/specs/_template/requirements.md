@@ -2,6 +2,7 @@
 
 > **编写者**: Dev
 > **所属工具**: `tools/{tool-name}/`
+> **规格路径**: `tools/{tool-name}/specs/SPEC-TOOL-{XXX}_{工具名称}/`（新建规格 = `cp specs/_template/ specs/SPEC-TOOL-{XXX}_{工具名称}/`）
 > **基于冲刺**: `sprints/sprint-NNN/SPRINT-features.md` 中的功能 F{X}
 
 ## 问题

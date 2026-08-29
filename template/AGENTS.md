@@ -289,39 +289,57 @@ project-root/
 │   └── ...
 │
 ├── apps/                      # ★ 前端/客户端应用（每个应用独立）
-│   ├── _template/
+│   ├── _template/             # 应用模板（cp 建新应用）
 │   │   ├── src/               # 代码目录
-│   │   └── specs/             # 自己的规格
-│   │       ├── requirements.md  # 技术方案 + 边界 + 验收条件
-│   │       ├── plan.md          # 实现步骤 + 文件清单
-│   │       ├── tasks.md         # 任务拆分 + 验证 + 审计追踪
-│   │       └── check.md         # AI 自检 + 人工验收清单
+│   │   └── specs/             # 该应用的规格库
+│   │       ├── _template/     # 规格模板（cp 建新规格）
+│   │       │   ├── requirements.md  # 技术方案 + 边界 + 验收条件
+│   │       │   ├── plan.md          # 实现步骤 + 文件清单
+│   │       │   ├── tasks.md         # 任务拆分 + 验证 + 审计追踪
+│   │       │   └── check.md         # AI 自检 + 人工验收清单
+│   │       └── SPEC-APP-001_用户登录/  # 具体规格（编号+描述，cp _template 创建）
+│   │           ├── requirements.md
+│   │           ├── plan.md
+│   │           ├── tasks.md
+│   │           └── check.md
 │   │
 │   ├── app-web/               # 具体应用 — Web 端
 │   │   ├── src/
 │   │   └── specs/
+│   │       ├── _template/
+│   │       └── SPEC-APP-001_xxx/
 │   │
 │   └── app-mobile/            # 具体应用 — 移动端
 │       ├── src/
 │       └── specs/
+│           ├── _template/
+│           └── SPEC-APP-002_xxx/
 │
 ├── businesses/                # ★ 后端业务服务（按领域划分）
 │   ├── _template/
 │   │   ├── src/
 │   │   └── specs/
+│   │       ├── _template/
+│   │       └── SPEC-BIZ-001_xxx/
 │   │
 │   ├── user-service/          # 用户服务
 │   │   ├── src/
 │   │   └── specs/
+│   │       ├── _template/
+│   │       └── SPEC-BIZ-001_xxx/
 │   │
 │   └── order-service/         # 订单服务
 │       ├── src/
 │       └── specs/
+│           ├── _template/
+│           └── SPEC-BIZ-002_xxx/
 │
 ├── tools/                     # ★ 非大型工作流类工具/脚本
 │   └── _template/
 │       ├── src/
 │       └── specs/
+│           ├── _template/
+│           └── SPEC-TOOL-001_xxx/
 │
 ├── .gitignore
 └── LICENSE
@@ -334,9 +352,9 @@ project-root/
 | `docs/` | **稳定层** | 全版本通用的产品规划文档。**不动摇的设计决策放这里，每次迭代的细节放 sprint** |
 | `docs/sprints/` | **版本层** | 每次迭代的完整产品设计容器。PM 在每个版本中更新功能描述、场景、流程图、图表和可交互原型。**上次版本的原型和文档作为历史记录，不覆盖** |
 | `ADR/` | **架构库** | 系统上下文、数据模型、核心流程、技术选型。AI 首次进入项目时先读此目录理解全局 |
-| `apps/*/specs/` | **前端规格** | Step 2/4 产出 |
-| `businesses/*/specs/` | **后端规格** | Step 2/4 产出 |
-| `tools/*/specs/` | **工具规格** | Step 2/4 产出 |
+| `apps/*/specs/_template/` | **前端规格模板** | Step 2/4 产出（每个规格 = `specs/SPEC-APP-{XXX}_描述/` 独立目录） |
+| `businesses/*/specs/_template/` | **后端规格模板** | Step 2/4 产出（每个规格 = `specs/SPEC-BIZ-{XXX}_描述/` 独立目录） |
+| `tools/*/specs/_template/` | **工具规格模板** | Step 2/4 产出（每个规格 = `specs/SPEC-TOOL-{XXX}_描述/` 独立目录） |
 
 > **关键约束**: `docs/` 根目录不存放版本迭代型文档（如场景、流程、图表、原型）。迭代型产品文档必须随版本放入 `docs/sprints/sprint-NNN/`，一个版本一个完整的 sprint 容器。
 
@@ -346,19 +364,27 @@ project-root/
 
 ### 6.1 为什么 specs 分散到模块内
 
-每个模块（apps/web、businesses/user-service、tools/deploy-tool）**拥有自己的 specs/ 子目录**：
+每个模块（apps/web、businesses/user-service、tools/deploy-tool）**拥有自己的 specs/ 子目录**，`specs/` 下每个规格一个"编号+描述"独立目录：
 
 ```
 apps/my-app/
 ├── src/         # 代码
-└── specs/       # 自己的规格
-    ├── requirements.md
-    ├── plan.md
-    ├── tasks.md
-    └── check.md
+└── specs/       # 自己的规格库
+    ├── _template/                  # 规格模板（cp 建新规格）
+    │   ├── requirements.md
+    │   ├── plan.md
+    │   ├── tasks.md
+    │   └── check.md
+    └── SPEC-APP-001_用户登录/      # 具体规格（编号+描述）
+        ├── requirements.md
+        ├── plan.md
+        ├── tasks.md
+        └── check.md
 ```
 
-**原因**: 代码变更时附带的 spec 维护在同一个目录，不会被遗忘。跨模块通过 Context Contract（≤15 行）引用。
+**新建规格**：`cp specs/_template/ specs/SPEC-APP-{XXX}_{功能名称}/`，编号按 `SPEC-{APP|BIZ|TOOL}-{三位数}` 递增，描述用下划线连接。
+
+**原因**: 代码变更时附带的 spec 维护在同一个目录，不会被遗忘；编号+描述目录让每个规格独立可追溯（与 sprint-001_功能名 同款机制）。跨模块通过 Context Contract（≤15 行）引用。
 
 ### 6.2 四文件模板
 
@@ -487,13 +513,13 @@ A 模块想确认依赖方 B 的接口格式，直接在 A 的 `requirements.md`
 ```
 ADR/ (Why — 为什么做这个决策)
   └── ADR-001_database-choice.md "为什么选 PostgreSQL"
-      └── apps/user-service/specs/requirements.md
+      └── apps/user-service/specs/SPEC-BIZ-001_用户表设计/requirements.md
           "基于 PostgreSQL 的 user 表设计"
 
 ADR/ (What — 整体架构)
   └── ADR-002_auth-scheme.md "JWT + refresh token"
       └── businesses/auth-service/specs/
-          实现 JWT 认证的各规格文件
+          实现 JWT 认证的各规格目录（SPEC-BIZ-XXX_描述/）
 ```
 
 - **ADR 是跨 module 的**，一个 ADR 可能影响多个模块的 specs
@@ -610,6 +636,9 @@ cp -r docs/sprints/_template docs/sprints/sprint-001_name
 # 创建新模块
 cp -r apps/_template apps/my-app
 cp -r businesses/_template businesses/my-service
+
+# 创建新规格（在模块内）
+cp -r apps/my-app/specs/_template apps/my-app/specs/SPEC-APP-001_功能名称
 
 # 创建新 ADR
 cp ADR/_template/ADR.md ADR/ADR-003_data-model.md

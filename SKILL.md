@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.11.0
+version: 2.12.0
 license: MIT
 ---
 

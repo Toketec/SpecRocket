@@ -2,6 +2,7 @@
 
 > **编写者**: Dev (前端/客户端)
 > **所属应用**: `apps/{app-name}/`
+> **规格路径**: `apps/{app-name}/specs/SPEC-APP-{XXX}_{功能名称}/`（新建规格 = `cp specs/_template/ specs/SPEC-APP-{XXX}_{功能名称}/`）
 > **基于冲刺**: `sprints/sprint-NNN/SPRINT-features.md` 中的功能 F{X}
 > **本文档包含架构设计和技术方案**
 
