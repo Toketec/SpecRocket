@@ -97,20 +97,13 @@ project-root/
 │                                     #   ✦ 按需取用，不强制全建
 │
 ├── apps/                             # ★ 前端/客户端应用（纯代码域）
-│   ├── _template/                    # ★ 应用模板（创建新应用时 cp）
-│   │   └── src/                      #   代码目录
-│   └── app-web/                      # ✦ 具体应用
-│       └── src/
+│   └── app-web/                      # ✦ 具体应用（框架项目，结构由框架决定）
 │
 ├── businesses/                       # ★ 后端业务服务（纯代码域）
-│   ├── _template/                    # ★ 服务模板
-│   │   └── src/
-│   └── user-service/                 # ✦ 具体服务
-│       └── src/
+│   └── user-service/                 # ✦ 具体服务（框架项目，结构由框架决定）
 │
 ├── tools/                            # ★ 工具/脚本（纯代码域）
-│   └── _template/                    # ★ 工具模板
-│       └── src/
+│   └── backup-tool/                  # ✦ 具体工具（框架项目，结构由框架决定）
 │
 ├── .gitignore                        # ★
 └── LICENSE                           # ★ MIT
@@ -120,7 +113,7 @@ project-root/
 - `docs/` = **稳定层** — 只放全版本通用的产品规划文档（产品概览、非功能需求、视觉规范、白皮书）。**不动摇的设计决策放这里，每次迭代的细节放 sprint**。
 - `sprints/` = **迭代层** — 每次迭代的完整容器：`docs/`（PM 产品设计）+ `specs/`（Dev 技术规格）。**多个 spec 共同促成一次迭代的所有开发任务**。上次迭代的文档和原型作为历史记录，不覆盖。
 - `adrs/` = **架构变动设计库** — 一次大型架构变动 = 一个 adr 文件夹（`architecture.md` 架构总览 + `data-model.md` 数据模型 + `impact.md` 影响注意）。**整个系统的技术设计只出现在这里**，其他目录不承载技术设计。**全局历史累积，不一定每次 sprint 都变架构，所以不放在 sprint 内**。AI 首次进入项目时先读此目录理解全局。
-- `apps/` / `businesses/` / `tools/` = **纯代码实现域** — 只关心实现，不再携带规格。
+- `apps/` / `businesses/` / `tools/` = **纯代码实现域** — 只关心实现，不再携带规格。**每个子目录直接放一个框架项目**（Next.js / Spring Boot / Cargo 等），目录结构由框架脚手架决定，不额外建 `src/` 壳。
 - `assets/` = **运营资产域** — 被系统/业务/外部直接引用的工程资产（配置模板、对外接口、规范库、说明手册），由 **Ops 运营角色**产出与维护。**判定规则：文件是否被代码/部署/外部系统直接引用？是 → assets/；否且是过程文档 → docs/。** docs/specs 引用 assets 用相对链接，不复制内容（SSOT）
 - `AGENTS.md` = **AI 协作入口**，浓缩规范供 AI 读取
 
@@ -429,24 +422,22 @@ cp -r sprints/sp-001-xxx/* sprints/sp-002-xxx/
 
 ### 4.3 apps/ / businesses/ / tools/ — 纯代码实现域（Dev 产出）
 
+**直接放框架项目，结构由框架决定**（不提供 SpecRocket 代码模板，不规定模块内建 `src/`）：
+
 ```
-apps/app-name/
-└── src/               # 应用代码
-
-businesses/service-name/
-└── src/               # 服务代码
-
-tools/tool-name/
-└── src/               # 工具代码
+apps/app-web/                # 前端应用（Next.js 脚手架生成，自带 app/ 等结构）
+businesses/user-service/     # 后端服务（Spring Boot 生成，自带 src/main/ 等结构）
+tools/backup-tool/           # 工具/脚本（cargo new 生成，自带 src/ 等结构）
 ```
 
-> **v3.0 变化**: 代码域不再携带 `specs/`。规格统一聚合在迭代容器 `sprints/sp-NNN-*/specs/` 内，多个 spec 共同促成一次迭代的所有开发任务。代码域只关心实现。
+> **v3.1 变化**: 代码域不再提供 `_template/src/` 空壳模板，**每个子目录直接放一个框架脚手架项目**（Next.js / Spring Boot / Cargo 等），目录结构由框架决定。规格仍统一聚合在迭代容器 `sprints/sp-NNN-*/specs/` 内（v3.0 起），多个 spec 共同促成一次迭代的所有开发任务。
 
-**创建新应用/服务/工具**:
+**创建新应用/服务/工具**（用框架脚手架，不用 cp 模板）:
 
 ```bash
-cp -r apps/_template apps/my-app
-cp -r businesses/_template businesses/my-service
+npx create-next-app@latest apps/app-web                              # 前端（Next.js）
+spring init --dependencies=web,data-jpa businesses/user-service      # 后端（Spring Boot）
+cargo new tools/backup-tool                                          # 工具（Rust）
 ```
 
 ### 4.4 adrs/ — 架构变动设计库（Dev 产出，全局）

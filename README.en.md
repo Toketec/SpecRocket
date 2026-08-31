@@ -226,7 +226,7 @@ SpecRocket/
 │   ├── sprints/_template/     ← Sprint container (docs/ product + specs/ tech)
 │   ├── adrs/                   ← Architecture change design (adr-YYYYMMDD-name/, 3 docs)
 │   ├── assets/                ← Operations asset templates (configs/interfaces/standards/manuals)
-│   ├── apps/businesses/tools/ ← Pure code domain templates (src/, no specs/)
+│   ├── apps/businesses/tools/ ← Pure code domain (framework projects directly, no specs/)
 │   └── ...
 ├── README.md         ← 🇨🇳 Chinese version
 ├── README.en.md      ← 🇬🇧 English version

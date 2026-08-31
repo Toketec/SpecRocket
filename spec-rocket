@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="3.0.0"
+VERSION="3.1.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 

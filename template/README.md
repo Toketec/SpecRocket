@@ -44,16 +44,14 @@ pnpm typecheck
 │   ├── _template/                # 模板（architecture / data-model / impact）
 │   └── adr-20260808-变动名/       # 一次大型变动的完整设计（3 份文档）
 │
-├── apps/                         # 前端/客户端应用（纯代码域）
-│   ├── {app-name}/
-│   └── _template/                # 创建新应用时复制
+├── apps/                         # 前端/客户端应用（纯代码域，直接放框架项目）
+│   └── {app-name}/
 │
-├── businesses/                   # 后端业务服务（纯代码域）
-│   ├── {service-name}/
-│   └── _template/
+├── businesses/                   # 后端业务服务（纯代码域，直接放框架项目）
+│   └── {service-name}/
 │
-├── tools/                        # 工作流类工具/脚本（纯代码域）
-│   └── _template/
+├── tools/                        # 工作流类工具/脚本（纯代码域，直接放框架项目）
+│   └── {tool-name}/
 │
 ├── assets/                       # ★ 运营资产 — 被系统/业务直接引用的文件
 │   ├── configs/                  # 配置模板库（.env.example、nginx 模板）

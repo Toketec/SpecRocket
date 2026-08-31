@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 3.0.0
+version: 3.1.0
 license: MIT
 ---
 
@@ -27,7 +27,7 @@ SpecRocket/                      ← 本仓库
 │   ├── sprints/_template/      ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
 │   ├── adrs/                   ← 架构变动设计模板（adr-YYYYMMDD-名称/，3 份文档）
 │   ├── assets/                 ← 运营资产模板（configs/interfaces/standards/manuals）
-│   ├── apps/businesses/tools/  ← 纯代码域模板（src/，无 specs/）
+│   ├── apps/businesses/tools/  ← 纯代码域模板（直接放框架项目，无 specs/）
 │   └── ...
 ├── README.md                   ← 项目介绍
 ├── LICENSE                     ← MIT License
@@ -185,16 +185,16 @@ SpecRocket/                      ← 本仓库
    | `docs/*` | `./docs/*`（product-overview / non-functional-reqs / visual-design / whitepaper） |
    | `sprints/_template/` | `./sprints/_template/` |
    | `adrs/_template/` | `./adrs/_template/` |
-   | `apps/_template/` | `./apps/_template/` |
-   | `businesses/_template/` | `./businesses/_template/` |
-   | `tools/_template/` | `./tools/_template/` |
+   | `apps/` `.gitkeep` | `./apps/.gitkeep`（代码域直接放框架项目，无 _template） |
+   | `businesses/` `.gitkeep` | `./businesses/.gitkeep` |
+   | `tools/` `.gitkeep` | `./tools/.gitkeep` |
    | `assets/` | `./assets/` |
 
 4. 完成时列出添加的文件清单，告诉用户做了什么
 
 ### 模式 2：旧版 SpecRocket 项目升级（结构迁移 + 内容转移）
 
-> 当项目由旧版本（v2.x）初始化，或用户自行添加了不符合模板结构的文档时使用。**强制更新到最新模板结构（v3.0）。**
+> 当项目由旧版本（v2.x）初始化，或用户自行添加了不符合模板结构的文档时使用。**强制更新到最新模板结构（v3.1）。**
 
 **第 1 步：结构迁移（脚本执行）**
 ```bash

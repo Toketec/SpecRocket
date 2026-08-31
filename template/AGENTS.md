@@ -308,20 +308,13 @@ project-root/
 │   └── ...
 │
 ├── apps/                      # ★ 前端/客户端应用（纯代码域，规格在 sprint 内）
-│   ├── _template/             # 应用模板（cp 建新应用）
-│   │   └── src/               # 代码目录
-│   └── app-web/
-│       └── src/
+│   └── app-web/               # 具体应用（框架项目，结构由框架决定）
 │
 ├── businesses/                # ★ 后端业务服务（纯代码域）
-│   ├── _template/
-│   │   └── src/
-│   └── user-service/
-│       └── src/
+│   └── user-service/          # 具体服务（框架项目，结构由框架决定）
 │
 ├── tools/                     # ★ 工具/脚本（纯代码域）
-│   └── _template/
-│       └── src/
+│   └── backup-tool/           # 具体工具（框架项目，结构由框架决定）
 │
 ├── assets/                    # ★ 运营资产 — 被系统/业务直接引用的文件
 │   ├── README.md              # 定位说明
@@ -552,7 +545,7 @@ curl -fsSL https://raw.githubusercontent.com/Toketec/SpecRocket/main/spec-rocket
 
 # 或手动
 mkdir -p apps/ businesses/ tools/ adrs/ docs/ sprints/
-cp -r {methodology}/apps/_template apps/{existing-app}/
+# 代码域直接放框架项目（用框架脚手架，如 npx create-next-app@latest apps/app-web）
 ```
 
 ### Phase 1: 为存量功能写 Retrospec（3 文件，无 plan.md）
@@ -616,9 +609,9 @@ cd SpecRocket && ./spec-rocket init "项目名"
 # 创建新 sprint（完整容器：docs/ + specs/）
 cp -r sprints/_template sprints/sp-001-功能名
 
-# 创建新模块（纯代码域）
-cp -r apps/_template apps/my-app
-cp -r businesses/_template businesses/my-service
+# 创建新模块（纯代码域，直接用框架脚手架生成项目）
+npx create-next-app@latest apps/my-app   # 前端（Next.js）
+spring init --dependencies=web,data-jpa businesses/my-service  # 后端（Spring Boot）
 
 # 创建新规格（在 sprint 内，编号递增）
 cp -r sprints/sp-001-功能名/specs/_template sprints/sp-001-功能名/specs/spec-001-功能名

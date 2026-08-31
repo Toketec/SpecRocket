@@ -260,7 +260,7 @@ SpecRocket/
 │   ├── sprints/_template/     ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
 │   ├── adrs/                   ← 架构变动设计模板（adr-YYYYMMDD-名称/，3 份文档）
 │   ├── assets/                ← 运营资产模板（configs/interfaces/standards/manuals）
-│   ├── apps/businesses/tools/ ← 纯代码域模板（src/，无 specs/）
+│   ├── apps/businesses/tools/ ← 纯代码域模板（直接放框架项目，无 specs/）
 │   └── ...
 ├── README.md         ← 🇨🇳 中文版
 ├── README.en.md      ← 🇬🇧 English version

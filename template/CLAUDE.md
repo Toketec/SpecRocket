@@ -45,15 +45,13 @@
 │   └── adr-20260808-变动名/        # 一次大型变动的完整设计
 │
 ├── apps/                          # ★ 前端/客户端应用（纯代码域，规格在 sprint 内）
-│   ├── _template/src/
-│   └── app-web/src/
+│   └── app-web/                   # 具体应用（框架项目，结构由框架决定）
 │
 ├── businesses/                    # ★ 后端业务服务（纯代码域）
-│   ├── _template/src/
-│   └── user-service/src/
+│   └── user-service/              # 具体服务（框架项目，结构由框架决定）
 │
 ├── tools/                         # ★ 工具/脚本（纯代码域）
-│   └── _template/src/
+│   └── backup-tool/               # 具体工具（框架项目，结构由框架决定）
 │
 ├── assets/                        # ★ 运营资产 — 被系统/业务直接引用的文件
 │   ├── configs/                   # 配置模板库（.env.example、nginx 模板）
@@ -189,9 +187,9 @@ curl ... | bash -s preview
 # 创建新 sprint（完整容器：docs/ + specs/）
 cp -r sprints/_template sprints/sp-001-功能名
 
-# 创建新模块（纯代码域）
-cp -r apps/_template apps/my-app
-cp -r businesses/_template businesses/my-service
+# 创建新模块（纯代码域，直接用框架脚手架生成项目）
+npx create-next-app@latest apps/my-app                # 前端（Next.js）
+spring init --dependencies=web,data-jpa businesses/my-service  # 后端（Spring Boot）
 
 # 创建新规格（在 sprint 内，编号递增）
 cp -r sprints/sp-001-功能名/specs/_template sprints/sp-001-功能名/specs/spec-001-功能名
