@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 3.2.1
+version: 3.3.0
 license: MIT
 ---
 
@@ -41,7 +41,7 @@ SpecRocket/                      ← 本仓库
 |:----|:------|
 | `init [项目名]` | 从 template/ 目录复制骨架。无参=当前目录，有参=新建项目目录 |
 | `brainstorm` | 引导用户描述产品 → 自动生成产品文档 + 创建 sprint |
-| `migrate` | ① 给现有项目嵌入骨架；② 旧版 SpecRocket 项目强制升级到最新模板结构（转移 → 收敛 → 保留 → 删除，零残留） |
+| `migrate` | 项目重构：介入 → 理解 → 保持 → 重构（不区分是否 SpecRocket 项目，保持原有设计不变，重构到最新模板结构，零残留） |
 | `preview` | 扫描项目 → 生成 dark-theme 可视化预览页 |
 | `update` | 一键更新本地 skill（自动检测用户使用的 AI 工具，按工具安装位置同步） |
 
@@ -161,57 +161,49 @@ SpecRocket/                      ← 本仓库
 
 ---
 
-## `/spec-rocket migrate` — 嵌入骨架 / 旧版项目升级
+## `/spec-rocket migrate` — 项目重构（介入 → 理解 → 保持 → 重构）
 
-**用途：** 两种模式：
-- **模式 1**：给已有项目（非 SpecRocket）添加骨架文件
-- **模式 2**：旧版 SpecRocket 项目强制升级到最新模板结构（含用户自定义文档的内容转移）
+**用途：** **不区分项目是否 SpecRocket 基础**——直接介入任何项目，理解项目现状，在**保持原有设计不变**的前提下，重构到最新模板结构，零残留。
 
-### 模式 1：嵌入骨架（新增文件）
+### 统一流程（五步）
 
-**执行规则：** 只添加不存在的文件，不修改现有代码。从 template/ 中复制。
+```
+① 介入   CLI 扫描项目结构（旧结构/游离内容/骨架缺失 → 生成报告）
+② 理解   AI 读项目：README + 源码结构 + 现有文档 → 理解产品/业务/技术现状与设计意图
+③ 保持   原有设计不变：内容转移不丢失；业务设计保留（如 visual-design 业务设计 → prototypes.md）
+④ 重构   补齐最新骨架 + 迁移旧结构 + 收敛游离文档 → 符合最新模板标准
+⑤ 验收   零残留检查 → 删除报告与 .legacy → 完成
+```
 
-**操作步骤：**
-1. **获取模板：** 如果当前不在 SpecRocket 仓库内，先克隆到临时目录
-2. 对每个文件，检查目标目录是否已存在：
-   - 已存在 → 跳过（不覆盖）
-   - 不存在 → 从 template/ 对应路径复制
-3. **添加清单（源路径 → 目标路径）：**
-
-   | 源（template/ 内） | 目标 |
-   |:-----------------|:-----|
-   | `AGENTS.md` | `./AGENTS.md` |
-   | `.gitignore` | `./.gitignore` |
-   | `docs/*` | `./docs/*`（product-overview / non-functional-reqs / visual-design / whitepaper） |
-   | `sprints/_template/` | `./sprints/_template/` |
-   | `adrs/_template/` | `./adrs/_template/` |
-   | `apps/` `.gitkeep` | `./apps/.gitkeep`（代码域直接放框架项目，无 _template） |
-   | `businesses/` `.gitkeep` | `./businesses/.gitkeep` |
-   | `tools/` `.gitkeep` | `./tools/.gitkeep` |
-   | `assets/` | `./assets/` |
-
-4. 完成时列出添加的文件清单，告诉用户做了什么
-
-### 模式 2：旧版 SpecRocket 项目升级（结构迁移 + 内容转移）
-
-> 当项目由旧版本（v2.x）初始化，或用户自行添加了不符合模板结构的文档时使用。**强制更新到最新模板结构（v3.1）。**
-
-**第 1 步：结构迁移（脚本执行）**
+**第 1 步：介入（脚本执行）**
 ```bash
 ./spec-rocket migrate [项目路径]     # 默认当前目录
 ```
-脚本会：
+脚本扫描并处理结构层：
 - **迁移 sprint 容器**：`docs/sprints/sprint-NNN_xxx/` → `sprints/sp-NNN-xxx/docs/`（重命名 + 改路径；检测旧版文件 `ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` 报告由 AI 转移）
 - **迁移模块规格**：`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/` → 按 spec 头部「基于冲刺」字段归入 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（脚本报告，AI 执行内容转移 + 重新编号）
 - **迁移架构变动设计**：`ADR/ADR-NNN_xxx.md`（旧决策记录）→ `adrs/adr-YYYYMMDD-xxx/`（文件夹，3 份文档；内容按新语义收敛由 AI 整合）
 - **清理废弃目录**：`sprint-000_initial/`（纯模板直接删；含内容转 `.legacy` 待转移）；根目录 `ssot-convention*.md` 归档到 `archive/`
-- **补齐新骨架**：`docs/whitepaper.md`、`sprints/_template/`（docs + specs，含 prototypes/ 的 prototypes.md + prototype.html）、`adrs/_template/`
+- **处理遗留 LICENSE**：模板默认证书（MIT + Toketec 署名）→ 归档；自定义证书 → 保留
 - **扫描 visual-design 混入业务设计**：检测 `docs/visual-design.md` 中疑似业务形态（页面/布局/内容/线框关键词）→ 报告 AI 转移到 `sprints/*/docs/prototypes/prototypes.md`，visual-design.md 只留审美边界
 - **扫描游离文档**：docs/ 全递归（排除 sprints/）+ 根目录非白名单内容 → 报告收敛
 - **扫描根目录非规范项** → 报告转移收敛到 assets/ 对应子目录
 - 生成 `MIGRATION-REPORT.md`
 
-**第 2 步：内容转移（AI 执行，按迁移映射表）**
+**第 2 步：理解（AI 执行）**
+
+AI 在动手前先读项目——**理解是保持的前提，不知道原有设计就无法在重构中保留它**：
+
+| 读什么 | 理解什么 |
+|:------|:--------|
+| `README.md` + 根目录文件 | 项目是什么、主语言、构建工具 |
+| 源码目录结构 | 模块划分、领域边界 |
+| 现有文档（docs/ 等） | 已有产品/业务设计意图 |
+| 关键配置（package.json / Cargo.toml 等） | 技术栈 |
+
+**第 3 步：保持（AI 执行，按迁移映射表）**
+
+原有设计全部保留——内容转移不丢失、业务设计归位：
 
 | 旧文件 | 内容去向 |
 |:-------|:---------|
@@ -225,11 +217,18 @@ SpecRocket/                      ← 本仓库
 | 全局 `spec/` + `_catalog.yaml` | 内容归入对应冲刺 specs/ 或 archive/（AI 判断） |
 | `sprint-000_initial.legacy/` | 基线设计转移至 `sp-001-*/docs/` 后删除 |
 
-**第 3 步：AI 转移后清理**
+**第 4 步：重构（脚本 + AI）**
+
+- **补齐新骨架**（只添加不存在的文件，不覆盖已有内容）：`AGENTS.md`、`.gitignore`、`docs/*`（product-overview / non-functional-reqs / visual-design / whitepaper）、`sprints/_template/`（docs + specs，含 prototypes/ 的 prototypes.md + prototype.html）、`adrs/_template/`、`apps|businesses|tools/` `.gitkeep`、`assets/`
+- **已有 sprint 补齐**：`prototypes/prototypes.md` 缺失时从模板复制（UI 设计文档）
+- **收敛游离文档**：按映射表归入对应 sprint docs/ 或 assets/ 或 archive/
+
+**第 5 步：验收（AI 执行）**
 - 确认 `*.legacy.md` 内容已全部转移 → 删除 `*.legacy.md` 和 `MIGRATION-REPORT.md`
 - 更新 AGENTS.md 目录结构描述（如有手动改动）
+- **最终目录结构完全符合最新规范，零残留**
 
-> **迁移原则**：转移 → 收敛 → 保留 → 删除。旧文档/冲刺/规格优先尽量对原始内容做转移；不方便转移的做收敛；不方便收敛的尽量保留信息不丢失；最后删除。**最终保持目录结构完全符合最新规范，零残留。**
+> **重构原则**：转移 → 收敛 → 保留 → 删除。旧文档/冲刺/规格优先尽量对原始内容做转移；不方便转移的做收敛；不方便收敛的尽量保留信息不丢失；最后删除。
 
 ---
 
@@ -362,7 +361,7 @@ AI：已进入 ~/projects/my-app（空目录）
 → 你：/spec-rocket preview
 → AI：分析现有项目 → 生成全貌预览
 → 你：/spec-rocket migrate
-→ AI：嵌入骨架（不碰代码）
+→ AI：重构现有项目（介入 → 理解 → 保持原有设计 → 重构到最新标准）
 → 或：/spec-rocket brainstorm
 → AI：引导描述产品 → 生成文档
 ```

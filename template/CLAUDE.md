@@ -175,7 +175,7 @@ curl -fsSL https://raw.githubusercontent.com/Toketec/SpecRocket/main/spec-rocket
 # 引导填充产品文档
 curl ... | bash -s brainstorm
 
-# 给现有项目嵌入骨架 / 旧版项目升级
+# 项目重构（介入 → 理解 → 保持 → 重构，不区分是否 SpecRocket 项目）
 curl ... | bash -s migrate
 
 # 生成项目预览页

@@ -162,7 +162,7 @@ You: Enter ~/projects/legacy-app
 → You: /spec-rocket preview
 → AI: Analyzes the project → generates full overview
 → You: /spec-rocket migrate
-→ AI: Embeds skeleton (zero code change)
+→ AI: Reconstructs the project (intervene → understand → preserve original design → rebuild to latest standard)
 → Or: /spec-rocket brainstorm
 → AI: Guides you to describe the product → generates docs
 ```
@@ -177,7 +177,7 @@ You: Enter ~/projects/legacy-app
 |:--------|:-------------|:---------|:----------|
 | `init` | Bootstrap skeleton + git init | ⚡ 1 second | 📟 Manual / 🤖 Slash command |
 | `brainstorm` | Guided product doc → sprint creation | 💬 5 questions | 🤖 AI slash command |
-| `migrate` | Embed skeleton / upgrade legacy project to latest structure (transfer → fold → preserve → delete, zero residue) | 🔄 Zero code touch | 🤖 AI slash command |
+| `migrate` | Project reconstruction: intervene → understand → preserve → rebuild (works on any project, preserves original design, rebuilds to latest template structure, zero residue) | 🔄 Zero code touch | 🤖 AI slash command |
 | `preview` | Generate full project overview page | 👁️ Instant | 🤖 AI slash command |
 | `update` | One-click update local skill (auto-detect AI tools) | ⚡ Instant | 📟 Manual / 🤖 Slash command |
 
