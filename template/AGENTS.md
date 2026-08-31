@@ -98,7 +98,7 @@
 | 可以做的 | 不可以做的 |
 |:--------|:----------|
 | 润色产品文档文案 | ❌ 决定业务流程 |
-| 画 Mermaid 流程图（环境不支持时用 ASCII） | ❌ 定义验收条件 |
+| 画 Mermaid 流程图 | ❌ 定义验收条件 |
 | 生成 HTML 原型模板 | ❌ 写技术方案 |
 | 检查 sprint 文档的完整性 | |
 
@@ -106,18 +106,18 @@
 
 | 文件 | 必需度 | 说明 |
 |:----|:-----:|:-----|
-| `docs/product-overview.md` | ⭐⭐⭐ | 用户画像、核心场景、术语表。所有后续文档的锚点 |
+| `docs/product-overview.md` | ⭐⭐⭐ | 用户画像、核心场景、术语表。后续文档锚点 |
 | `docs/non-functional-reqs.md` | ⭐⭐⭐ | **必须存在**，无要求也要写一行占位。性能/SLA/安全/合规基线 |
-| `docs/visual-design.md` | ⭐⭐⭐ | **必须存在**，无 UI 也要写一行占位。设计系统 token / UI 框架选型 |
-| `docs/whitepaper.md` | ⭐⭐ | **建议存在**，无对外需求可一行占位。产品愿景/市场定位/核心理念 |
-| `sprints/sp-NNN-*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
-| `sprints/sp-NNN-*/docs/user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
-| `sprints/sp-NNN-*/docs/business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态，Mermaid）。**业务闭环一眼可见**，Dev 理解流程的关键 |
-| `sprints/sp-NNN-*/docs/uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制**，极简项目可一行占位 |
-| `sprints/sp-NNN-*/docs/prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示** |
+| `docs/visual-design.md` | ⭐⭐⭐ | **必须存在**，无 UI 也要写一行占位。全局唯一审美边界（颜色/大小/设计语言/风格/动效），**禁业务设计** |
+| `docs/whitepaper.md` | ⭐⭐ | **建议存在**，无对外需求可一行占位。愿景/市场/价值/商机，**质量门槛：全盘视野/无版本关联/低认知门槛** |
+| `sprints/sp-NNN-*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点项目建议写。功能索引+路线图 |
+| `sprints/sp-NNN-*/docs/user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览 + 用例清单。Dev 理解业务的基础 |
+| `sprints/sp-NNN-*/docs/business-flows.md` | ⭐⭐⭐ | 核心业务流程图（Mermaid）。**业务闭环一眼可见** |
+| `sprints/sp-NNN-*/docs/uml-pack.md` | ⭐⭐ | 软件工程图表包。**按需最小化绘制**，极简项目可一行占位 |
+| `sprints/sp-NNN-*/docs/prototypes/` | ⭐⭐ | 客户端建议做：**prototypes.md**（页面结构/布局/内容/线框/文案）+ **prototype.html**（交互原型） |
 | `sprints/sp-NNN-*/docs/SPRINT-features.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
 
-> ⚠️ **重要**：`non-functional-reqs.md` 和 `visual-design.md` 的必需度已从 ⭐⭐ 提升为 ⭐⭐⭐，理由：这两个文件过去常被 AI 漏写，导致技术约束和视觉方向有空白。即使项目极简（纯脚本/CLI/无 UI），也至少写入一行占位说明为什么不需要。
+> ⚠️ 必填（⭐⭐⭐）：`non-functional-reqs.md` 与 `visual-design.md` 过去常被 AI 漏写，极简项目也要一行占位说明为什么不需要。
 
 ### 📋 编辑顺序（必须遵守，不跳序）
 
@@ -131,7 +131,7 @@ Step 1 中文档按以下顺序编辑，每步完成后再进入下一步：
 | 4️⃣ | `docs/whitepaper.md` | 白皮书（愿景/定位），影响对外叙事 |
 | 5️⃣ | `sprints/sp-NNN-*/docs/` | 版本迭代设计，依赖前四步的全局决策 |
 
-> 例如：一个纯脚本工具 → 1️⃣产品概览 → 2️⃣"无特殊非功能需求要求"占位 → 3️⃣"无前端界面，不涉及视觉设计"占位 → 4️⃣"内部工具，无对外白皮书"占位 → 5️⃣sprint。
+> 例如：纯脚本工具 → 1️⃣产品概览 → 2️⃣"无特殊非功能需求要求"占位 → 3️⃣"无前端界面，不涉及视觉设计"占位 → 4️⃣"内部工具，无对外白皮书"占位 → 5️⃣sprint。
 
 ### 📌 占位规则
 
@@ -254,7 +254,7 @@ Dev 发现边界 bug → AI 推荐修复 → Dev 确认。
     - 产品设计文档至少包含 **1 个 Mermaid 流程图**（用户旅程总览或核心业务泳道图），让业务闭环一眼可见；复杂交互配时序图，有状态机配状态图
     - `uml-pack.md` 遵循**最小化数量原则**：按项目实际需要按需绘制，不追求全量；能用一个图说清就不画第二个，极简项目整文件一行占位
     - 工具环境不支持 Mermaid 渲染时，用 ASCII 图替代并标注「ASCII 备选」
-12. **禁止自动浏览器验证原则**: 非代码开发阶段（文档/原型产出）不进行自动浏览器验证，节省时间和 token；交互原型（`prototypes/*.html`）交由 PM 人工验证
+12. **禁止自动浏览器验证原则**: 非代码开发阶段（文档/原型产出）不进行自动浏览器验证，节省时间和 token；交互原型（`prototypes/prototype.html`）交由 PM 人工验证
 
 ---
 
@@ -284,8 +284,9 @@ project-root/
 │   │   │   ├── user-scenarios.md     # 本版本用户旅程 + 用例
 │   │   │   ├── business-flows.md     # 核心业务流程图（泳道/时序/状态，Mermaid 必写）
 │   │   │   ├── uml-pack.md           # UML 图表包（按需，最小化原则）
-│   │   │   └── prototypes/           # 本版本的可交互 HTML 原型
-│   │   │       └── prototype.html
+│   │   │   └── prototypes/           # UI 设计（prototypes.md）+ 交互原型（prototype.html）
+│   │   │       ├── prototypes.md     # 本版本页面结构/布局/内容/线框/文案
+│   │   │       └── prototype.html    # 可点击交互原型（纯演示）
 │   │   └── specs/             # ★ 本次迭代的规格库（Dev 产出）
 │   │       ├── _template/     # 规格模板（cp 建新规格）
 │   │       │   ├── requirements.md  # 技术方案 + 边界 + 验收条件
@@ -618,6 +619,6 @@ cp -r sprints/sp-001-功能名/specs/_template sprints/sp-001-功能名/specs/sp
 # 创建新 adr（一次大型变动 = 一个文件夹，3 份文档）
 cp -r adrs/_template adrs/adr-20260808-变动名
 
-# 创建新原型
-cp sprints/_template/docs/prototypes/prototype.html sprints/sp-001-功能名/docs/prototypes/
+# 创建新原型（UI 设计文档 + 交互原型）
+cp -r sprints/_template/docs/prototypes sprints/sp-001-功能名/docs/
 ```

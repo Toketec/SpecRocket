@@ -24,8 +24,9 @@
 │   │   │   ├── user-scenarios.md       # 用户旅程 + 用例
 │   │   │   ├── business-flows.md       # 核心业务流程图（泳道/时序/状态）
 │   │   │   ├── uml-pack.md             # UML 图表包（按需，最小化原则）
-│   │   │   └── prototypes/             # 可交互 HTML 原型
-│   │   │       └── prototype.html
+│   │   │   └── prototypes/             # UI 设计（prototypes.md）+ 交互原型（prototype.html）
+│   │   │       ├── prototypes.md       # 本版本页面结构/布局/内容/线框/文案
+│   │   │       └── prototype.html      # 可点击交互原型（纯演示）
 │   │   └── specs/                 # ★ 本次迭代的规格库（Dev 产出）
 │   │       ├── _template/         # 规格模板（cp 建新规格）
 │   │       │   ├── requirements.md  # 技术方案 + 边界 + 验收
@@ -196,8 +197,8 @@ cp -r sprints/sp-001-功能名/specs/_template sprints/sp-001-功能名/specs/sp
 # 创建新 adr（一次大型变动 = 一个文件夹，3 份文档）
 cp -r adrs/_template adrs/adr-20260808-变动名
 
-# 创建新原型
-cp sprints/_template/docs/prototypes/prototype.html sprints/sp-001-功能名/docs/prototypes/
+# 创建新原型（UI 设计文档 + 交互原型）
+cp -r sprints/_template/docs/prototypes sprints/sp-001-功能名/docs/
 ```
 
 > 本文件由 SpecRocket 模板自动生成。`{项目名}` 占位符会在 `init` 时自动替换。

@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="3.2.0"
+VERSION="3.2.1"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -331,6 +331,15 @@ cmd_migrate() {
       ok "    补齐: docs/$f"
     fi
   done
+  # 已有 sprint 容器补齐 prototypes.md（UI 设计文档，v3.2.1）
+  if [ -d sprints ]; then
+    while IFS= read -r pd; do
+      if [ ! -f "$pd/prototypes.md" ] && [ -f "$TEMPLATE/sprints/_template/docs/prototypes/prototypes.md" ]; then
+        cp "$TEMPLATE/sprints/_template/docs/prototypes/prototypes.md" "$pd/prototypes.md"
+        ok "    补齐: $pd/prototypes.md（UI 设计文档）"
+      fi
+    done < <(find sprints -maxdepth 5 -type d -name prototypes 2>/dev/null || true)
+  fi
   # sprints/_template/
   if [ ! -d sprints/_template ] && [ -d "$TEMPLATE/sprints/_template" ]; then
     mkdir -p sprints
@@ -421,6 +430,19 @@ cmd_migrate() {
   done < <(find . -maxdepth 1 -type d ! -name "." 2>/dev/null || true)
 
   # ═══════════════════════════════════════════════
+  # 6b. visual-design 混入业务设计扫描（v3.2.1）
+  # ═══════════════════════════════════════════════
+  VD_SCAN=0
+  VD_HITS=""
+  if [ -f docs/visual-design.md ]; then
+    VD_HITS=$(grep -nE "首页|列表页|详情页|登录页|注册页|购物车|导航栏|线框|框线图|页面结构|业务字段" docs/visual-design.md 2>/dev/null | head -10 || true)
+    if [ -n "$VD_HITS" ]; then
+      VD_SCAN=1
+      REPORT_NEEDED=1
+    fi
+  fi
+
+  # ═══════════════════════════════════════════════
   # 7. 报告输出
   # ═══════════════════════════════════════════════
   if [ "${#LEGACY_NOTES[@]}" -gt 0 ]; then
@@ -442,6 +464,11 @@ cmd_migrate() {
       echo "    - $f"
     done
     REPORT_NEEDED=1
+  fi
+  if [ "$VD_SCAN" = "1" ]; then
+    warn "docs/visual-design.md 疑似混入业务设计（关键词命中；含模板示例词的行可忽略，请 AI 判断）："
+    echo "$VD_HITS" | sed 's/^/    /'
+    echo "    → 确为业务设计时：转移到 sprints/*/docs/prototypes/prototypes.md，visual-design.md 只留审美边界"
   fi
   if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
     warn "检测到 assets/ 内散落项（规则2：归位到 configs/interfaces/standards/manuals）："
@@ -490,6 +517,12 @@ cmd_migrate() {
         for sp in "${MODULE_SPECS[@]}"; do
           echo "- $sp/"
         done
+        echo ""
+      fi
+      if [ "$VD_SCAN" = "1" ]; then
+        echo "### visual-design.md 疑似业务设计（AI 判断后转移到 prototypes.md）"
+        echo ""
+        echo "$VD_HITS" | sed 's/^/- /'
         echo ""
       fi
       if [ "${#STRAY_DOCS[@]}" -gt 0 ] || [ "${#ROOT_STRAY_R1[@]}" -gt 0 ]; then

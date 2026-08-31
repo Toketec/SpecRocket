@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 3.2.0
+version: 3.2.1
 license: MIT
 ---
 
@@ -111,8 +111,8 @@ SpecRocket/                      ← 本仓库
 |:--:|:----|:-----|
 | 1️⃣ | `docs/product-overview.md` | 全局锚点，定义产品是什么 |
 | 2️⃣ | `docs/non-functional-reqs.md` | 技术约束基线（性能/安全/合规） |
-| 3️⃣ | `docs/visual-design.md` | 视觉方向（或明确无 UI） |
-| 4️⃣ | `docs/whitepaper.md` | 白皮书（愿景/定位/理念） |
+| 3️⃣ | `docs/visual-design.md` | 全局审美边界（颜色/大小/设计语言/风格/动效），**禁业务设计** |
+| 4️⃣ | `docs/whitepaper.md` | 白皮书（愿景/价值/商机，**质量门槛**） |
 | 5️⃣ | `sprints/sp-001-功能名/` | 版本迭代设计 |
 
 > 每步完成后再进入下一步。即使确定本项目无 UI/无特殊非功能需求/无对外白皮书，2️⃣3️⃣4️⃣也必须写一行占位（参见「占位规则」）。
@@ -145,10 +145,10 @@ SpecRocket/                      ← 本仓库
    - 有 → 按模板填写关键指标
    - 无 → 写入占位行
 4. **阶段③** — 写 visual-design.md：判断项目是否有前端界面
-   - 有 UI → 根据产品类型选策略（完整设计系统 / UI框架定制 / 纯框架默认）
+   - 有 UI → 根据产品类型选策略（完整设计系统 / UI框架定制 / 纯框架默认）；**只定义审美边界（颜色/字体/间距/动效/组件视觉属性），禁止写具体页面/布局/内容/线框**（这些进 sprint 的 `prototypes/prototypes.md`）
    - 纯后端/脚本/CLI → 写入占位行
 5. **阶段④** — 写 whitepaper.md：判断是否有对外白皮书需求
-   - 对外产品 → 填写愿景/定位/理念
+   - 对外产品 → **按质量门槛写完整**：全盘视野、无版本关联、产品专家+商业精英双视角、痛点→收益→商机、低认知门槛
    - 内部工具 → 写入占位行
 6. **阶段⑤** — 创建 sp-001：一个问题引导
 
@@ -205,7 +205,8 @@ SpecRocket/                      ← 本仓库
 - **迁移模块规格**：`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/` → 按 spec 头部「基于冲刺」字段归入 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（脚本报告，AI 执行内容转移 + 重新编号）
 - **迁移架构变动设计**：`ADR/ADR-NNN_xxx.md`（旧决策记录）→ `adrs/adr-YYYYMMDD-xxx/`（文件夹，3 份文档；内容按新语义收敛由 AI 整合）
 - **清理废弃目录**：`sprint-000_initial/`（纯模板直接删；含内容转 `.legacy` 待转移）；根目录 `ssot-convention*.md` 归档到 `archive/`
-- **补齐新骨架**：`docs/whitepaper.md`、`sprints/_template/`（docs + specs）、`adrs/_template/`
+- **补齐新骨架**：`docs/whitepaper.md`、`sprints/_template/`（docs + specs，含 prototypes/ 的 prototypes.md + prototype.html）、`adrs/_template/`
+- **扫描 visual-design 混入业务设计**：检测 `docs/visual-design.md` 中疑似业务形态（页面/布局/内容/线框关键词）→ 报告 AI 转移到 `sprints/*/docs/prototypes/prototypes.md`，visual-design.md 只留审美边界
 - **扫描游离文档**：docs/ 全递归（排除 sprints/）+ 根目录非白名单内容 → 报告收敛
 - **扫描根目录非规范项** → 报告转移收敛到 assets/ 对应子目录
 - 生成 `MIGRATION-REPORT.md`
@@ -215,8 +216,9 @@ SpecRocket/                      ← 本仓库
 | 旧文件 | 内容去向 |
 |:-------|:---------|
 | `ux-flows.md` | 旅程部分 → `sprints/sp-NNN-*/docs/user-scenarios.md`；流程部分 → `business-flows.md` |
-| `ui-wireframes.md` | 布局/交互 → `docs/prototypes/prototype.html`；系统图表 → `uml-pack.md` |
+| `ui-wireframes.md` | 布局/交互 → `docs/prototypes/prototypes.md` + `prototype.html`；系统图表 → `uml-pack.md` |
 | `user-journey-flows.md` | 旅程总览 → `user-scenarios.md`；流程图 → `business-flows.md` |
+| `visual-design.md` 混入的业务设计（页面/布局/内容/线框） | → `sprints/sp-NNN-*/docs/prototypes/prototypes.md`（无对应冲刺 → 最近冲刺或 archive/）；visual-design.md 只留审美边界 |
 | `docs/sprints/sprint-NNN_xxx/` 其余文档 | → `sprints/sp-NNN-xxx/docs/` 对应文件 |
 | `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | → 归属冲刺的 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（四文件；重新编号；头部改写覆盖范围） |
 | `ADR/ADR-NNN_xxx.md` | → `adrs/adr-YYYYMMDD-xxx/`（architecture / data-model / impact；旧内容整合进 architecture，其余待 AI 收敛） |

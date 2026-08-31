@@ -57,8 +57,9 @@ project-root/
 │   │   │   ├── user-scenarios.md     #   本版本用户旅程 + 用例
 │   │   │   ├── business-flows.md     #   核心业务流程图（泳道/时序/状态，必写）
 │   │   │   ├── uml-pack.md           #   UML 图表包（按需，最小化原则）
-│   │   │   └── prototypes/           #   本版本的可交互 HTML 原型
-│   │   │       └── prototype.html
+│   │   │   └── prototypes/           #   UI 设计（prototypes.md）+ 交互原型（prototype.html）
+│   │   │       ├── prototypes.md     #   本版本页面结构/布局/内容/线框/文案
+│   │   │       └── prototype.html    #   可点击交互原型（纯演示）
 │   │   └── specs/                    # ★ 本次迭代的规格库（Dev 产出）
 │   │       ├── _template/            #   规格模板（cp 建新规格）
 │   │       │   ├── requirements.md   #   技术方案 + 架构 + 边界 + 验收条件
@@ -184,7 +185,7 @@ project-root/
 | `sprints/*/docs/user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
 | `sprints/*/docs/business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态）。**业务闭环一眼可见** |
 | `sprints/*/docs/uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制** |
-| `sprints/*/docs/prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示** |
+| `sprints/*/docs/prototypes/` | ⭐⭐ | 客户端项目建议做：**prototypes.md**（本版本页面结构/布局/内容/线框/文案）+ **prototype.html**（交互原型） |
 | `sprints/*/docs/SPRINT-features.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
 
 **编辑顺序（必须遵守，不跳序）**:
@@ -347,22 +348,24 @@ QA 跑人工验收项。如果项目没有专职 QA，Dev 自行验收，PM 确�
 |:---------|:----|:----------|:--------:|:----:|
 | `product-overview.md` | 用户画像、核心场景、价值主张、成功指标、**业务术语表** | PRD 的"背景/目标/用户" | 200 行 | ✅ |
 | `non-functional-reqs.md` | **非功能需求** — 性能/SLA/安全/合规/埋点/可观测性 | 传统 PRD 的非功能章节 | 不限 | ✅ |
-| `visual-design.md` | **视觉设计规范** — 设计系统 token / UI框架选型与定制 / 组件清单 / 品牌资产 | Figma Design System / UI Kit | 不限 | ✅ |
-| `whitepaper.md` | **白皮书** — 产品愿景/市场定位/核心价值/技术理念 | 对外介绍材料 | 不限 | ⭐⭐ |
+| `visual-design.md` | **视觉设计规范** — 全局唯一审美边界（颜色/大小/设计语言/风格/动效/间隔），**禁业务设计**；组件仅记跨版本稳定视觉属性 | Figma Design System / UI Kit | 不限 | ✅ |
+| `whitepaper.md` | **白皮书** — 愿景/市场/价值/商机；**质量门槛：全盘视野/无版本关联/双视角/低认知门槛** | 对外介绍材料 | 不限 | ⭐⭐ |
 | `competition-strategy.md`（可选） | 竞品对比、定位、差异化 | 竞品分析 PPT | — | ❌ |
 | `judge-qa.md`（可选） | 评委/投资人 Q&A 预演 | 答辩准备 | — | ❌ |
 
 > ⚠️ **必填规则**：`non-functional-reqs.md` 和 `visual-design.md` 是 **必填文件**，即使项目极简（纯脚本/CLI/无 UI）也必须存在。无实质内容时写一行占位说明「为什么不需要」，不留空白。`whitepaper.md` 建议存在，内部工具可一行占位。
 
-> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、业务流程图（business-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sp-NNN-*/docs/` 目录，一个版本一个完整容器。
+> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、业务流程图（business-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、UI 具体形态（prototypes）。这些必须放入对应的 `sprints/sp-NNN-*/docs/` 目录，一个版本一个完整容器。
 
-对于有客户端的项目（Web/移动端），PM 应提供一个或多个纯 HTML 原型，放在对应 sprint 的 `prototypes/` 目录中：
+对于有客户端的项目（Web/移动端），PM 应在对应 sprint 的 `prototypes/` 目录中同时产出 **UI 设计文档** 与 **交互原型**：
 
-```html
+```text
 sprints/sp-NNN-名称/docs/prototypes/
-├── prototype.html      # 主要原型（含所有交互）
-└── prototype-aux.html  # 辅助原型（可选）
+├── prototypes.md       # UI 设计说明 — 本版本页面结构/布局/内容/线框/文案（随版本变动）
+└── prototype.html      # 可交互原型（纯演示，不写说明文字/线框）
 ```
+
+> **分工原则**: `visual-design.md` 只定义全局审美边界（与版本无关）；页面具体形态（哪些页面、什么布局、什么内容、什么文案、线框）→ `prototypes.md`；可点击演示 → `prototype.html`。两者一一对应，改文案改 md，改演示改 html。
 
 > ⚡ **原型必须包含完整的交互演示**：页面切换、弹窗、表单填写、状态切换（loading/empty/error/success）。不接受只有静态视觉输出的原型。双击 HTML 文件即可在浏览器中运行。
 
@@ -374,6 +377,7 @@ sprints/sp-NNN-名称/docs/prototypes/
 | ✅ 手机优先 | 默认移动端宽度（480px），兼顾桌面 |
 | ✅ 单文件 | 一个页面一个 .html，自包含，双击即可打开 |
 | ❌ 不要 mock 后端 | 数据用静态变量模拟，不调 API |
+| ❌ 原型不写说明 | 线框、文字说明、页面清单一律进 prototypes.md |
 
 **规则**:
 - 所有图文（原型图、流程图、截图）转化为 MD 文本描述，人+AI 可读
@@ -391,7 +395,8 @@ sprints/sp-NNN-名称/
 │   ├── business-flows.md           # 核心业务流程图（Mermaid，必写）
 │   ├── uml-pack.md                 # UML 图表包（用例/ER/类图/C4，按需最小化）
 │   └── prototypes/
-│       └── prototype.html          # 本版本可交互 HTML 原型（完整交互）
+│       ├── prototypes.md           # 本版本 UI 设计（页面结构/布局/内容/线框/文案）
+│       └── prototype.html          # 本版本可交互 HTML 原型（纯演示）
 └── specs/                          # Dev 技术规格（多个 spec 共同促成本次迭代）
     ├── _template/                  # 规格模板（cp 建新规格）
     └── spec-001-前端xxx/           # 具体规格
@@ -589,6 +594,7 @@ adr:    proposed → accepted → deprecated → superseded
 | `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（按 spec 头部「基于冲刺」字段或 AI 判断归入对应冲刺） | 转移 + 重新编号 |
 | `ADR/ADR-NNN_xxx.md`（旧决策记录） | `adrs/adr-YYYYMMDD-xxx/`（架构变动设计文件夹，3 份文档） | 转移 + 重命名，内容按新语义收敛（AI 整合为一整份） |
 | 无法归类的游离文档 | 对应 sprint `docs/` 收敛；仍无法归类 → `archive/` | 收敛 → 保留 → 删 |
+| `visual-design.md` 中混入的业务设计（页面/布局/内容/线框） | `sprints/sp-NNN-*/docs/prototypes/prototypes.md`（无对应冲刺 → 最近冲刺或 `archive/`） | AI 转移，`visual-design.md` 只留审美边界 |
 | `sprints/sprint-000_initial/`（纯模板） | 直接删除 | 删除 |
 | `sprints/sprint-000_initial.legacy/`（含内容） | 内容转移至 `sprints/sp-001-*/docs/` 后删除 | 转移 → 删除 |
 
@@ -617,5 +623,10 @@ adr:    proposed → accepted → deprecated → superseded
 
 **错误做法**: Step 4 编码中 PM 改需求，AI 边写边改。
 **正确做法**: 新需求进下一个 sprint，当前 sprint 以冻结的 spec 为准。
+
+### 8.5 视觉设计混入业务设计陷阱
+
+**错误做法**: `visual-design.md` 里写具体页面（"首页顶部导航、左侧列表"）、业务文案、框线图——且这些业务设计在其他文档缺失。
+**正确做法**: `visual-design.md` 只定义全局审美边界（颜色/字体/间距/动效/组件视觉属性，与版本无关）；页面形态进对应 sprint 的 `prototypes/prototypes.md`，交互演示进 `prototype.html`。migrate 时若发现 `visual-design.md` 含业务设计，转移到 `prototypes.md` 并清理原文件。
 
 ---

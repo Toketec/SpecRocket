@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SPRINT-{NNN}: {冲刺名称} — 原型</title>
-  <!-- 纯 HTML 原型 — 不需要框架、后端、真实数据 -->
+  <!-- 纯 HTML 可交互原型 — 不做线框、不写说明文字（页面结构/文案/线框见同目录 prototypes.md） -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, "PingFang SC", sans-serif; background: #f5f5f5; padding: 20px; }
     .container { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; }
-    /* ========== 组件样式 ========== */
+    /* ========== 组件样式（视觉属性以 docs/visual-design.md 为准） ========== */
     .header { padding: 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
     .header h1 { font-size: 18px; font-weight: 600; }
     .content { padding: 16px; }
@@ -57,47 +57,47 @@
   <div class="container">
     <!-- ====== 导航标签 ====== -->
     <div class="nav-bar" id="navBar">
-      <div class="tab active" data-page="page1">{页面 1}</div>
-      <div class="tab" data-page="page2">{页面 2}</div>
-      <div class="tab" data-page="page3">{页面 3}</div>
+      <div class="tab active" data-page="page1">首页</div>
+      <div class="tab" data-page="page2">表单</div>
+      <div class="tab" data-page="page3">状态</div>
     </div>
 
-    <!-- ====== 页面 1 ====== -->
+    <!-- ====== 页面 1：列表 ====== -->
     <div class="page active" id="page1">
       <div class="header">
-        <span style="font-weight:600;">{页面 1 标题}</span>
-        <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:14px;" onclick="showModal()">{操作}</button>
+        <span style="font-weight:600;">项目列表</span>
+        <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:14px;" onclick="showModal()">新建</button>
       </div>
       <div class="content" id="page1Content">
         <!-- 正常状态 -->
         <div class="card" onclick="this.classList.toggle('selected')">
-          <div style="font-weight:500;margin-bottom:4px;">{项目标题}</div>
-          <div style="font-size:13px;color:#666;">{项目描述}</div>
+          <div style="font-weight:500;margin-bottom:4px;">示例项目 A</div>
+          <div style="font-size:13px;color:#666;">示例项目 A 的简短描述</div>
         </div>
         <div class="card" onclick="this.classList.toggle('selected')">
-          <div style="font-weight:500;margin-bottom:4px;">{项目标题 2}</div>
-          <div style="font-size:13px;color:#666;">{项目描述}</div>
+          <div style="font-weight:500;margin-bottom:4px;">示例项目 B</div>
+          <div style="font-size:13px;color:#666;">示例项目 B 的简短描述</div>
         </div>
       </div>
     </div>
 
-    <!-- ====== 页面 2 ====== -->
+    <!-- ====== 页面 2：表单 ====== -->
     <div class="page" id="page2">
       <div class="header">
-        <span style="font-weight:600;">{页面 2 标题}</span>
+        <span style="font-weight:600;">新建项目</span>
       </div>
       <div class="content">
-        <label style="display:block;font-size:14px;color:#333;margin-bottom:6px;">{输入框标签}</label>
-        <input class="input" placeholder="{占位文本}" id="demoInput">
+        <label style="display:block;font-size:14px;color:#333;margin-bottom:6px;">项目名称</label>
+        <input class="input" placeholder="请输入项目名称" id="demoInput">
         <div style="height:12px;"></div>
-        <button class="btn btn-primary" onclick="showToast()">{提交}</button>
+        <button class="btn btn-primary" onclick="showToast()">提交</button>
       </div>
     </div>
 
-    <!-- ====== 页面 3 ====== -->
+    <!-- ====== 页面 3：状态演示 ====== -->
     <div class="page" id="page3">
       <div class="header">
-        <span style="font-weight:600;">{页面 3 标题}</span>
+        <span style="font-weight:600;">状态演示</span>
       </div>
       <div class="loading" id="page3Loading">
         <div class="spinner"></div>
@@ -105,11 +105,11 @@
       </div>
       <div class="empty-state" id="page3Empty" style="display:none;">
         <div class="icon">📭</div>
-        <div style="margin-bottom:12px;">暂无{内容}</div>
-        <button class="btn btn-secondary" style="width:auto;display:inline-block;padding:8px 24px;" onclick="showToast()">{引导操作}</button>
+        <div style="margin-bottom:12px;">暂无内容</div>
+        <button class="btn btn-secondary" style="width:auto;display:inline-block;padding:8px 24px;" onclick="showToast()">去创建</button>
       </div>
       <div class="content" id="page3Content" style="display:none;">
-        {正常内容}
+        <div class="card">内容示例</div>
       </div>
     </div>
   </div>
@@ -117,8 +117,8 @@
   <!-- ====== 弹窗 ====== -->
   <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)hideModal()">
     <div class="modal">
-      <h3>{弹窗标题}</h3>
-      <p style="color:#666;font-size:14px;">{弹窗内容描述}</p>
+      <h3>确认操作</h3>
+      <p style="color:#666;font-size:14px;">确定要执行此操作吗？</p>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="hideModal()">取消</button>
         <button class="btn btn-primary" onclick="hideModal();showToast()">确认</button>
@@ -127,7 +127,7 @@
   </div>
 
   <script>
-    // ========== 交互脚本 ==========
+    // ========== 交互脚本（仅演示，文案与页面结构见 prototypes.md） ==========
 
     // 导航切换
     document.querySelectorAll('.tab').forEach(tab => {
