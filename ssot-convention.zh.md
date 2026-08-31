@@ -620,5 +620,3 @@ adr:    proposed → accepted → deprecated → superseded
 **正确做法**: 新需求进下一个 sprint，当前 sprint 以冻结的 spec 为准。
 
 ---
-
-**参考**: `references/specs-directory-hierarchy.md` — 规格目录层级权威结构（v3.0）。

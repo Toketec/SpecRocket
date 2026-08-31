@@ -107,7 +107,6 @@ cmd_update() {
     if [ "$SYNC_HERMES" = "1" ]; then
       mkdir -p "$HOME/.hermes/skills/spec-rocket"
       cp "$SCRIPT_DIR/SKILL.md" "$HOME/.hermes/skills/spec-rocket/SKILL.md"
-      [ -d "$SCRIPT_DIR/references" ] && { mkdir -p "$HOME/.hermes/skills/spec-rocket/references"; cp -r "$SCRIPT_DIR/references"/* "$HOME/.hermes/skills/spec-rocket/references/" 2>/dev/null || true; }
       ok "Hermes skill 已同步 → ~/.hermes/skills/spec-rocket/ (v$VERSION)"
     fi
   else

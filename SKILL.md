@@ -81,7 +81,7 @@ SpecRocket/                      ← 本仓库
 
 | AI 产品 | skill/规则位置 | update 动作 |
 |:-------|:-------------|:-----------|
-| **Hermes Agent** | `~/.hermes/skills/spec-rocket/` | 复制最新 `SKILL.md` + `references/` |
+| **Hermes Agent** | `~/.hermes/skills/spec-rocket/` | 复制最新 `SKILL.md` |
 | **spec-rocket-light**（若安装） | `~/.hermes/skills/spec-rocket-light/` | 同步 light 版 SKILL.md |
 | **Codex** | 项目级 `AGENTS.md`（全局 `~/.codex/AGENTS.md` 谨慎） | 检测到全局含 SpecRocket 内容 → 提示手动同步；推荐项目级由 init/migrate 注入 |
 | **Claude Code** | 项目级 `CLAUDE.md`（每个项目一份） | 无需全局更新；项目升级用 `/spec-rocket migrate` |
@@ -344,8 +344,6 @@ sprints/sp-001-核心交易/specs/
 ```
 
 新建规格 = `cp -r specs/_template specs/spec-{XXX}_{规格名}`，编号 `spec-{三位数}` 在冲刺内递增，描述下划线连接（与 `sp-001-功能名` 同款机制）。
-
-> ⚠️ **详细结构、命名规则、变更检查清单、版本差异见 `references/specs-directory-hierarchy.md`**。改模板结构前先读，并向用户梳理层级确认后再动手。
 
 ## 完整使用路径
 
