@@ -61,8 +61,7 @@
 │
 ├── AGENTS.md                      # 五步开发流程 AI 规范 ← 先读
 ├── CLAUDE.md                      # 本文件
-├── .gitignore
-└── LICENSE
+└── .gitignore
 ```
 
 > **关键约束**: `docs/` 根目录只放全版本通用的文档。迭代型产品文档（场景、流程、原型）必须放入 `sprints/sp-NNN-*/docs/`，技术规格放入同 sprint 的 `specs/`。

@@ -323,8 +323,7 @@ project-root/
 │   ├── standards/             # 规范库（编码规范、数据字典、术语表）
 │   └── manuals/               # 说明文档（部署/运维手册、FAQ）
 │
-├── .gitignore
-└── LICENSE
+└── .gitignore
 ```
 
 ### 各目录职责

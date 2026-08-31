@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="3.1.0"
+VERSION="3.2.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -304,6 +304,20 @@ cmd_migrate() {
       mv "$f" "archive/$f"
       ok "    已归档: $f → archive/$f（方法论本体文档，最新版见 SpecRocket GitHub 主仓库）"
     done
+  fi
+
+  # ═══════════════════════════════════════════════
+  # 4b. LICENSE 处理（v3.2 起模板不再预设证书）
+  # ═══════════════════════════════════════════════
+  if [ -f LICENSE ]; then
+    if head -1 LICENSE | grep -q "^MIT License$" && grep -q "Toketec" LICENSE; then
+      mkdir -p archive
+      mv LICENSE archive/LICENSE
+      ok "    已归档: LICENSE → archive/LICENSE（v3.2 起模板不再预设证书，旧模板默认 MIT 已移除，如需证书请自行添加）"
+      REPORT_NEEDED=1
+    else
+      warn "    保留: LICENSE（项目自定义证书，v3.2 起模板不再预设证书，此证书由项目自行持有）"
+    fi
   fi
 
   # ═══════════════════════════════════════════════

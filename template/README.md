@@ -64,7 +64,6 @@ pnpm typecheck
 │   └── make-pptx.js
 │
 ├── .gitignore
-├── LICENSE
 ├── AGENTS.md                     # AI 协作规范（开发用）
 └── README.md                     # 本文件
 ```

@@ -105,8 +105,7 @@ project-root/
 ├── tools/                            # ★ 工具/脚本（纯代码域）
 │   └── backup-tool/                  # ✦ 具体工具（框架项目，结构由框架决定）
 │
-├── .gitignore                        # ★
-└── LICENSE                           # ★ MIT
+└── .gitignore                        # ★
 ```
 
 **核心原则**:
