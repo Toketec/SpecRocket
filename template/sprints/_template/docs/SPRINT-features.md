@@ -130,5 +130,7 @@ stateDiagram-v2
 
 ---
 
-> **写完后做什么**: 将本 sprint 的功能拆解为 spec 组（每个规格一个"编号+描述"目录，如 `apps/my-app/specs/SPEC-APP-001_功能名/`），由开发者补充架构设计和技术方案。
-> **下一个文档**: 前往对应模块的 `specs/_template/` 开始为每个 spec 准备四文件（`cp -r specs/_template specs/SPEC-{APP|BIZ|TOOL}-NNN_功能名`）。
+> **写完后做什么**: 将本 sprint 的功能拆解为 spec 组（每个规格一个"编号+描述"目录，如 `sprints/sp-{NNN}-{冲刺名}/specs/spec-001-xxx/`），由开发者补充架构设计和技术方案。
+> **下一个文档**: 前往 `sprints/sp-{NNN}-{冲刺名}/specs/_template/` 开始为每个 spec 准备四文件（`cp -r specs/_template specs/spec-{XXX}_{规格名}`）。
+
+> **规格拆分原则**: 一次冲刺拆多个规格，目的是**解耦、拆解、相互独立以便并行开发且互不干扰**——前端/后端分列、不同服务分列；但颗粒度以「解耦 + 提升 token 利用率减少幻觉」为上限，**不刻意多拆**，方便管理为下限。

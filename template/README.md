@@ -25,23 +25,33 @@ pnpm typecheck
 ## 目录结构
 
 ```
-├── docs/                         # ★ 稳定层 — 全版本通用产品规划文档
+├── docs/                         # ★ 稳定层 — 全版本通用产品文档
 │   ├── product-overview.md       # 产品概览
 │   ├── non-functional-reqs.md    # 非功能需求
 │   ├── visual-design.md          # 视觉设计规范
-│   └── sprints/                  # ★ 版本层 — 每次迭代的完整设计容器
-│       ├── _template/            # 模板（含 6 个文档 + 原型）
-│       └── sprint-001_功能名/    # 每次迭代一个容器（cp _template 创建）
+│   ├── whitepaper.md             # 白皮书（愿景/定位/理念）
+│   └── (可选) competition-strategy.md / judge-qa.md
 │
-├── apps/                         # 前端/客户端应用
+├── sprints/                      # ★ 迭代层 — 每次迭代的完整容器
+│   ├── _template/                # sprint 模板（docs/ + specs/）
+│   └── sp-001_功能名/            # 具体冲刺：docs/（产品设计）+ specs/（技术规格）
+│       ├── docs/
+│       └── specs/
+│           ├── _template/
+│           └── spec-001-前端xxx/ # 多个规格共同促成本次迭代（可并行开发）
+│
+├── adrs/                         # ★ 架构决策记录（全局历史累积）
+│   └── adr-001-数据库选型.md
+│
+├── apps/                         # 前端/客户端应用（纯代码域）
 │   ├── {app-name}/
 │   └── _template/                # 创建新应用时复制
 │
-├── businesses/                   # 后端业务服务
+├── businesses/                   # 后端业务服务（纯代码域）
 │   ├── {service-name}/
 │   └── _template/
 │
-├── tools/                        # 工作流类工具/脚本
+├── tools/                        # 工作流类工具/脚本（纯代码域）
 │   └── _template/
 │
 ├── assets/                       # ★ 运营资产 — 被系统/业务直接引用的文件
@@ -53,9 +63,6 @@ pnpm typecheck
 ├── scripts/                      # 项目工具脚本
 │   ├── bootstrap-project.sh      # ★ 核心脚本：创建新项目/迁移老项目
 │   └── make-pptx.js
-│
-├── ADR/                          # 架构决策记录
-│   └── _template/ADR.md
 │
 ├── .gitignore
 ├── LICENSE

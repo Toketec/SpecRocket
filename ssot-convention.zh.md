@@ -1,9 +1,9 @@
 # SSOT — 规格驱动开发规范手册
 
-> **版本**: 2.1
+> **版本**: 3.0
 > **用途**: 本文档是 SSOT（Single Source of Truth）规格驱动开发的完整规范。每个团队成员在加入时应阅读一次。
 > **AI 协作入口**: `AGENTS.md`（AI 读取的浓缩版，位于根目录）
-> **核心理念**: specs 嵌入在代码模块中，ADR 记录架构设计，PM 产出全在 docs/ 下。
+> **核心理念**: 一次冲刺 = 一个完整容器（PM 产品设计 + Dev 技术规格）。specs 聚合在迭代容器内，共同促成一次迭代的所有开发任务；adrs 记录全局架构决策；代码域只关心实现。
 
 ---
 
@@ -13,11 +13,11 @@
 
 | # | 优势 | 说明 |
 |:-:|:----|:------|
-| 1 | **结构更轻量** | 无 package.json、无构建工具链、无 VS Code 绑定。仅 3 个根配置 + 3 类模块模板 + ADR 模板 + 产品文档模板。`curl | bash` 一键初始化 |
+| 1 | **结构更轻量** | 无 package.json、无构建工具链、无 VS Code 绑定。仅 4 个根配置 + 迭代容器模板 + adr 模板 + 产品文档模板。`curl \| bash` 一键初始化 |
 | 2 | **边界定位清晰，适合企业协作** | 五步法（PM→Dev+AI→评审→AI编码→Dev收尾）明确每个角色职责边界。PM 不需要懂技术实现，Dev 不需要反复解释需求，AI 不跳步骤不改方案 |
-| 3 | **吸纳敏捷与瀑布优势** | SDD 本质是瀑布的阶段门禁（Step 1→2→3→4→5 顺序递进），但 `sprints/sprint-NNN/` 结构天然支持多版本迭代。新需求进下一个 sprint，当前 sprint 冻结 |
+| 3 | **迭代内聚合，支持并行开发** | 一次冲刺拆多个 spec（前端/后端/服务分列），多个 spec 共同促成一次迭代的全部开发任务。规格相互独立 → 可并行开发互不干扰；颗粒度受「解耦 + token 利用率」约束 |
 | 4 | **可脱离 AI 工具独立交付** | `_template/` + 命名约定 + 目录职责表构成完整的项目管理框架。即使所有 AI 工具消失，团队仍可按此结构交付、复用、维护 |
-| 5 | **标准化产品文档 → 单一事实源** | `product-overview.md`（全局锚点）→ `sprints/`（版本设计）→ `ADR/`（架构决策）→ `specs/`（技术规格），信息链路完整可追溯 |
+| 5 | **标准化产品文档 → 单一事实源** | `docs/`（全局锚点）→ `sprints/*/docs/`（版本设计）→ `adrs/`（架构决策）→ `sprints/*/specs/`（技术规格），信息链路完整可追溯 |
 | 6 | **保留 TDD 思想，简化为 check** | 不追求传统 TDD 的测试先行成本，但保留验收驱动精神：`check.md` 在实现前定义验收预期，实现后 AI 自检 + QA 签收形成双层验证 |
 | 7 | **标准化项目结构（核心）** | 这是框架最重要的设计。只有标准化的结构可以脱离 AI 工具进行可交付、可复用、可维护——即使未来方法论被大模型吸纳，这个结构依然适合团队分工与交付 |
 
@@ -45,23 +45,45 @@ project-root/
 │   ├── product-overview.md           # ★ 产品概览（用户画像、核心场景、术语表）
 │   ├── non-functional-reqs.md        # ★ 非功能需求 — 性能/SLA/安全/合规
 │   ├── visual-design.md              # ★ 视觉设计规范
+│   ├── whitepaper.md                 # ★ 白皮书（产品愿景/市场定位/核心理念）
+│   ├── competition-strategy.md       # ✦ 竞品策略（可选）
+│   └── judge-qa.md                   # ✦ 评委/投资人 Q&A（可选）
+│
+├── sprints/                          # ★ 迭代层 — 每次迭代的完整容器
+│   ├── _template/                    # ★ sprint 模板（创建新 sprint 时 cp）
+│   │   ├── docs/                     # ★ 冲刺产品文档（PM 产出）
+│   │   │   ├── SPRINT-features.md    #   冲刺目标 + 功能清单 + 业务验收条件
+│   │   │   ├── functional-overview.md #   本版本功能总览 + 路线图
+│   │   │   ├── user-scenarios.md     #   本版本用户旅程 + 用例
+│   │   │   ├── business-flows.md     #   核心业务流程图（泳道/时序/状态，必写）
+│   │   │   ├── uml-pack.md           #   UML 图表包（按需，最小化原则）
+│   │   │   └── prototypes/           #   本版本的可交互 HTML 原型
+│   │   │       └── prototype.html
+│   │   └── specs/                    # ★ 本次迭代的规格库（Dev 产出）
+│   │       ├── _template/            #   规格模板（cp 建新规格）
+│   │       │   ├── requirements.md   #   技术方案 + 架构 + 边界 + 验收条件
+│   │       │   ├── plan.md           #   实现步骤 + 文件清单
+│   │       │   ├── tasks.md          #   任务拆分 + 验证 + 审计追踪
+│   │       │   └── check.md          #   AI 自检 + 人工验收清单
+│   │       └── spec-001-功能名/      # ✦ 具体规格（编号+描述，cp _template 创建）
+│   │           ├── requirements.md
+│   │           ├── plan.md
+│   │           ├── tasks.md
+│   │           └── check.md
 │   │
-│   └── sprints/                      # ★ 版本层 — 每次迭代的完整产品设计容器
-│       ├── _template/                # ★ sprint 模板（创建新 sprint 时 cp）
-│       │   ├── SPRINT-features.md    #   冲刺目标 + 功能清单 + 业务验收条件
-│       │   ├── functional-overview.md #   本版本功能总览 + 路线图
-│       │   ├── user-scenarios.md     #   本版本用户旅程 + 用例
-│       │   ├── business-flows.md     #   核心业务流程图（泳道/时序/状态，必写）
-│       │   ├── uml-pack.md           #   UML 图表包（按需，最小化原则）
-│       │   └── prototypes/           #   本版本的可交互 HTML 原型
-│       │       └── prototype.html
-│       │
-│       └── sprint-001_功能名/        # ✦ 后续版本 — 每次迭代一个 sprint 容器（cp _template 创建）
+│   └── sp-001-功能名/                # ✦ 具体冲刺 — 每次迭代一个完整容器
+│       ├── docs/                     #   本冲刺的产品设计（PM）
+│       │   └── ...
+│       └── specs/                    #   本冲刺的技术规格（Dev）
+│           ├── _template/
+│           ├── spec-001-前端用户登录/  #   前端独立规格
+│           ├── spec-002-后端认证服务/  #   后端独立规格 → 可并行开发
 │           └── ...
 │
-├── ADR/                              # ★ 架构决策记录目录
-│   └── _template/ADR.md              # ★ ADR 模板
-│   └── ADR-001_xxx.md                # ✦ 后续开发中创建的 ADR…
+├── adrs/                             # ★ 架构决策记录（全局历史累积，不随 sprint 走）
+│   ├── _template/adr.md              # ★ adr 模板
+│   ├── adr-001-数据库选型.md          # ✦ 后续开发中创建的 adr…
+│   └── ...
 │
 ├── assets/                           # ★ 运营资产 — 被系统/业务直接引用的文件
 │   ├── README.md                     # ★ 定位说明（判定规则 + 角色边界）
@@ -71,73 +93,65 @@ project-root/
 │   └── manuals/                      #   说明文档（部署/运维手册、FAQ）
 │                                     #   ✦ 按需取用，不强制全建
 │
-├── apps/                             # ★ 前端/客户端应用目录
-│   └── _template/                    # ★ 应用模板（创建新应用时 cp）
-│       └── specs/                    # ★ 该应用的规格库
-│           ├── _template/            #   规格模板（创建新规格时 cp）
-│           │   ├── requirements.md   #   技术方案 + 边界 + 验收条件
-│           │   ├── plan.md           #   实现步骤 + 文件清单
-│           │   ├── tasks.md          #   任务拆分 + 验证 + 审计追踪
-│           │   └── check.md          #   AI 自检 + 人工验收清单
-│           └── SPEC-APP-001_用户登录/ # ✦ 具体规格（编号+描述，cp _template 创建）
-│               ├── requirements.md
-│               ├── plan.md
-│               ├── tasks.md
-│               └── check.md
-│       └── 应用名/                   # ✦ 开发中用 `cp _template 应用名` 创建
-│           ├── src/                  #   代码目录（开发者创建）
-│           └── specs/                #   该应用的规格库（含 _template + 各规格目录）
+├── apps/                             # ★ 前端/客户端应用（纯代码域）
+│   ├── _template/                    # ★ 应用模板（创建新应用时 cp）
+│   │   └── src/                      #   代码目录
+│   └── app-web/                      # ✦ 具体应用
+│       └── src/
 │
-├── businesses/                       # ★ 后端业务服务目录
-│   └── _template/                    # ★ 服务模板
-│       └── specs/
-│           ├── _template/
-│           │   ├── requirements.md
-│           │   ├── plan.md
-│           │   ├── tasks.md
-│           │   └── check.md
-│           └── SPEC-BIZ-001_xxx/     # ✦ 具体规格（编号+描述）
-│       └── 服务名/                   # ✦ 同上
-│           ├── src/
-│           └── specs/
+├── businesses/                       # ★ 后端业务服务（纯代码域）
+│   ├── _template/                    # ★ 服务模板
+│   │   └── src/
+│   └── user-service/                 # ✦ 具体服务
+│       └── src/
 │
-├── tools/                            # ★ 工具/脚本目录
+├── tools/                            # ★ 工具/脚本（纯代码域）
 │   └── _template/                    # ★ 工具模板
-│       └── specs/
-│           ├── _template/
-│           │   ├── requirements.md
-│           │   ├── plan.md
-│           │   ├── tasks.md
-│           │   └── check.md
-│           └── SPEC-TOOL-001_xxx/    # ✦ 具体规格（编号+描述）
+│       └── src/
 │
 ├── .gitignore                        # ★
 └── LICENSE                           # ★ MIT
 ```
 
 **核心原则**:
-- `docs/` = **稳定层** — 只放全版本通用的产品规划文档（产品概览、非功能需求、视觉规范）。**不动摇的设计决策放这里，每次迭代的细节放 sprint**。
-- `docs/sprints/sprint-NNN/` = **版本层** — 每次迭代的完整产品设计容器。PM 在每个版本中更新功能描述、场景、流程图、图表和可交互原型。**上次版本的原型和文档作为历史记录，不覆盖。**
-- `apps/` / `businesses/` / `tools/` = **代码实现域**，各自携带 specs
+- `docs/` = **稳定层** — 只放全版本通用的产品规划文档（产品概览、非功能需求、视觉规范、白皮书）。**不动摇的设计决策放这里，每次迭代的细节放 sprint**。
+- `sprints/` = **迭代层** — 每次迭代的完整容器：`docs/`（PM 产品设计）+ `specs/`（Dev 技术规格）。**多个 spec 共同促成一次迭代的所有开发任务**。上次迭代的文档和原型作为历史记录，不覆盖。
+- `adrs/` = **架构决策库** — 系统上下文、数据模型、核心流程、技术选型。**全局历史累积，不一定每次都改架构，所以不放在 sprint 内**。AI 首次进入项目时先读此目录理解全局。
+- `apps/` / `businesses/` / `tools/` = **纯代码实现域** — 只关心实现，不再携带规格。
 - `assets/` = **运营资产域** — 被系统/业务/外部直接引用的工程资产（配置模板、对外接口、规范库、说明手册），由 **Ops 运营角色**产出与维护。**判定规则：文件是否被代码/部署/外部系统直接引用？是 → assets/；否且是过程文档 → docs/。** docs/specs 引用 assets 用相对链接，不复制内容（SSOT）
-- `ADR/` = **架构设计文档库** — 系统上下文、数据模型、核心流程、技术选型。AI 首次进入项目时先读此目录理解全局，一次性看清系统架构。
 - `AGENTS.md` = **AI 协作入口**，浓缩规范供 AI 读取
 
-> **关键约束**: `docs/` 根目录不存放版本迭代型文档（如场景、流程、图表、原型）。迭代型产品文档必须随版本放入 `docs/sprints/sprint-NNN/`，一个版本一个完整的 sprint 容器。
+> **关键约束**: `docs/` 根目录不存放版本迭代型文档（如场景、流程、图表、原型）。迭代型产品文档必须随版本放入 `sprints/sp-NNN-*/docs/`，技术规格放入同 sprint 的 `specs/`。一个冲刺一个完整容器。
 
 ---
 
-## 二、五步开发流程 (Core Workflow)
+## 二、命名规则（v3.0）
+
+> 全小写 + 连字符，与目录类型强一致。模板目录统一 `_template`（不参与编号）。
+
+| 对象 | 规则 | 示例 |
+|:--|:--|:--|
+| 冲刺容器 | `sp-{编号}-{名字}` | `sprints/sp-001-核心交易/` |
+| 规格目录 | `spec-{编号}-{名字}` | `sprints/sp-001-核心交易/specs/spec-001-前端收银台/` |
+| 架构决策 | `adr-{编号}-{名字}` | `adrs/adr-001-数据库选型.md` |
+| 模板目录 | `_template` | `sprints/_template/`、`sprints/_template/specs/_template/` |
+| 编号规则 | 冲刺内递增（001, 002…） | spec 编号在所属冲刺内从 001 起 |
+
+> 命名是结构的标识符：任何人/任何 AI 看到目录名即可判断类型与归属，无需读内容。
+
+---
+
+## 三、五步开发流程 (Core Workflow)
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  Step 1 │ PM 独作 — 产品设计阶段                        │
-│          │ 产出: docs/ + docs/sprints/ + prototypes/    │
+│          │ 产出: docs/ + sprints/*/docs/ + prototypes/  │
 │          │ AI 角色: 协助润色、画 ASCII 图、生成原型模板  │
 ├──────────────────────────────────────────────────────────┤
 │  Step 2 │ Dev+AI 独作 — 架构设计与规格编写              │
-│          │ 输入: docs/sprints/ 的功能描述                │
-│          │ 产出: ADR/ + {apps|biz|tools}/*/specs/       │
+│          │ 输入: sprints/*/docs/ 的功能描述              │
+│          │ 产出: adrs/ + sprints/*/specs/（多个 spec）   │
 │          │ Dev 给方向 → AI 写完整 spec 四文件            │
 ├──────────────────────────────────────────────────────────┤
 │  Step 3 │ PM + Dev 共同 — 方案评审                      │
@@ -157,57 +171,91 @@ project-root/
 └──────────────────────────────────────────────────────────┘
 ```
 
-### 2.1 Step 1: PM 独作 — 产品设计
+### 3.1 Step 1: PM 独作 — 产品设计
 
 **谁来干**: PM（产品经理），AI 可协作辅助
-**产出去哪**: `docs/` 和 `docs/sprints/`
+**产出去哪**: `docs/` 和 `sprints/sp-NNN-*/docs/`
 **AI 能力边界**: AI 可协助润色文案、画 ASCII 流程图、生成 HTML 原型模板，**但业务流程定义和验收条件由 PM 把关**
 
 **交付物清单**（按需选，不强制全部写完才进入 Step 2）:
 
 | 文件 | 必需度 | 说明 |
 |:----|:-----:|:-----|
-| `product-overview.md` | ⭐⭐⭐ | 用户画像、核心场景、术语表。所有后续文档的锚点 |
-| `functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
-| `non-functional-reqs.md` | ⭐⭐ | 有性能基线/合规要求时必写 |
-| `user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
-| `business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态）。**业务闭环一眼可见** |
-| `uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制** |
-| `prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示** |
-| `sprints/sprint-NNN/*.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
+| `docs/product-overview.md` | ⭐⭐⭐ | 用户画像、核心场景、术语表。所有后续文档的锚点 |
+| `docs/non-functional-reqs.md` | ⭐⭐⭐ | **必须存在**，无要求也要一行占位。性能/SLA/安全/合规基线 |
+| `docs/visual-design.md` | ⭐⭐⭐ | **必须存在**，无 UI 也要一行占位。视觉方向 |
+| `docs/whitepaper.md` | ⭐⭐ | 产品愿景/市场定位/核心理念。无对外需求可一行占位 |
+| `sprints/*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
+| `sprints/*/docs/user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
+| `sprints/*/docs/business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态）。**业务闭环一眼可见** |
+| `sprints/*/docs/uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制** |
+| `sprints/*/docs/prototypes/*.html` | ⭐⭐ | 客户端项目建议做，纯 HTML，可点击交互。**承担页面布局+交互展示** |
+| `sprints/*/docs/SPRINT-features.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
 
-**进入 Step 2 的条件**: 至少 `product-overview.md` + `user-scenarios.md` + `sprints/sprint-NNN/SPRINT-features.md` 就位并经过 TL 技术可行性评审。
+**编辑顺序（必须遵守，不跳序）**:
+
+| 序 | 文件 | 原因 |
+|:--:|:----|:-----|
+| 1️⃣ | `docs/product-overview.md` | 全局锚点，先定义产品是什么 |
+| 2️⃣ | `docs/non-functional-reqs.md` | 技术约束基线（性能/安全/合规），影响技术选型 |
+| 3️⃣ | `docs/visual-design.md` | 视觉方向（或明确无 UI），影响前端框架选型 |
+| 4️⃣ | `docs/whitepaper.md` | 白皮书（愿景/定位），影响对外叙事 |
+| 5️⃣ | `sprints/sp-NNN-*/docs/` | 版本迭代设计，依赖前四步的全局决策 |
+
+**占位规则**: `docs/` 根目录下的每个必填文件必须存在并有内容。无实质可写时写一行占位说明「为什么不需要」。
+
+| 文件 | 占位示例 |
+|:----|:--------|
+| `non-functional-reqs.md` | `本项目为无用户交互的脚本工具，无特殊非功能需求要求。` |
+| `visual-design.md` | `本项目无前端界面（纯后端/脚本/CLI），不涉及视觉设计。` |
+| `whitepaper.md` | `本项目为内部工具，不涉及对外白皮书。` |
+
+**进入 Step 2 的条件**: 至少 `product-overview.md` + `sprints/sp-NNN-*/docs/user-scenarios.md` + `sprints/sp-NNN-*/docs/SPRINT-features.md` 就位并经过 TL 技术可行性评审。
 
 ---
 
-### 2.2 Step 2: Dev+AI 独作 — 架构设计与规格编写
+### 3.2 Step 2: Dev+AI 独作 — 架构设计与规格编写
 
 **谁来干**: Dev 给方向，AI 写产出
-**输入**: `docs/sprints/sprint-NNN/SPRINT-features.md`
-**产出去哪**: `ADR/` + 对应模块的 `specs/`
+**输入**: `sprints/sp-NNN-*/docs/SPRINT-features.md`
+**产出去哪**: `adrs/` + 本冲刺的 `sprints/sp-NNN-*/specs/`
 
 **Dev 的职责**（4 件事，10 分钟决策）:
 
 | 决策 | 示例 |
 |:----|:-----|
-| 这个功能属于哪个模块 | `apps/web`? `businesses/order-service`? |
-| 需要新 ADR 吗 | 新增服务、改数据模型、引入新技术栈 → 写 ADR |
-| 跨模块依赖 | 需要对接哪个上游服务？接口是什么？ |
+| 本次迭代拆几个 spec？每个 spec 的边界 | `spec-001-前端收银台` / `spec-002-后端订单服务` |
+| 需要新 adr 吗 | 新增服务、改数据模型、引入新技术栈 → 写 adr |
+| 跨 spec 依赖 | spec-002 与 spec-001 的接口契约是什么？ |
 | spec 关键字 | 核心函数名、API 路径、数据表名 |
 
 **AI 的职责**（基于 Dev 的方向自动完成）:
 
-- 写 `ADR/` 的架构设计文档（系统上下文、数据模型、流程）
-- 写 `requirements.md`（技术方案 + 架构 + 边界）
-- 写 `plan.md`（实现步骤 + 文件清单）
-- 写 `tasks.md`（任务拆分 + 验证清单）
-- 写 `check.md`（AI 自检 + 人工验收）
+- 写 `adrs/adr-NNN-*.md` 的架构设计文档（系统上下文、数据模型、流程）
+- 写 `sprints/sp-NNN-*/specs/spec-XXX_*/` 四文件（requirements / plan / tasks / check）
 
 **Step 2 的产出物必须包含架构设计和技术方案**，不只是一堆空模板。AI 应该写出可供评审的完整方案。
 
+#### 📐 规格拆分原则（核心，v3.0）
+
+> **为什么一次冲刺要拆多个规格？**
+> 把一次开发任务**解耦、拆解、尽量相互独立**，以便**并行开发且互不干扰**——前端和后端分离成多个规格项、不同服务分成不同规格项。多个 spec 共同促成一次迭代的所有开发任务（必然包含前端、后端或其他服务）。
+
+**颗粒度控制原则**:
+
+| 原则 | 说明 |
+|:----|:----|
+| ✅ 解耦 | 能独立开发/独立验收的边界才拆（前端/后端、不同服务、不同领域） |
+| ✅ 提升 token 利用率减少幻觉 | spec 上下文要小到 AI 能完整理解；过大 → 幻觉增多 |
+| ❌ 不刻意多拆 | 没有独立边界不硬拆；拆太多 → 管理成本上升 |
+| 上限 | 「解耦 + token 利用率」 |
+| 下限 | 「方便管理」 |
+
+**判断问题**: 这个规格能独立交给一个 AI 对话完整实现并验收吗？能 → 拆；不能（拆了就互相耦合）→ 合并。
+
 ---
 
-### 2.3 Step 3: PM + Dev 共同 — 方案评审
+### 3.3 Step 3: PM + Dev 共同 — 方案评审
 
 **这是唯一必须真人碰面的节点**。评审两件事：
 
@@ -222,9 +270,11 @@ project-root/
 - ✅ **通过** → 进入 Step 4（AI 编码）
 - 🔁 **需修改** → 打回 Step 2，Dev+AI 修改后重新评审
 
+> 多个 spec 可以并行评审，但必须逐个过，不能打包通过。
+
 ---
 
-### 2.4 Step 4: AI 按 spec 执行 — 编码
+### 3.4 Step 4: AI 按 spec 执行 — 编码
 
 **谁来干**: AI 按 spec 自动编码，Dev 监督
 **输入**: `requirements.md` + `plan.md`
@@ -244,10 +294,11 @@ project-root/
 - ❌ 不读 spec 直接写代码
 - ❌ 边写边改方案（改方案必须回 Step 2/3）
 - ❌ 自动 git commit/push（必须展示改动等确认）
+- ❌ 跨 spec 修改其他规格的文件（并行开发的边界）
 
 ---
 
-### 2.5 Step 5: Dev 收尾 — 验收
+### 3.5 Step 5: Dev 收尾 — 验收
 
 **谁来干**: Dev 修复边界情况，QA 最终验收
 **输入**: AI 生成的代码
@@ -262,17 +313,20 @@ project-root/
 | 错误处理 | ⭐⭐ try/catch 主线 | 🔴 异常组合（网络断开+用户重复点击） |
 | 安全 | ⭐ 常见注入 | 🔴 权限穿越、敏感数据泄露 |
 | 性能 | ⭐ 明显的 N+1 | 🔴 大数据量下的瓶颈 |
-| 集成 | ⭐⭐ 单模块 | 🔴 跨模块数据流 |
+| 集成 | ⭐⭐ 单规格 | 🔴 跨规格数据流 |
 | 代码风格 | ⭐⭐⭐ 格式化 | ⚪ 团队约定（命名、注释风格） |
 
 **QA 验收**: 跑 `check.md` 全部人工验收步骤，通过后签署 done。
 
 ---
 
-### 2.6 常见问题
+### 3.6 常见问题
 
 **Q: 一个 sprint 多个功能怎么办？**
-每个功能一个 spec（或一组相关功能一个 spec），Step 2-3 可以并行。但 Step 3 评审必须逐个过。
+一个功能（或一组相关功能）一个 spec，Step 2-3 可以并行。但 Step 3 评审必须逐个过。
+
+**Q: 一个 sprint 拆几个 spec？**
+按「规格拆分原则」：解耦 + 提升 token 利用率减少幻觉，不刻意多拆。前端/后端/不同服务天然是拆分边界。
 
 **Q: Step 2 写 spec 时发现 sprint 有问题？**
 打回 Step 1，PM 修 sprint 文档后再来。**不要在 spec 里改业务需求**。
@@ -283,52 +337,34 @@ project-root/
 **Q: 谁验收 check.md？**
 QA 跑人工验收项。如果项目没有专职 QA，Dev 自行验收，PM 确认业务验收条件满足。
 
+**Q: adrs 为什么不放 sprint 里？**
+不一定每次都改架构。架构决策是全局历史累积，跨 sprint 生效；放入迭代容器会造成重复与分裂。
+
 ---
 
-## 三、各目录角色与产出
+## 四、各目录角色与产出
 
-### 3.1 docs/ — 稳定层：全版本通用的产品规划文档
+### 4.1 docs/ — 稳定层：全版本通用的产品规划文档
 
-`docs/` 根目录只存放**变化极小或不常变的全版本通用文档**。每次大版本的迭代型产品文档（场景、流程、图表、原型）必须在对应的 `docs/sprints/sprint-NNN/` 中。
+`docs/` 根目录只存放**变化极小或不常变的全版本通用文档**。每次大版本的迭代型产品文档（场景、流程、图表、原型）必须在对应的 `sprints/sp-NNN-*/docs/` 中。
 
 | 文件/目录 | 内容 | 替代了什么 | 页数上限 | 必须 |
 |:---------|:----|:----------|:--------:|:----:|
 | `product-overview.md` | 用户画像、核心场景、价值主张、成功指标、**业务术语表** | PRD 的"背景/目标/用户" | 200 行 | ✅ |
 | `non-functional-reqs.md` | **非功能需求** — 性能/SLA/安全/合规/埋点/可观测性 | 传统 PRD 的非功能章节 | 不限 | ✅ |
 | `visual-design.md` | **视觉设计规范** — 设计系统 token / UI框架选型与定制 / 组件清单 / 品牌资产 | Figma Design System / UI Kit | 不限 | ✅ |
+| `whitepaper.md` | **白皮书** — 产品愿景/市场定位/核心价值/技术理念 | 对外介绍材料 | 不限 | ⭐⭐ |
 | `competition-strategy.md`（可选） | 竞品对比、定位、差异化 | 竞品分析 PPT | — | ❌ |
 | `judge-qa.md`（可选） | 评委/投资人 Q&A 预演 | 答辩准备 | — | ❌ |
 
-> ⚠️ **必填规则**：`non-functional-reqs.md` 和 `visual-design.md` 是 **必填文件**，即使项目极简（纯脚本/CLI/无 UI）也必须存在。无实质内容时写一行占位说明「为什么不需要」，不留空白。详见下方「编辑顺序」和「占位规则」。
+> ⚠️ **必填规则**：`non-functional-reqs.md` 和 `visual-design.md` 是 **必填文件**，即使项目极简（纯脚本/CLI/无 UI）也必须存在。无实质内容时写一行占位说明「为什么不需要」，不留空白。`whitepaper.md` 建议存在，内部工具可一行占位。
 
-### 📋 编辑顺序（必须遵守，不跳序）
-
-Step 1 中文档按以下顺序编辑，每步完成后再进入下一步：
-
-| 序 | 文件 | 原因 |
-|:--:|:----|:-----|
-| 1️⃣ | `product-overview.md` | 全局锚点，先定义产品是什么 |
-| 2️⃣ | `non-functional-reqs.md` | 技术约束基线（性能/安全/合规），影响技术选型 |
-| 3️⃣ | `visual-design.md` | 视觉方向（或明确无 UI），影响前端框架选型 |
-| 4️⃣ | `sprints/sprint-NNN/` | 版本迭代设计，依赖前三项的全局决策 |
-
-### 📌 占位规则
-
-> `docs/` 根目录下的每个必填文件必须存在并有内容。无实质可写时写一行占位说明「为什么不需要」。
-
-| 文件 | 占位示例 |
-|:----|:--------|
-| `non-functional-reqs.md` | `本项目为无用户交互的脚本工具，无特殊非功能需求要求。` |
-| `visual-design.md` | `本项目无前端界面（纯后端/脚本/CLI），不涉及视觉设计。` |
-
-> 占位原则：说清楚**为什么不需要**，不留"可能是忘了"的疑问。
-
-> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、业务流程图（business-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sprint-NNN/` 目录，一个版本一个完整容器。
+> ⚠️ **不在 `docs/` 根目录存放的文档**: 用户场景（user-scenarios）、业务流程图（business-flows）、UML 图表（uml-pack）、功能总览（functional-overview）、HTML 原型。这些必须放入对应的 `sprints/sp-NNN-*/docs/` 目录，一个版本一个完整容器。
 
 对于有客户端的项目（Web/移动端），PM 应提供一个或多个纯 HTML 原型，放在对应 sprint 的 `prototypes/` 目录中：
 
 ```html
-docs/sprints/sprint-NNN_name/prototypes/
+sprints/sp-NNN-名称/docs/prototypes/
 ├── prototype.html      # 主要原型（含所有交互）
 └── prototype-aux.html  # 辅助原型（可选）
 ```
@@ -349,263 +385,177 @@ docs/sprints/sprint-NNN_name/prototypes/
 - 不包含技术架构、API 设计、DB schema
 - 经过 TL 评审技术可行性后才能进入 Sprint 阶段
 
-### 3.2 docs/sprints/ — 版本层：每次迭代的完整产品设计容器
+### 4.2 sprints/ — 迭代层：每次迭代的完整容器
 
 ```
-docs/sprints/sprint-NNN_name/
-├── SPRINT-features.md           # 冲刺目标 + 功能清单 + 业务流程 + 验收条件
-├── functional-overview.md       # 本版本功能需求总览 + 版本路线图
-├── user-scenarios.md            # 本版本用户旅程总览 + 用例清单
-├── business-flows.md            # 核心业务流程图（Mermaid，必写）
-├── uml-pack.md                  # UML 图表包（用例/ER/类图/C4，按需最小化）
-└── prototypes/
-    └── prototype.html           # 本版本可交互 HTML 原型（完整交互）
+sprints/sp-NNN-名称/
+├── docs/                           # PM 产品设计
+│   ├── SPRINT-features.md          # 冲刺目标 + 功能清单 + 业务流程 + 验收条件
+│   ├── functional-overview.md      # 本版本功能需求总览 + 版本路线图
+│   ├── user-scenarios.md           # 本版本用户旅程总览 + 用例清单
+│   ├── business-flows.md           # 核心业务流程图（Mermaid，必写）
+│   ├── uml-pack.md                 # UML 图表包（用例/ER/类图/C4，按需最小化）
+│   └── prototypes/
+│       └── prototype.html          # 本版本可交互 HTML 原型（完整交互）
+└── specs/                          # Dev 技术规格（多个 spec 共同促成本次迭代）
+    ├── _template/                  # 规格模板（cp 建新规格）
+    └── spec-001-前端xxx/           # 具体规格
+        ├── requirements.md
+        ├── plan.md
+        ├── tasks.md
+        └── check.md
 ```
 
-每个 sprint 是一个独立的、完整的版本设计容器。PM 在每个大版本迭代时完整复制一次模板，填入本次版本的完整产品设计。
+每个 sprint 是一个独立的、完整的版本容器（产品设计 + 技术规格）。PM 在每个大版本迭代时完整复制一次模板，填入本次版本的完整产品设计；Dev 在 Step 2 时在 `specs/` 中拆解规格。
 
 **为什么要一个版本一个容器？**
+- ✅ **迭代完整自包含** — 一次迭代的所有产出（产品设计 + 技术规格）在同一目录，Dev 只看本 sprint 即可理解要做什么
+- ✅ **冻结即全冻结** — sprint 冻结 = docs + specs 全部冻结，迭代边界干净
 - ✅ **原型可回溯** — 上一个版本的原型不会被覆盖，随时可以回顾
-- ✅ **每次迭代独立** — 每个 sprint 的文档完整自包含，Dev 只看本 sprint 即可理解要做什么
-- ✅ **原型可交互** — 每个版本有自己完整的 HTML 原型，双击浏览器打开即可体验该版本的全部交互
 - ✅ **历史对比** — 两个 sprint 的 user-scenarios.md 放在一起，一眼看出本次迭代改了哪些场景
 
 **创建新 sprint 的命令**:
 
 ```bash
-# 从模板创建新 sprint
-cp -r docs/sprints/_template docs/sprints/sprint-NNN_{name}
+# 从模板创建新 sprint（完整容器：docs/ + specs/）
+cp -r sprints/_template sprints/sp-NNN-名称
 
 # 或从上一个 sprint 复制（保持一致的文档结构）
-cp -r docs/sprints/sprint-001_xxx/* docs/sprints/sprint-002_xxx/
+cp -r sprints/sp-001-xxx/* sprints/sp-002-xxx/
 ```
 
----
-
-### SPRINT-features.md 模板结构
-
-### 3.3 apps/ — 前端/客户端应用（Dev 产出）
-
-每个应用一个目录，包含自身代码和规格库：
+### 4.3 apps/ / businesses/ / tools/ — 纯代码实现域（Dev 产出）
 
 ```
 apps/app-name/
-├── src/               # 应用代码
-└── specs/             # ★ 本应用的规格库
-    ├── _template/             # 规格模板（cp 建新规格）
-    │   ├── requirements.md   # 前端架构 + 组件设计 + API 对接方案
-    │   ├── plan.md           # 实现步骤 + 组件树 + 路由
-    │   ├── tasks.md          # 任务拆分 + Owner + 验证清单
-    │   └── check.md          # AI 自检 + 人工验收
-    └── SPEC-APP-001_用户注册/  # ✦ 具体规格（编号+描述，cp _template 创建）
-        ├── requirements.md
-        ├── plan.md
-        ├── tasks.md
-        └── check.md
-```
+└── src/               # 应用代码
 
-**新建规格**: `cp -r apps/app-name/specs/_template apps/app-name/specs/SPEC-APP-001_功能名`
-
-**Spec ID 格式**: `SPEC-APP-NNN_{name}`（如 `SPEC-APP-001_user-registration`）
-
-### 3.4 businesses/ — 后端业务服务（Dev 产出）
-
-每个服务一个目录：
-
-```
 businesses/service-name/
-├── src/               # 服务代码
-└── specs/             # ★ 本服务的规格库
-    ├── _template/             # 规格模板
-    │   ├── requirements.md   # 架构总览 + 数据模型 + API 设计 + DB 变更
-    │   ├── plan.md           # 数据层/路由层/业务逻辑层实现步骤
-    │   ├── tasks.md          # 任务拆分 + 验证清单
-    │   └── check.md          # AI 自检 + 人工验收
-    └── SPEC-BIZ-001_用户API/   # ✦ 具体规格（编号+描述）
-        ├── requirements.md
-        ├── plan.md
-        ├── tasks.md
-        └── check.md
-```
+└── src/               # 服务代码
 
-**新建规格**: `cp -r businesses/service-name/specs/_template businesses/service-name/specs/SPEC-BIZ-001_功能名`
-
-**Spec ID 格式**: `SPEC-BIZ-NNN_{name}`（如 `SPEC-BIZ-001_user-api`）
-
-### 3.5 tools/ — 工作流工具（Dev 产出）
-
-非大型、非结构性、非多模块的工作流类工具：
-
-```
 tools/tool-name/
-├── src/               # 工具代码
-└── specs/             # ★ 多次迭代则应包含 specs
-    ├── _template/             # 规格模板
-    │   ├── requirements.md   # 问题定义 + 输入/输出 + 核心逻辑
-    │   ├── plan.md           # 简洁的执行步骤
-    │   ├── tasks.md          # 任务跟踪
-    │   └── check.md          # 命令行验收方式
-    └── SPEC-TOOL-001_部署脚本/ # ✦ 具体规格（编号+描述）
-        ├── requirements.md
-        ├── plan.md
-        ├── tasks.md
-        └── check.md
+└── src/               # 工具代码
 ```
 
-**新建规格**: `cp -r tools/tool-name/specs/_template tools/tool-name/specs/SPEC-TOOL-001_功能名`
+> **v3.0 变化**: 代码域不再携带 `specs/`。规格统一聚合在迭代容器 `sprints/sp-NNN-*/specs/` 内，多个 spec 共同促成一次迭代的所有开发任务。代码域只关心实现。
 
-**Spec ID 格式**: `SPEC-TOOL-NNN_{name}`（如 `SPEC-TOOL-001_deploy-script`）
+**创建新应用/服务/工具**:
 
-**单次工具**（一次性脚本）：不需要 specs，直接在 `src/` 中用 README 说明。
-**多次迭代的工具**：必须有 specs 四文件，走完整流程。
-
----
-
-## 四、ADR — 架构设计文档库
-
-> **ADR 是什么**: 不仅是决策记录(Architecture Decision Record)，更是**整个系统的架构设计文档库**。包含系统上下文图、数据模型、核心流程、技术选型、重要决策理由。AI 首次进入项目先读 ADR/ 即可快速理解全局，不用翻遍每个模块的 spec。
->
-> **为什么需要**: businesses 中的后端服务必然涉及大量架构设计（数据库选型、服务拆分、API 网关、认证方案等），这些设计影响多个模块，不能只在某个模块 specs/ 里记录。
-
-### 4.1 ADR 文档类型
-
-| 类型 | 内容 | 示例 |
-|:----|:-----|:-----|
-| **架构设计** | 系统上下文、ER 图、核心流程、组件关系 | 部署架构、数据流、认证流程 |
-| **数据字典** | **跨模块共享数据定义** — 字段名、业务含义、类型、约束 | User、Order、Market 等共享实体 |
-| **决策记录** | 多方案对比+选择理由 | 为什么选 A 不选 B |
-
-两者都放在 ADR/ 下，按编号顺序排列即可还原系统全貌。
-
-### 4.2 什么时候需要写 ADR
-
-| 触发条件 | 示例 |
-|:--------|:-----|
-| 跨多个模块的技术决策 | 选 PostgreSQL vs MongoDB、引入消息队列 |
-| 影响全局架构的选择 | 认证方案（JWT vs OAuth）、API 规范（REST vs GraphQL） |
-| 有多方案对比且需记录理由 | 为什么选方案 A 不选 B |
-| 上游接口变更影响多个消费者 | 改 DB schema 影响 3+ 模块 |
-
-### 4.2 ADR 模板
-
-```
-ADR/ADR-NNN_title.md
+```bash
+cp -r apps/_template apps/my-app
+cp -r businesses/_template businesses/my-service
 ```
 
-| 章节 | 内容 |
-|:----|:-----|
-| 背景 | 为什么需要做这个决策 |
-| 决策 | 选了什么方案，一句话说清楚 |
-| 方案对比 | 表格对比 2-3 个方案（描述、优点、缺点） |
-| 正面影响 | 对系统/团队的好处 |
-| 负面影响 | 引入的约束或成本 |
-| 关联 | 关联的 ADR、specs 路径、模块 |
-
-### 4.3 ADR 和 spec 的关系
+### 4.4 adrs/ — 架构决策记录（Dev 产出，全局）
 
 ```
-ADR（全局架构决策）         spec（模块级实现方案）
-─────────────────         ────────────────────
-记录 WHY                  记录 WHAT + HOW
-影响多个模块               只影响本模块
-提交即冻结（历史记录）      随代码迭代更新
-给所有人看                 给本模块的 Dev 看
+adrs/
+├── _template/adr.md              # adr 模板
+├── adr-001-数据库选型.md          # "为什么选 PostgreSQL"
+├── adr-002-认证方案.md            # "JWT + refresh token 方案"
+└── ...
 ```
 
-### 4.4 从 ADR 看系统架构
+**什么时候需要写 adr**:
 
-按编号顺序阅读 ADR/ 目录即可还原整个系统的架构演进：
+| 场景 | 示例 | 是否必须写 adr |
+|:----|:-----|:-------------:|
+| 新增服务 | 新加一个 `order-service` | ✅ |
+| 改数据模型 | 改 `users` 表结构、新增核心字段 | ✅ |
+| 换技术栈 | MySQL → PostgreSQL | ✅ |
+| 小功能 | 5 行代码改个按钮文案 | ❌ |
+| bugfix | 修复已有逻辑，不改接口 | ❌ |
+
+**adr 和 spec 的关系**:
 
 ```
-ADR-001_database-choice     → 为什么用 PostgreSQL
-ADR-002_auth-scheme         → 为什么用 JWT + refresh token
-ADR-003_service-split       → 为什么拆成 user/order/payment 三个服务
-ADR-004_api-versioning      → 为什么用 URL prefix 版本化
+adrs/ (Why — 为什么做这个决策)
+  └── adr-001-数据库选型.md "为什么选 PostgreSQL"
+      └── sprints/sp-001-*/specs/spec-002-后端订单服务/requirements.md
+          "基于 PostgreSQL 的订单表设计"
+
+adrs/ (What — 整体架构)
+  └── adr-002-认证方案.md "JWT + refresh token"
+      └── sprints/sp-002-*/specs/spec-001-后端认证服务/
+          实现 JWT 认证的规格四文件
 ```
 
-新人或 AI 读 ADR/ 所有文件，就能一次性看清整个系统的架构设计理由，而不需要翻遍每个模块的 spec。
+- **adr 是跨 spec 的**，一个 adr 可能影响多个 spec（可跨多个 sprint）
+- **spec 是迭代内的技术方案**，是 adr 决策后的具体落地
+- **adr 不随 sprint 走**：不一定每次都改架构，架构决策全局历史累积
+- **读的顺序**: adrs 先看（理解架构决策）→ 再到具体 sprint 读 spec（理解实现）
+
+**创建新 adr**:
+
+```bash
+cp adrs/_template/adr.md adrs/adr-003-数据模型.md
+```
+
+### 4.5 assets/ — 运营资产（Ops 产出）
+
+`assets/` 存放**被系统/业务直接引用的工程资产**（配置模板、对外接口、规范库、说明手册），由 **Ops 运营角色**产出与维护。
+
+- 四类按需取用：`configs/`（配置模板）、`interfaces/`（对外接口）、`standards/`（规范库）、`manuals/`（说明文档）
+- docs/specs 引用本目录文件用**相对链接**，不复制内容（SSOT）
 
 ---
 
 ## 五、Spec 四文件详解
 
-### 5.1 为什么 specs 分散到模块内
-
-| 旧模式 | 新模式 |
-|:------|:------|
-| specs 和代码分离 | specs 和代码在一起，修改即更新 |
-| 新人不知哪个 spec 对哪个模块 | 打开模块就看到自己的 specs |
-| 跨模块依赖需全局文件 | 直接在 requirements.md 中引用路径 |
-| 大型 monorepo 目录膨胀 | 每个模块自包含，解耦 |
-
-### 5.2 四文件模板
-
-每个模块的 `specs/` 下包含 `_template/`（规格模板）和多个"编号+描述"规格目录，每个规格目录内是 4 个文件：
+### 5.1 规格目录结构
 
 ```
-apps/app-name/specs/
-├── _template/                  # 规格模板（cp 建新规格）
+sprints/sp-NNN-名称/specs/
+├── _template/                       # 规格模板（cp 建新规格）
 │   ├── requirements.md
 │   ├── plan.md
 │   ├── tasks.md
 │   └── check.md
-└── SPEC-APP-001_用户注册/      # 具体规格（编号+描述）
+└── spec-001-功能名/                 # 具体规格（编号+描述，cp _template 创建）
     ├── requirements.md
     ├── plan.md
     ├── tasks.md
     └── check.md
 ```
 
-**新建规格**: `cp -r specs/_template specs/SPEC-{APP|BIZ|TOOL}-NNN_功能名`，编号三位数递增，描述用下划线连接。
+**新建规格**：`cp -r specs/_template specs/spec-{XXX}_{规格名}`，编号在冲刺内递增（001, 002…），描述用下划线连接。
 
-| 文件 | 编写者 | 读者 | 用途 |
-|:----|:-------|:----|:-----|
-| `requirements.md` | **Dev**（基于 sprint） | TL、Dev、QA | 架构设计 + 技术方案 + 边界 + 验收标准 |
-| `plan.md` | **Dev/TL** | Dev | 实现步骤 + 文件清单 + 代码骨架 + 回滚方案 |
-| `tasks.md` | **Dev** | TL、QA | 任务拆分 + Owner + Est. + 状态 + Done 条件 |
-| `check.md` | **Dev + QA** | 所有人 | AI 自检 + 人工验收步骤 + 回归范围 |
+### 5.2 四文件职责
 
-**Retrospec（存量代码）**: 只写 3 个文件（`requirements.md` + `tasks.md` + `check.md`，不写 `plan.md`）。
+| 文件 | 职责 | 关键内容 |
+|:----|:----|:--------|
+| `requirements.md` | 技术方案 + 边界 + 验收条件 | 架构设计、接口/API 设计、数据/存储设计、边界、验收条件 |
+| `plan.md` | 实现步骤 + 文件清单 | 分步实现、文件增改清单、风险 |
+| `tasks.md` | 任务拆分 + 验证 + 审计追踪 | 任务表、跨 spec 依赖、回归范围 |
+| `check.md` | AI 自检 + 人工验收 | AI 自检项、QA 签收项、回归验证 |
 
-### 5.3 跨模块引用
+### 5.3 跨规格引用（Context Contract）
 
-当 app 的 specs 需要引用 business 的 specs 时：
+所有 specs 共享一个 Context Contract 机制（≤15 行）：
 
-```markdown
-## 依赖项
-- BIZ-001: `businesses/user-service/specs/SPEC-BIZ-001_用户API/requirements.md`
-- APP-002: `apps/admin-panel/specs/SPEC-APP-002_管理后台/requirements.md`
 ```
-
-在 `requirements.md` 末尾的 **Context from Dependencies** 小节中维护接口摘要（≤15 行）：
-
-```markdown
 ## Context from Dependencies
 
-### BIZ-001 (user-service) → 接口契约
-- `POST /api/auth/login` → `{ token, user }`
-- `GET /api/users/me` → `User`
+### spec-002 (后端订单服务) → 接口契约
+- `POST /api/orders` 创建订单，返回 `{ id, status }`
+- `GET /api/orders/:id` 获取订单详情
 ```
 
-### 5.4 跨模块验收标注
-
-在 check.md 的"回归测试范围"中标注依赖的模块：
-
-```markdown
-## 回归测试范围
-- `businesses/user-service/specs/SPEC-BIZ-001_用户API/` — 改动了认证接口格式
-- `apps/admin-panel/specs/SPEC-APP-002_管理后台/` — 改动了共享 User 类型
-```
+A spec 想确认依赖方 B 的接口格式，直接在 A 的 `requirements.md` 里写上述 Context Contract。不需要翻 B 的规格。**这种引用只读不写，下游规格不可修改上游规格。**
 
 ---
 
-## 六、生命周期
+## 六、生命周期状态管理
+
+### 状态流转
 
 ```
 sprint: drafting → review → approved → active → done
 spec:   draft → review → approved → active → done → archived
-ADR:    proposed → accepted → deprecated → superseded
+adr:    proposed → accepted → deprecated → superseded
 ```
+
+### 状态说明
 
 | 状态 | 含义 | 谁修改 |
 |:----|:-----|:-------|
@@ -616,62 +566,59 @@ ADR:    proposed → accepted → deprecated → superseded
 | done | check.md 全部通过 | QA 签收 |
 | archived | 被替代或历史记录 | TL |
 
-状态直接在 spec 文件顶部标记，或由各模块自行管理。不再需要全局 catalog。
+> 状态直接在 spec 文件顶部标记，或由各规格自行管理。不再需要全局 catalog。
 
 ---
 
-## 七、AI 协作规则
+## 七、迁移指南（v3.0 结构迁移）
 
-1. **读顺序**: AGENTS.md → ADR/（架构设计全景→快速理解系统）→ docs/sprints/（确认功能意图）→ 目标模块 specs/（实现细节）
-2. **人机协作**: 所有文件 AI 都可编辑修改。修改后展示改动，获得确认后提交
-3. **跨模块不读全量 spec**: 只读 Context Contract（≤15 行），避免上下文爆炸
-4. **禁止自动 git commit/push**: 先展示改动，等用户确认
-5. **影响架构时更新 ADR**: 如果改动改变了系统架构（新增服务、改数据模型、换技术栈），同步更新或新增 ADR 文档
+### 迁移原则（转移 → 收敛 → 保留 → 删除）
 
----
+> 执行 `./spec-rocket migrate` 时，旧结构的内容按以下优先级处理：
+> 1. **转移**：能确定归属的，直接移动并重命名（如 sprint 文档 → 新 sprint 容器）
+> 2. **收敛**：不方便转移的，合并进新位置对应文档（语义合并由 AI 执行）
+> 3. **保留**：不方便收敛的，保留信息不丢失（`.legacy` / `archive/`）
+> 4. **删除**：确认无价值且内容已转移后删除
+>
+> **最终保持目录结构完全符合最新规范，零残留。**
 
-## 八、审计追踪
+### 旧 → 新映射表
 
-每个 spec 的 `tasks.md` 维护状态历史：
+| 旧结构（≤ v2.12） | 新结构（v3.0） | 策略 |
+|:--|:--|:--|
+| `docs/sprints/sprint-001_xxx/` 下 6 文档+原型 | `sprints/sp-001-xxx/docs/` | 转移（重命名 + 改路径） |
+| `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（按 spec 头部「基于冲刺」字段或 AI 判断归入对应冲刺） | 转移 + 重新编号 |
+| `ADR/ADR-NNN_xxx.md` | `adrs/adr-NNN-xxx.md` | 转移 + 重命名 |
+| 无法归类的游离文档 | 对应 sprint `docs/` 收敛；仍无法归类 → `archive/` | 收敛 → 保留 → 删 |
+| `sprints/sprint-000_initial/`（纯模板） | 直接删除 | 删除 |
+| `sprints/sprint-000_initial.legacy/`（含内容） | 内容转移至 `sprints/sp-001-*/docs/` 后删除 | 转移 → 删除 |
 
-```
-T01 | 实现注册 API | plan.md | @dev_a | 30min | ☐ → ✅ (2026-07-20, curl 返回 201)
-```
-
----
-
-## 九、现有项目迁移（Retrospec 模式）
-
-**Phase 0 (30min)**: 使用引导脚本创建骨架
-```bash
-# 从方法论项目运行引导脚本
-path/to/SpecRocket/scripts/bootstrap-project.sh migrate ../my-existing-project "项目名"
-
-# 或手动创建
-mkdir -p apps/ businesses/ tools/ ADR/ docs/sprints/
-cp -r {methodology}/apps/_template apps/{existing-app}/
-cp -r {methodology}/businesses/_template businesses/{existing-service}/
-```
-
-**Phase 1**: 为关键模块写 Retrospec（3 文件，无 plan.md）
-- requirements.md: 当前功能 + 边界 + 已知问题
-- tasks.md: 记录已存在的功能点
-- check.md: 当前行为作为验收基线
-
-**Phase 2**: 读 ADR/ 目录了解现有架构决策，补齐缺失的 ADR
-
-**Phase 3**: 新功能强制走 Sprint → ADR → Spec 流程
-
-**Phase 4**: 逐步覆盖存量，每次 sprint 选 1 个模块写 Retrospec
+> 脚本完成结构层迁移（目录/文件移动、命名规范化），内容层的语义合并由 AI 按 MIGRATION-REPORT.md 执行。
 
 ---
 
-## 十、升级路径
+## 八、常见陷阱（Pitfalls）
 
-从 Lite（单人全包）升级到完整 SSOT：
-1. 用引导脚本创建骨架：`scripts/bootstrap-project.sh migrate ./ "项目名"`
-2. 创建 `docs/` 写全版本通用产品文档（product-overview、non-functional-reqs、visual-design）
-3. 创建 `docs/sprints/sprint-001_name/` 开始第一个版本设计
-4. 创建 `ADR/` 记录架构决策
-5. 在 `apps/`、`businesses/`、`tools/` 中按模块逐步引入 specs
-6. 用 `AGENTS.md` 作为 AI 协作入口
+### 8.1 规格颗粒度陷阱
+
+**错误做法**: 为了"看起来专业"把一个功能拆成 5 个 spec，每个 spec 只有 3 行内容。
+**正确做法**: 按「规格拆分原则」——有独立边界（前端/后端/不同服务/不同领域）才拆；拆了要能独立交给一个 AI 对话完整实现。
+
+### 8.2 跨规格耦合陷阱
+
+**错误做法**: spec-A 直接引用 spec-B 的实现细节（内部函数、私有表结构）。
+**正确做法**: 只通过 Context Contract（接口契约 ≤15 行）引用。实现细节各自独立，改 spec-B 内部不影响 spec-A。
+
+### 8.3 角色越界陷阱
+
+**错误做法**: PM 在 sprint 文档里写死技术方案（"用 PostgreSQL""用 React"）；Dev 在 spec 里改业务需求。
+**正确做法**: PM 文档只定义**做什么**，不决定**怎么做**；技术方案在 Step 2 的 adrs + specs 中推导。发现业务问题 → 打回 Step 1。
+
+### 8.4 迭代边界陷阱
+
+**错误做法**: Step 4 编码中 PM 改需求，AI 边写边改。
+**正确做法**: 新需求进下一个 sprint，当前 sprint 以冻结的 spec 为准。
+
+---
+
+**参考**: `references/specs-directory-hierarchy.md` — 规格目录层级权威结构（v3.0）。

@@ -100,7 +100,7 @@ Issues and PRs welcome.
 |:-:|:--------|:---------|
 | 1 | **AI context loss** | 5-step flow, each step produces artifacts, AI has full context |
 | 2 | **Endless requirements back-and-forth** | PM writes product docs → Dev+AI write spec → one review pass |
-| 3 | **Architecture decisions lost** | ADR directory persists forever — newcomers and new AIs understand the full picture in 3 minutes |
+| 3 | **Architecture decisions lost** | adrs/ directory persists forever — newcomers and new AIs understand the full picture in 3 minutes |
 | 4 | **Unclear acceptance criteria** | `check.md` built-in checklist — AI self-checks + QA signs off |
 | 5 | **Vibecoding handover disaster** | 5-step guarantees structured code with clear module boundaries. Code written by AI, handled by devs |
 | 6 | **Tool lock-in** | Not a plugin, not a CLI dependency — pure file structure. **Any terminal + Git = it works** |
@@ -177,7 +177,7 @@ You: Enter ~/projects/legacy-app
 |:--------|:-------------|:---------|:----------|
 | `init` | Bootstrap skeleton + git init | ⚡ 1 second | 📟 Manual / 🤖 Slash command |
 | `brainstorm` | Guided product doc → sprint creation | 💬 5 questions | 🤖 AI slash command |
-| `migrate` | Embed skeleton / upgrade legacy project to latest structure (non-template files: first fold into docs, else into assets; scans docs/ recursively + project root fully + assets/ internals) | 🔄 Zero code touch | 🤖 AI slash command |
+| `migrate` | Embed skeleton / upgrade legacy project to latest structure (transfer → fold → preserve → delete, zero residue) | 🔄 Zero code touch | 🤖 AI slash command |
 | `preview` | Generate full project overview page | 👁️ Instant | 🤖 AI slash command |
 | `update` | One-click update local skill (auto-detect AI tools) | ⚡ Instant | 📟 Manual / 🤖 Slash command |
 
@@ -192,7 +192,7 @@ You: Enter ~/projects/legacy-app
 │         │ AI assists with polish, diagrams, prototype templates   │
 ├────────────────────────────────────────────────────────────────────┤
 │ Step 2 │ Dev+AI solo                                               │
-│         │ ADR/ + {apps|biz|tools}/*/specs/                        │
+│         │ adrs/ + sprints/*/specs/ (multiple specs per sprint)    │
 │         │ Dev gives 4 directions (10min) → AI writes 4 files      │
 ├────────────────────────────────────────────────────────────────────┤
 │ Step 3 │ PM + Dev review                                          │
@@ -222,10 +222,11 @@ SpecRocket/
 ├── template/               ← Project template framework
 │   ├── AGENTS.md              ← AI collaboration rules
 │   ├── CLAUDE.md              ← Claude Code collaboration rules
-│   ├── docs/                  ← Product doc templates
-│   ├── ADR/                   ← Architecture decision record templates
+│   ├── docs/                  ← Stable-layer product docs (incl. whitepaper)
+│   ├── sprints/_template/     ← Sprint container (docs/ product + specs/ tech)
+│   ├── adrs/                   ← Architecture decision records (adr-NNN-name.md)
 │   ├── assets/                ← Operations asset templates (configs/interfaces/standards/manuals)
-│   ├── apps/businesses/tools/ ← Module templates
+│   ├── apps/businesses/tools/ ← Pure code domain templates (src/, no specs/)
 │   └── ...
 ├── README.md         ← 🇨🇳 Chinese version
 ├── README.en.md      ← 🇬🇧 English version
@@ -244,7 +245,7 @@ SpecRocket/
 | **Team roles** | ✅ 5-step method | ❌ | ❌ | ❌ | ❌ |
 | **Iteration support** | ✅ sprints/NNN | ❌ One-shot | ❌ | ❌ | ❌ |
 | **Product documentation** | ✅ Complete templates | ❌ Spec only | ❌ | ❌ | ❌ |
-| **ADR/Architecture** | ✅ Built-in | ❌ | ❌ | ❌ | ❌ |
+| **adrs/Architecture** | ✅ Built-in | ❌ | ❌ | ❌ | ❌ |
 | **Acceptance strategy** | ✅ check.md | ❌ | ❌ | ❌ | ❌ |
 | **Learning curve** | ⭐ **30 minutes** | ⭐⭐ | ⭐ | ⭐ | ⭐⭐⭐⭐⭐ |
 
@@ -277,7 +278,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 | Scenario | Recommended path |
 |:----|:---------|
 | 🆕 **New project** | 📟 Manual `./init.sh` or 🤖 AI `/spec-rocket init` → 🤖 `brainstorm` → 5-step flow |
-| 🔄 **Existing project + AI** | 🤖 AI `migrate` → write ADR → Retrospec |
+| 🔄 **Existing project + AI** | 🤖 AI `migrate` → write adrs → Retrospec |
 | ⬆️ **Upgrade to latest methodology** | 📟 `./spec-rocket update` → run `migrate` on project to upgrade structure |
 | 🏁 **Hackathon** | 📟/🤖 `init` → skip Step 1 → Step 4 AI coding |
 | 👥 **Team training** | 📟 Manual `init` → read ssot-convention → PPT |

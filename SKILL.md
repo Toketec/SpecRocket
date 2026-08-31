@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 2.12.0
+version: 3.0.0
 license: MIT
 ---
 
@@ -23,10 +23,11 @@ SpecRocket/                      ← 本仓库
 ├── template/               ← 项目模板框架（init/migrate 复制此目录）
 │   ├── AGENTS.md               ← AI 协作规则
 │   ├── CLAUDE.md               ← Claude Code 协作规则
-│   ├── docs/                   ← 产品文档模板
-│   ├── ADR/                    ← 架构决策模板
+│   ├── docs/                   ← 稳定层产品文档模板（含 whitepaper.md）
+│   ├── sprints/_template/      ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
+│   ├── adrs/                   ← 架构决策模板（adr-NNN-名称.md）
 │   ├── assets/                 ← 运营资产模板（configs/interfaces/standards/manuals）
-│   ├── apps/businesses/tools/  ← 模块模板
+│   ├── apps/businesses/tools/  ← 纯代码域模板（src/，无 specs/）
 │   └── ...
 ├── README.md                   ← 项目介绍
 ├── LICENSE                     ← MIT License
@@ -40,7 +41,7 @@ SpecRocket/                      ← 本仓库
 |:----|:------|
 | `init [项目名]` | 从 template/ 目录复制骨架。无参=当前目录，有参=新建项目目录 |
 | `brainstorm` | 引导用户描述产品 → 自动生成产品文档 + 创建 sprint |
-| `migrate` | ① 给现有项目嵌入骨架；② 旧版 SpecRocket 项目强制升级到最新模板结构（内容转移） |
+| `migrate` | ① 给现有项目嵌入骨架；② 旧版 SpecRocket 项目强制升级到最新模板结构（转移 → 收敛 → 保留 → 删除，零残留） |
 | `preview` | 扫描项目 → 生成 dark-theme 可视化预览页 |
 | `update` | 一键更新本地 skill（自动检测用户使用的 AI 工具，按工具安装位置同步） |
 
@@ -48,7 +49,7 @@ SpecRocket/                      ← 本仓库
 
 ## `/spec-rocket init` — 建新项目
 
-**做什么：** 从 `template/` submodule 复制 SpecRocket 骨架到目标项目，初始化 Git。**无参时在当前目录初始化，有参时创建项目目录。**
+**做什么：** 从 `template/` 目录（与主仓库共享 .git，非 submodule）复制 SpecRocket 骨架到目标项目，初始化 Git。**无参时在当前目录初始化，有参时创建项目目录。**
 
 **手动执行（无 AI 时）：**
 ```bash
@@ -102,7 +103,7 @@ SpecRocket/                      ← 本仓库
 
 ## `/spec-rocket brainstorm` — 引导填文档
 
-**用途：** 用户已经有项目（刚 init 或现有项目），不清楚怎么写文档。AI 用问题引导，按固定顺序写 4 组文件。
+**用途：** 用户已经有项目（刚 init 或现有项目），不清楚怎么写文档。AI 用问题引导，按固定顺序写 5 组文件。
 
 ### 📋 编辑顺序（必须遵守，不跳序）
 
@@ -111,9 +112,10 @@ SpecRocket/                      ← 本仓库
 | 1️⃣ | `docs/product-overview.md` | 全局锚点，定义产品是什么 |
 | 2️⃣ | `docs/non-functional-reqs.md` | 技术约束基线（性能/安全/合规） |
 | 3️⃣ | `docs/visual-design.md` | 视觉方向（或明确无 UI） |
-| 4️⃣ | `docs/sprints/sprint-001/` | 版本迭代设计 |
+| 4️⃣ | `docs/whitepaper.md` | 白皮书（愿景/定位/理念） |
+| 5️⃣ | `sprints/sp-001-功能名/` | 版本迭代设计 |
 
-> 每步完成后再进入下一步。即使确定本项目无 UI/无特殊非功能需求，2️⃣3️⃣也必须写一行占位（参见「占位规则」）。
+> 每步完成后再进入下一步。即使确定本项目无 UI/无特殊非功能需求/无对外白皮书，2️⃣3️⃣4️⃣也必须写一行占位（参见「占位规则」）。
 
 ### 📌 占位规则
 
@@ -123,6 +125,7 @@ SpecRocket/                      ← 本仓库
 |:----|:--------|
 | `non-functional-reqs.md` | `本项目为无用户交互的脚本工具，无特殊非功能需求要求。` |
 | `visual-design.md` | `本项目无前端界面（纯后端/脚本/CLI），不涉及视觉设计。` |
+| `whitepaper.md` | `本项目为内部工具，不涉及对外白皮书。` |
 
 > 占位原则：说清楚**为什么不需要**，不留"可能是忘了"的疑问。
 
@@ -144,14 +147,17 @@ SpecRocket/                      ← 本仓库
 4. **Step 3️⃣** — 写 visual-design.md：判断项目是否有前端界面
    - 有 UI → 根据产品类型选策略（完整设计系统 / UI框架定制 / 纯框架默认）
    - 纯后端/脚本/CLI → 写入占位行
-5. **Step 4️⃣** — 创建 sprint-001：一个问题引导
+5. **Step 4️⃣** — 写 whitepaper.md：判断是否有对外白皮书需求
+   - 对外产品 → 填写愿景/定位/理念
+   - 内部工具 → 写入占位行
+6. **Step 5️⃣** — 创建 sp-001：一个问题引导
 
    | # | 问题 | 写入哪里 |
    |:--|:-----|:---------|
-   | 5 | 第一个版本最想做什么功能？ | 创建 `sprints/sprint-001_功能名/` 从 _template |
+   | 5 | 第一个版本最想做什么功能？ | 创建 `sprints/sp-001_功能名/` 从 _template |
 
-6. 展示全部 4 组文件给用户确认
-7. 问："还要补充什么？直接告诉我改哪里"
+7. 展示全部 5 组文件给用户确认
+8. 问："还要补充什么？直接告诉我改哪里"
 
 ---
 
@@ -176,48 +182,52 @@ SpecRocket/                      ← 本仓库
    |:-----------------|:-----|
    | `AGENTS.md` | `./AGENTS.md` |
    | `.gitignore` | `./.gitignore` |
-   | `docs/sprints/_template/` | `docs/sprints/_template/` |
-   | `apps/_template/` | `apps/_template/` |
-   | `businesses/_template/` | `businesses/_template/` |
-   | `tools/_template/` | `tools/_template/` |
-   | `ADR/_template/` | `ADR/_template/` |
+   | `docs/*` | `./docs/*`（product-overview / non-functional-reqs / visual-design / whitepaper） |
+   | `sprints/_template/` | `./sprints/_template/` |
+   | `adrs/_template/` | `./adrs/_template/` |
+   | `apps/_template/` | `./apps/_template/` |
+   | `businesses/_template/` | `./businesses/_template/` |
+   | `tools/_template/` | `./tools/_template/` |
+   | `assets/` | `./assets/` |
 
 4. 完成时列出添加的文件清单，告诉用户做了什么
 
 ### 模式 2：旧版 SpecRocket 项目升级（结构迁移 + 内容转移）
 
-> 当项目由旧版本（v2.1 ~ v2.3）初始化，或用户自行添加了不符合模板结构的文档时使用。**强制更新到最新模板结构。**
+> 当项目由旧版本（v2.x）初始化，或用户自行添加了不符合模板结构的文档时使用。**强制更新到最新模板结构（v3.0）。**
 
 **第 1 步：结构迁移（脚本执行）**
 ```bash
 ./spec-rocket migrate [项目路径]     # 默认当前目录
 ```
 脚本会：
-- 检测旧版文件：`ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` / 全局 `spec/` + `_catalog.yaml`
-- **规整 sprints 结构**：检测废弃的 `sprint-000_initial/`（v2.5.0 起废弃）——纯模板副本（文件仍含占位符）直接删除；含真实内容则重命名为 `sprint-000_initial.legacy/` 保留待转移
-- **清理文档中的 000 残留**：AGENTS.md / CLAUDE.md / README.md / README.en.md / ssot-convention*.md / docs/README.md 结构图中的 `sprint-000_initial` 块自动删除（含兄弟节点前缀修正）；正文描述残留写入 MIGRATION-REPORT.md 由 AI 处理
-- **清理方法论残留**：项目根 `ssot-convention*.md` 自动归档到 `archive/`（此文档仅应存在于 SpecRocket 主仓库）
-- **补齐 assets/ 运营资产骨架**：项目无 `assets/` 时自动创建（configs/interfaces/standards/manuals 四类按需取用，详见 `assets/README.md`）；已有 `assets/` 时**对齐模板骨架**（补齐缺失子目录 + README）；检测到项目已有 `config/` `api/` `manual/` 等运营资产目录 → **自动转移归位** `assets/` 对应子目录（configs/interfaces/standards/manuals；目标已有真实内容时不覆盖，报告标注由 AI 合并）——**规则2：相关性不大或无法收敛的文件收敛到 assets/**
-- **扫描游离文档（规则1）**：检测 `docs/` 全递归（含子目录，排除 `sprints/`）散落的非模板 .md、根目录非白名单内容文档（.md/.txt/.docx/.pdf 等）→ 报告标记**优先收敛到 docs/ 对应文档**（由 AI 语义合并）
-- **扫描根目录非规范项（规则2）**：根目录非白名单的资产型文件（配置/接口等）及非规范目录 → 报告标记**转移并收敛到 assets/ 对应子目录**（由 AI 确认归属）
-- 从 template 补齐缺失的新 sprint 文件（`user-scenarios.md` / `business-flows.md` / `uml-pack.md`）
-- 旧文件重命名为 `*.legacy.md`（内容保留），生成 `MIGRATION-REPORT.md`
+- **迁移 sprint 容器**：`docs/sprints/sprint-NNN_xxx/` → `sprints/sp-NNN-xxx/docs/`（重命名 + 改路径；检测旧版文件 `ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` 报告由 AI 转移）
+- **迁移模块规格**：`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/` → 按 spec 头部「基于冲刺」字段归入 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（脚本报告，AI 执行内容转移 + 重新编号）
+- **迁移架构决策**：`ADR/ADR-NNN_xxx.md` → `adrs/adr-NNN-xxx.md`
+- **清理废弃目录**：`sprint-000_initial/`（纯模板直接删；含内容转 `.legacy` 待转移）；根目录 `ssot-convention*.md` 归档到 `archive/`
+- **补齐新骨架**：`docs/whitepaper.md`、`sprints/_template/`（docs + specs）、`adrs/_template/`
+- **扫描游离文档**：docs/ 全递归（排除 sprints/）+ 根目录非白名单内容 → 报告收敛
+- **扫描根目录非规范项** → 报告转移收敛到 assets/ 对应子目录
+- 生成 `MIGRATION-REPORT.md`
 
-**第 2 步：内容转移（AI 执行，按迁移规则）**
+**第 2 步：内容转移（AI 执行，按迁移映射表）**
 
 | 旧文件 | 内容去向 |
 |:-------|:---------|
-| `ux-flows.md` | 旅程部分 → `user-scenarios.md` §1；流程部分 → `business-flows.md` |
-| `ui-wireframes.md` | 布局/交互 → `prototypes/prototype.html`；系统图表 → `uml-pack.md` |
-| `user-journey-flows.md` | 旅程总览 → `user-scenarios.md` §1；流程图 → `business-flows.md` |
-| `sprint-000_initial/` | v2.5.0 已废弃——纯模板副本脚本直接删除；含真实内容时 → 把 v1.0 基线设计转移到 `sprint-001/` 对应文件后删除 `.legacy` |
-| 全局 `spec/` + `_catalog.yaml` | 按模块迁移到 `{apps\|businesses\|tools}/*/specs/` 规格库（每个规格一个"编号+描述"目录：`SPEC-{APP\|BIZ\|TOOL}-NNN_描述/`，内含 requirements/plan/tasks/check） |
+| `ux-flows.md` | 旅程部分 → `sprints/sp-NNN-*/docs/user-scenarios.md`；流程部分 → `business-flows.md` |
+| `ui-wireframes.md` | 布局/交互 → `docs/prototypes/prototype.html`；系统图表 → `uml-pack.md` |
+| `user-journey-flows.md` | 旅程总览 → `user-scenarios.md`；流程图 → `business-flows.md` |
+| `docs/sprints/sprint-NNN_xxx/` 其余文档 | → `sprints/sp-NNN-xxx/docs/` 对应文件 |
+| `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | → 归属冲刺的 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（四文件；重新编号；头部改写覆盖范围） |
+| `ADR/ADR-NNN_xxx.md` | → `adrs/adr-NNN-xxx.md` |
+| 全局 `spec/` + `_catalog.yaml` | 内容归入对应冲刺 specs/ 或 archive/（AI 判断） |
+| `sprint-000_initial.legacy/` | 基线设计转移至 `sp-001-*/docs/` 后删除 |
 
 **第 3 步：AI 转移后清理**
 - 确认 `*.legacy.md` 内容已全部转移 → 删除 `*.legacy.md` 和 `MIGRATION-REPORT.md`
 - 更新 AGENTS.md 目录结构描述（如有手动改动）
 
-> **用户自定义的不符合模板文档（两级收敛策略 v2.10.0，扫描范围 v2.11.0）**：检测报告中列出 → ① **规则1 优先收敛到 docs/**：内容型文档（需求/设计/说明类 .md/.txt/.docx/.pdf）由 AI 判断内容归属，合并进 `docs/` 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等）；② **规则2 转移并收敛到 assets/**：相关性不大或无法收敛的资产型文件（配置/接口/手册/规范），转移到 `assets/` 对应子目录（configs / interfaces / standards / manuals）。**检查范围**：`docs/` 全递归（排除 `sprints/` 整棵）、项目根目录全量（文件+目录，排除白名单/隐藏项）、`assets/` 内部（散落项归位四子目录）；`apps/` `businesses/` `tools/` 等**技术产出目录不干预**（技术结构遵循行业规范）。
+> **迁移原则**：转移 → 收敛 → 保留 → 删除。旧文档/冲刺/规格优先尽量对原始内容做转移；不方便转移的做收敛；不方便收敛的尽量保留信息不丢失；最后删除。**最终保持目录结构完全符合最新规范，零残留。**
 
 ---
 
@@ -236,18 +246,18 @@ SpecRocket/                      ← 本仓库
 | 地图 | 信息来源 | 展示什么 |
 |:----|:---------|:---------|
 | 🗺️ **产品地图** | `docs/product-overview.md` | 产品核心功能分区 → 可视化卡片 |
-| 🗺️ **业务地图** | `docs/product-overview.md` 核心场景 + `docs/sprints/` | 用户旅程 / 业务流转关系图 |
-| 🗺️ **架构地图** | `ADR/` 目录 + `apps/` `businesses/` `tools/` + `assets/` | 模块关系 + 技术选型 + 运营资产（配置/接口/规范/手册） |
+| 🗺️ **业务地图** | `docs/product-overview.md` 核心场景 + `sprints/` | 用户旅程 / 业务流转关系图 |
+| 🗺️ **架构地图** | `adrs/` 目录 + `apps/` `businesses/` `tools/` + `sprints/*/specs/` + `assets/` | 模块关系 + 技术选型 + 迭代规格分布 + 运营资产（配置/接口/规范/手册） |
 
 下方补充信息（按需展示，无则不显）：
 
 | 信息块 | 来源 |
 |:------|:-----|
-| 用户画像 | `product-overview.md` |
-| 关键术语 | `product-overview.md` |
-| Sprint 路线图 | `docs/sprints/` |
-| ADR 决策列表 | `ADR/` |
-| 技术栈 | `non-functional-reqs.md` |
+| 用户画像 | `docs/product-overview.md` |
+| 关键术语 | `docs/product-overview.md` |
+| Sprint 路线图 | `sprints/` |
+| adr 决策列表 | `adrs/` |
+| 技术栈 | `docs/non-functional-reqs.md` |
 | 项目统计 | 全目录扫描（文件数、目录数、行数） |
 
 ---
@@ -292,18 +302,50 @@ AI 自行探索项目，**先理解再输出**。
 SpecRocket **不做** `/spec-rocket plan` 自动写 spec。理由：
 
 ```
-Dev 把 sprint-001 文档 → 拖到新的 AI 对话中（干净上下文）
+Dev 把 sp-NNN 的 docs/（冲刺文档）→ 拖到新的 AI 对话中（干净上下文）
   ↓
 Dev 给 4 个方向：
-  ① 归属哪个模块
-  ② 是否需要新 ADR
-  ③ 跨模块依赖
+  ① 本次迭代拆几个 spec？每个 spec 的边界
+  ② 是否需要新 adr
+  ③ 跨 spec 依赖
   ④ 核心函数/API/表名
   ↓
 AI 在干净上下文中写 specs 四文件
   ↓
 PM + Dev 评审
 ```
+
+### 📐 规格拆分原则（核心）
+
+> **为什么一次冲刺要拆多个规格？** 把一次开发任务**解耦、拆解、尽量相互独立**，以便**并行开发且互不干扰**——前端和后端分离成多个规格项、不同服务分成不同规格项。多个 spec 共同促成一次迭代的所有开发任务（必然包含前端、后端或其他服务）。
+
+| 原则 | 说明 |
+|:----|:----|
+| ✅ 解耦 | 能独立开发/独立验收的边界才拆（前端/后端、不同服务、不同领域） |
+| ✅ 提升 token 利用率减少幻觉 | spec 上下文要小到 AI 能完整理解；过大 → 幻觉增多 |
+| ❌ 不刻意多拆 | 没有独立边界不硬拆；拆太多 → 管理成本上升 |
+| 上限 | 「解耦 + token 利用率」 |
+| 下限 | 「方便管理」 |
+
+### Specs 目录层级（v3.0）
+
+每个冲刺容器内有 `specs/` 规格库，内含 `_template/`（四文件模板）+ 每个规格一个"编号+描述"独立目录：
+
+```
+sprints/sp-001-核心交易/specs/
+├── _template/                  # 规格模板（cp 建新规格）
+│   ├── requirements.md
+│   ├── plan.md
+│   ├── tasks.md
+│   └── check.md
+└── spec-001-前端收银台/        # 具体规格（编号+描述）
+    ├── requirements.md
+    └── ...
+```
+
+新建规格 = `cp -r specs/_template specs/spec-{XXX}_{规格名}`，编号 `spec-{三位数}` 在冲刺内递增，描述下划线连接（与 `sp-001-功能名` 同款机制）。
+
+> ⚠️ **详细结构、命名规则、变更检查清单、版本差异见 `references/specs-directory-hierarchy.md`**。改模板结构前先读，并向用户梳理层级确认后再动手。
 
 ## 完整使用路径
 

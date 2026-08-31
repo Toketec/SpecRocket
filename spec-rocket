@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口
+# 规格驱动开发（SDD）框架的命令入口 (v3.0)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 一键更新本地 skill（工具感知）
-#   ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构（不符合模板文件：先收敛 docs，否则收敛 assets）
+#   ./spec-rocket migrate [路径]   # 旧版项目迁移到最新模板结构（转移 → 收敛 → 保留 → 删除，零残留）
 #   ./spec-rocket help            # 帮助
 # ============================================================
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="2.12.0"
+VERSION="3.0.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -54,7 +54,7 @@ cmd_init() {
     git add . >/dev/null
     git commit -m "init: SpecRocket project skeleton" >/dev/null 2>&1 || warn "git commit 失败（可能未配置用户信息），可稍后手动提交"
   fi
-  ok "项目已初始化"
+  ok "项目已初始化（v$VERSION 结构：docs/ + sprints/ + adrs/ + apps/businesses/tools + assets/）"
   echo "  下一步：运行 /spec-rocket brainstorm 引导写产品文档"
 }
 
@@ -148,7 +148,8 @@ cmd_update() {
 }
 
 # ============================================================
-# migrate — 旧版项目迁移到最新模板结构（结构层）
+# migrate — 旧版项目迁移到最新模板结构 v3.0（结构层）
+# 迁移原则：转移 → 收敛 → 保留 → 删除；最终目录结构零残留
 # 内容层（拆分/转移语义内容）由 AI 斜杠命令按 SKILL.md 规则执行
 # ============================================================
 cmd_migrate() {
@@ -158,364 +159,334 @@ cmd_migrate() {
     exit 1
   fi
   cd "$TARGET"
-  info "SpecRocket migrate — 目标: $(pwd)"
+  info "SpecRocket migrate v$VERSION — 目标: $(pwd)"
   echo ""
 
-  # 检测旧版文件（v2.1 ~ v2.3）
-  LEGACY_FILES=()
-  FOUND_LEGACY=0
+  REPORT_NEEDED=0
+  LEGACY_NOTES=()     # 保留待确认项（内容已转移，确认后删除）
+  STRAY_DOCS=()       # 规则1：游离内容文档 → 收敛 docs/
+  ROOT_STRAY_R1=()    # 规则1：根目录内容型文档 → 收敛 docs/
+  ROOT_STRAY_R2=()    # 规则2：根目录非规范项 → 归位 assets/
+  ASSETS_STRAY=()
 
-  # 旧 sprint 文件
-  while IFS= read -r f; do
-    LEGACY_FILES+=("$f")
-    FOUND_LEGACY=1
-  done < <(find docs -name "ux-flows.md" -o -name "ui-wireframes.md" -o -name "user-journey-flows.md" 2>/dev/null || true)
+  # ═══════════════════════════════════════════════
+  # 1. 迁移旧 sprint 容器：docs/sprints/sprint-NNN_xxx/ → sprints/sp-NNN-xxx/docs/
+  # ═══════════════════════════════════════════════
+  if [ -d docs/sprints ]; then
+    info "① 检测到旧结构 docs/sprints/，迁移到顶层 sprints/ ..."
+    mkdir -p sprints
 
-  # 全局 spec/ 目录或 _catalog.yaml（v2.1 前）
-  if [ -d spec ] || [ -f _catalog.yaml ] || [ -f specs/_catalog.yaml ]; then
-    LEGACY_FILES+=("[全局] spec/ 目录 或 _catalog.yaml")
-    FOUND_LEGACY=1
-  fi
+    # 旧 sprint 文件（v2.1 ~ v2.3）检测
+    while IFS= read -r f; do
+      LEGACY_NOTES+=("$f（旧版文件，AI 按迁移映射表转移内容）")
+      REPORT_NEEDED=1
+    done < <(find docs -name "ux-flows.md" -o -name "ui-wireframes.md" -o -name "user-journey-flows.md" 2>/dev/null || true)
 
-  # 废弃 sprint-000_initial 目录（v2.5.0 起 sprints 只保留 _template/，000 由 brainstorm 直接创建 sprint-001）
-  if [ -d docs/sprints/sprint-000_initial ]; then
-    # 检测是否含真实内容：所有 .md 仍含 {占位符} = 纯模板副本 → 直接删除；否则保留为 .legacy
-    HAS_REAL=$(grep -L "{" docs/sprints/sprint-000_initial/*.md 2>/dev/null | head -1)
-    if [ -z "$HAS_REAL" ]; then
-      rm -rf docs/sprints/sprint-000_initial
-      ok "已删除废弃目录: docs/sprints/sprint-000_initial/（纯模板副本，无真实内容）"
-    else
-      mv docs/sprints/sprint-000_initial docs/sprints/sprint-000_initial.legacy
-      warn "sprint-000_initial 含真实内容 → 已保留为 sprint-000_initial.legacy/（AI 转移内容后删除）"
-      LEGACY_FILES+=("[目录] docs/sprints/sprint-000_initial/ → .legacy/")
-      FOUND_LEGACY=1
-    fi
-  fi
+    # 处理具体 sprint：sprint-NNN_xxx/ → sp-NNN-xxx/docs/
+    for sprint in docs/sprints/sprint-*; do
+      [ -d "$sprint" ] || continue
+      base=$(basename "$sprint")
+      newname=$(printf '%s' "$base" | sed 's/^sprint-/sp-/; s/_/-/g')
+      if [ -d "sprints/$newname" ]; then
+        warn "    目标 sprints/$newname 已存在，跳过（内容请 AI 合并）"
+        continue
+      fi
+      mkdir -p "sprints/$newname/docs"
+      # 转移内容（不删除源，保留 .legacy 供 AI 确认）
+      cp -r "$sprint"/* "sprints/$newname/docs/" 2>/dev/null || true
+      # sprint 内含 specs/ 的情况（v2.12 结构异常）→ 移到新 specs/
+      if [ -d "$sprint/specs" ]; then
+        cp -r "$sprint/specs" "sprints/$newname/specs" 2>/dev/null || true
+      fi
+      ok "    已转移: $base → sprints/$newname/docs/"
+      mv "$sprint" "$sprint.legacy"
+      LEGACY_NOTES+=("$sprint.legacy → 内容已转移至 sprints/$newname/，AI 确认后删除")
+      REPORT_NEEDED=1
+    done
 
-  # 清理文档中的 sprint-000_initial 结构图残留（v2.8.0）
-  # 老项目从旧模板复制的 AGENTS.md/README.md 等，结构图仍画着 sprint-000_initial，
-  # 与实际目录（已删除/legacy）不统一 → 自动删除结构图中的 000 块，修正兄弟项前缀
-  DOC_000_FIXED=0
-  DOC_000_NOTE=()
-  for doc in AGENTS.md CLAUDE.md README.md README.en.md ssot-convention*.md docs/README.md; do
-    [ -f "$doc" ] || continue
-    case "$doc" in *.legacy.md) continue;; esac
-    if grep -q "sprint-000" "$doc" 2>/dev/null; then
-      # awk：删结构图中的 000 块；000 是最后兄弟时把前一个兄弟 ├── 改为 └──
-      # 注意：不用字符类 [├└] 等（gawk C locale 下多字节字符类不可靠），统一用 index() 字节匹配
-      awk '
-        function emit_pending() {
-          if (pending != "") {
-            if (fix_next && index(pending, "├──") > 0) sub(/├──/, "└──", pending)
-            print pending
-            pending = ""
-          }
-          fix_next = 0
-        }
-        index($0, "sprint-000_initial") > 0 && (index($0, "├──") > 0 || index($0, "└──") > 0) {
-          if (index($0, "└──") > 0) fix_next = 1
-          removed++
-          in000 = 1
-          next
-        }
-        in000 {
-          p1 = index($0, "│")
-          if (p1 > 0 && index(substr($0, p1 + 1), "│") > 0) { removed++; next }
-          if ($0 ~ /^[[:space:]]*$/) { removed++; next }
-          in000 = 0
-        }
-        index($0, "├──") > 0 || index($0, "└──") > 0 {
-          emit_pending()
-          pending = $0
-          next
-        }
-        { emit_pending(); print }
-        END { emit_pending(); if (removed > 0) print removed > "/dev/stderr" }
-      ' "$doc" > "${doc}.sr000" 2>/tmp/sr000_stat
-      REMOVED=$(cat /tmp/sr000_stat 2>/dev/null)
-      if [ -s "${doc}.sr000" ] && [ "${REMOVED:-0}" -gt 0 ] 2>/dev/null; then
-        mv "${doc}.sr000" "$doc"
-        DOC_000_FIXED=1
-        ok "已清理 $doc 中 sprint-000_initial 结构图残留（删除 ${REMOVED} 行）"
+    # 处理 sprint-000（v2.5 废弃）
+    if [ -d docs/sprints/sprint-000_initial ]; then
+      HAS_REAL=$(grep -L "{" docs/sprints/sprint-000_initial/*.md 2>/dev/null | head -1)
+      if [ -z "$HAS_REAL" ]; then
+        rm -rf docs/sprints/sprint-000_initial
+        ok "    已删除废弃目录: docs/sprints/sprint-000_initial/（纯模板副本）"
       else
-        rm -f "${doc}.sr000"
-      fi
-      # 正文描述残留（非结构图）→ 记录待 AI 处理
-      BODY_HITS=$(grep -n "sprint-000" "$doc" 2>/dev/null | grep -v '[├└]──' | head -5 || true)
-      if [ -n "$BODY_HITS" ]; then
-        DOC_000_NOTE+=("$doc: $BODY_HITS")
+        mv docs/sprints/sprint-000_initial docs/sprints/sprint-000_initial.legacy
+        warn "    sprint-000_initial 含真实内容 → 保留为 .legacy（AI 转移基线设计到 sp-001-*/docs/ 后删除）"
+        LEGACY_NOTES+=("docs/sprints/sprint-000_initial.legacy → 基线设计转移至 sp-001-*/docs/ 后删除")
+        REPORT_NEEDED=1
       fi
     fi
-  done
-  if [ "$DOC_000_FIXED" = "1" ]; then
-    warn "已自动清理文档中的 sprint-000_initial 结构图残留（目录与文档保持一致）"
+
+    # 转移 _template（若有旧模板文件散落）——新模板由下方统一补齐
+    rm -rf docs/sprints 2>/dev/null || true
+    if [ -z "$(ls -A sprints 2>/dev/null)" ]; then
+      rmdir sprints 2>/dev/null || true
+    fi
   fi
 
-  # 项目根残留 ssot-convention（方法论本体文档，仅应存在于 SpecRocket 主仓库）
+  # ═══════════════════════════════════════════════
+  # 2. 迁移 ADR/ → adrs/
+  # ═══════════════════════════════════════════════
+  if [ -d ADR ]; then
+    info "② 检测到旧结构 ADR/，迁移到 adrs/ ..."
+    mkdir -p adrs
+    for f in ADR/ADR-*.md; do
+      [ -f "$f" ] || continue
+      base=$(basename "$f")
+      newname=$(printf '%s' "$base" | sed 's/^ADR-/adr-/; s/_/-/g')
+      if [ ! -f "adrs/$newname" ]; then
+        cp "$f" "adrs/$newname"
+        ok "    已转移: $base → adrs/$newname"
+        LEGACY_NOTES+=("$f → 已复制至 adrs/$newname，AI 确认后删除原件")
+        REPORT_NEEDED=1
+      else
+        warn "    adrs/$newname 已存在，跳过（内容请 AI 合并）"
+      fi
+    done
+    # ADR 内其他游离 .md → 报告
+    while IFS= read -r f; do
+      case "$f" in ADR/_template/*|ADR/ADR-*.md) continue;; esac
+      LEGACY_NOTES+=("$f（ADR 内游离文档，AI 判断归属）")
+      REPORT_NEEDED=1
+    done < <(find ADR -type f -name "*.md" 2>/dev/null || true)
+  fi
+
+  # ═══════════════════════════════════════════════
+  # 3. 检测模块内 specs/（v2.x 模块维度规格）→ 报告 AI 迁移到迭代容器
+  # ═══════════════════════════════════════════════
+  MODULE_SPECS=()
+  for dir in apps businesses tools; do
+    [ -d "$dir" ] || continue
+    while IFS= read -r sp; do
+      MODULE_SPECS+=("$sp")
+    done < <(find "$dir" -type d -name specs 2>/dev/null || true)
+  done
+  if [ ${#MODULE_SPECS[@]} -gt 0 ]; then
+    warn "③ 检测到模块内 specs/（v2.x 结构）——需迁移到迭代容器 sprints/sp-NNN-*/specs/："
+    for sp in "${MODULE_SPECS[@]}"; do
+      echo "    - $sp/（AI 按 spec 头部「基于冲刺」字段归入对应冲刺，重新编号 spec-NNN-xxx）"
+    done
+    REPORT_NEEDED=1
+  fi
+
+  # ═══════════════════════════════════════════════
+  # 4. 根目录残留 ssot-convention（方法论本体，仅应存在于主仓库）
+  # ═══════════════════════════════════════════════
   if ls ssot-convention*.md >/dev/null 2>&1; then
     mkdir -p archive
     for f in ssot-convention*.md; do
       mv "$f" "archive/$f"
-      ok "已归档: $f → archive/$f（方法论本体文档，最新版见 SpecRocket GitHub 主仓库）"
+      ok "    已归档: $f → archive/$f（方法论本体文档，最新版见 SpecRocket GitHub 主仓库）"
     done
   fi
 
-  # 补齐 assets/ 运营资产骨架（v2.9.0）+ 内部结构对齐（v2.11.0）
-  # assets/ = 被系统/业务直接引用的工程资产（配置模板/对外接口/规范库/手册），由 Ops 角色产出
-  ASSETS_STRAY=()
+  # ═══════════════════════════════════════════════
+  # 5. 补齐新骨架（docs 四件套 + sprints/_template/ + adrs/_template/ + assets/）
+  # ═══════════════════════════════════════════════
+  # docs/ 四件套
+  mkdir -p docs
+  for f in product-overview.md non-functional-reqs.md visual-design.md whitepaper.md; do
+    if [ ! -f "docs/$f" ] && [ -f "$TEMPLATE/docs/$f" ]; then
+      cp "$TEMPLATE/docs/$f" "docs/$f"
+      ok "    补齐: docs/$f"
+    fi
+  done
+  # sprints/_template/
+  if [ ! -d sprints/_template ] && [ -d "$TEMPLATE/sprints/_template" ]; then
+    mkdir -p sprints
+    cp -r "$TEMPLATE/sprints/_template" sprints/_template
+    ok "    补齐: sprints/_template/（docs/ + specs/ 模板）"
+  fi
+  # adrs/_template/
+  if [ ! -d adrs/_template ] && [ -d "$TEMPLATE/adrs/_template" ]; then
+    mkdir -p adrs
+    cp -r "$TEMPLATE/adrs/_template" adrs/_template
+    ok "    补齐: adrs/_template/"
+  fi
+  # assets/ 骨架（v2.9 沿用）
   if [ ! -d assets ]; then
-    if [ -d "$SCRIPT_DIR/template/assets" ]; then
-      cp -r "$SCRIPT_DIR/template/assets" assets
-      ok "已创建 assets/ 运营资产骨架（configs/interfaces/standards/manuals，详见 assets/README.md）"
+    if [ -d "$TEMPLATE/assets" ]; then
+      cp -r "$TEMPLATE/assets" assets
+      ok "    补齐: assets/ 运营资产骨架（configs/interfaces/standards/manuals）"
     fi
   else
-    # 已有 assets/ → 对齐模板骨架（补齐缺失子目录 + README）
-    if [ -d "$SCRIPT_DIR/template/assets" ]; then
-      for sub in configs interfaces standards manuals; do
-        if [ ! -d "assets/$sub" ]; then
-          mkdir -p "assets/$sub"
-          [ -f "$SCRIPT_DIR/template/assets/$sub/.gitkeep" ] && cp "$SCRIPT_DIR/template/assets/$sub/.gitkeep" "assets/$sub/"
-          ok "已补齐 assets/$sub/ 子目录（对齐模板骨架）"
-        fi
-      done
-      if [ ! -f assets/README.md ]; then
-        cp "$SCRIPT_DIR/template/assets/README.md" assets/README.md
-        ok "已补齐 assets/README.md（对齐模板骨架）"
+    for sub in configs interfaces standards manuals; do
+      if [ ! -d "assets/$sub" ]; then
+        mkdir -p "assets/$sub"
+        ok "    补齐: assets/$sub/"
       fi
-    fi
-    # assets/ 内部散落项（不在四子目录内，且非 README.md）→ 规则2 标记 AI 归位
+    done
+    [ ! -f assets/README.md ] && [ -f "$TEMPLATE/assets/README.md" ] && cp "$TEMPLATE/assets/README.md" assets/README.md
     while IFS= read -r f; do
       base=$(basename "$f")
       [ "$base" = "README.md" ] && continue
       ASSETS_STRAY+=("$f")
     done < <(find assets -maxdepth 1 -mindepth 1 ! -name "configs" ! -name "interfaces" ! -name "standards" ! -name "manuals" 2>/dev/null || true)
   fi
-  # 不符合模板文件的两级收敛策略（v2.10.0）
-  # 规则1: 优先收敛到 docs/ 设计相关文档（内容型 .md，由 AI 语义合并）
-  # 规则2: 相关性不大或无法收敛 → 转移并收敛到 assets/ 对应子目录（资产型）
-  # ── 规则2：运营资产目录自动转移归位（config/api/manual/standards → assets/ 对应子类）
-  OPS_MOVED=0
-  OPS_CONFLICT=()
-  move_ops_dir() { # $1=源目录 $2=目标子目录 $3=说明
+  # 运营资产目录自动归位（规则2）
+  move_ops_dir() { # $1=源目录 $2=目标子目录
     local src="$1" dst="assets/$2"
     [ -d "$src" ] || return 0
     if [ ! -d "$dst" ]; then
       mv "$src" "$dst"
-      ok "已转移: $src/ → $dst/（规则2：运营资产收敛 assets/）"
-      OPS_MOVED=1
+      ok "    已转移: $src/ → $dst/（规则2：运营资产收敛 assets/）"
+      REPORT_NEEDED=1
     elif [ -z "$(ls -A "$dst" | grep -v '^\.gitkeep$' 2>/dev/null)" ]; then
-      # 目标为空骨架（仅 .gitkeep）→ 合并转移
       mv "$src"/* "$dst"/ 2>/dev/null || true
       rmdir "$src" 2>/dev/null || true
-      ok "已转移: $src/ → $dst/（规则2：运营资产收敛 assets/，合并入骨架）"
-      OPS_MOVED=1
+      ok "    已转移: $src/ → $dst/（合并入骨架）"
+      REPORT_NEEDED=1
     else
-      OPS_CONFLICT+=("$src/ → $dst/（目标已存在，内容请 AI 合并）")
+      warn "    $src/ → $dst/（目标已存在，内容请 AI 合并）"
+      REPORT_NEEDED=1
     fi
   }
-  move_ops_dir config configs "配置模板"
-  move_ops_dir api interfaces "对外接口"
-  move_ops_dir manual manuals "说明手册"
-  move_ops_dir docs-manual manuals "说明手册"
-  move_ops_dir standards standards "规范库"
-  if [ "${#OPS_CONFLICT[@]}" -gt 0 ]; then
-    for c in "${OPS_CONFLICT[@]}"; do
-      warn "目标已存在，跳过自动转移: $c"
-    done
-  fi
-  # ── 规则1：游离内容文档扫描（docs/ 递归 + 根目录散落内容文档）→ 收敛到 docs 对应文档
-  # docs/ 模板只允许 product-overview / non-functional-reqs / visual-design / sprints/（及 preview.html）
-  is_legacy_file() { # $1=路径，判断是否已识别为旧版文件
-    local f="$1"
-    for lf in "${LEGACY_FILES[@]}"; do
-      case "$lf" in \[全局\]*) continue;; esac
-      [ "$f" = "$lf" ] && return 0
-    done
-    return 1
-  }
-  STRAY_DOCS=()
+  move_ops_dir config configs
+  move_ops_dir api interfaces
+  move_ops_dir manual manuals
+  move_ops_dir docs-manual manuals
+  move_ops_dir standards standards
+
+  # ═══════════════════════════════════════════════
+  # 6. 游离文档扫描（规则1：收敛 docs/；规则2：归位 assets/）
+  # ═══════════════════════════════════════════════
   if [ -d docs ]; then
-    # v2.11.0：递归扫描 docs/ 全部 .md（排除 sprints/ 整棵 + 白名单四件套）
     while IFS= read -r f; do
       base=$(basename "$f")
       case "$base" in
-        product-overview.md|non-functional-reqs.md|visual-design.md|README.md) continue ;;
+        product-overview.md|non-functional-reqs.md|visual-design.md|whitepaper.md|README.md|preview.html) continue ;;
         *.legacy.md) continue ;;
       esac
-      case "$f" in */sprints/*) continue ;; esac
-      is_legacy_file "$f" && continue
       STRAY_DOCS+=("$f")
-    done < <(find docs -type f -name "*.md" 2>/dev/null || true)
+    done < <(find docs -type f \( -name "*.md" -o -name "*.html" \) 2>/dev/null || true)
   fi
-  # 根目录非白名单内容文档（v2.11.0：全量扫描，不止 .md；排除隐藏文件/模板文件/方法论本体/迁移报告）
-  ROOT_STRAY_R1=()   # 规则1：内容型文档（.md/.txt/.docx/.pdf 等）→ 收敛 docs/
-  ROOT_STRAY_R2=()   # 规则2：资产型/未知（配置/接口/规范/目录）→ 归位 assets/
   while IFS= read -r f; do
     base=$(basename "$f")
     case "$base" in
       AGENTS.md|CLAUDE.md|README.md|README.en.md|MIGRATION-REPORT.md|ssot-convention*.md|LICENSE) continue ;;
       *.legacy.md) continue ;;
     esac
-    is_legacy_file "${f#./}" && continue
     case "$base" in
       *.md|*.txt|*.docx|*.doc|*.pdf|*.rst|*.tex) ROOT_STRAY_R1+=("$f") ;;
       *) ROOT_STRAY_R2+=("$f") ;;
     esac
   done < <(find . -maxdepth 1 -type f ! -name ".*" 2>/dev/null || true)
-  # 根目录非规范目录 → 规则2（排除模板白名单目录 + ADR（Step 2 产出，SSOT 架构目录）+ 隐藏目录）
   while IFS= read -r d; do
     base=$(basename "$d")
     case "$base" in
-      docs|apps|businesses|tools|assets|archive|ADR) continue ;;
+      docs|sprints|adrs|apps|businesses|tools|assets|archive) continue ;;
       .*) continue ;;
     esac
     ROOT_STRAY_R2+=("$d")
   done < <(find . -maxdepth 1 -type d ! -name "." 2>/dev/null || true)
+
+  # ═══════════════════════════════════════════════
+  # 7. 报告输出
+  # ═══════════════════════════════════════════════
+  if [ "${#LEGACY_NOTES[@]}" -gt 0 ]; then
+    warn "检测到旧版结构，已完成结构层迁移（详见下方报告）："
+    for n in "${LEGACY_NOTES[@]}"; do
+      echo "    - $n"
+    done
+  fi
   if [ "${#STRAY_DOCS[@]}" -gt 0 ] || [ "${#ROOT_STRAY_R1[@]}" -gt 0 ]; then
-    warn "检测到不符合模板的游离内容文档（规则1：优先收敛到 docs/ 设计相关文档，由 AI 判断内容归属并合并）："
+    warn "检测到不符合模板的游离内容文档（规则1：优先收敛到 docs/ 对应文档，由 AI 判断归属并合并）："
     for f in "${STRAY_DOCS[@]}" "${ROOT_STRAY_R1[@]}"; do
       echo "    - $f"
     done
+    REPORT_NEEDED=1
   fi
   if [ "${#ROOT_STRAY_R2[@]}" -gt 0 ]; then
     warn "检测到根目录非规范项（规则2：转移并收敛到 assets/ 对应子目录，由 AI 确认归属）："
     for f in "${ROOT_STRAY_R2[@]}"; do
       echo "    - $f"
     done
+    REPORT_NEEDED=1
   fi
   if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
-    warn "检测到 assets/ 内散落项（规则2：归位到对应子目录 configs/interfaces/standards/manuals，由 AI 确认归属）："
+    warn "检测到 assets/ 内散落项（规则2：归位到 configs/interfaces/standards/manuals）："
     for f in "${ASSETS_STRAY[@]}"; do
       echo "    - $f"
     done
+    REPORT_NEEDED=1
+  fi
+  if [ "${#MODULE_SPECS[@]}" -gt 0 ]; then
+    REPORT_NEEDED=1
   fi
 
-  if [ "$FOUND_LEGACY" = "0" ]; then
-    ok "未检测到旧版文件，项目结构已是最新"
-  else
-    warn "检测到以下旧版文件，需要迁移："
-    for f in "${LEGACY_FILES[@]}"; do
-      echo "    - $f"
-    done
-    echo ""
-  fi
-
-  # 从模板补齐缺失的新 sprint 文件
-  if [ -d docs/sprints ]; then
-    info "从模板补齐缺失的 sprint 文件 ..."
-    SPRINT_DIRS=$(find docs/sprints -mindepth 1 -maxdepth 1 -type d ! -name "_template" 2>/dev/null || true)
-    if [ -z "$SPRINT_DIRS" ]; then
-      info "    无具体 sprint 目录（或只有 _template），跳过补齐"
-    fi
-    for sprint in $SPRINT_DIRS; do
-      for f in user-scenarios.md business-flows.md uml-pack.md; do
-        if [ ! -f "$sprint/$f" ] && [ -f "$SCRIPT_DIR/template/docs/sprints/_template/$f" ]; then
-          cp "$SCRIPT_DIR/template/docs/sprints/_template/$f" "$sprint/$f"
-          ok "    补齐: $sprint/$f"
-        fi
-      done
-    done
-  fi
-
-  # 旧文件重命名保留（内容留给 AI 转移），并生成迁移报告
-  # 报告生成条件：有旧版文件 或 有规则2已转移资产 或 有规则1游离文档
-  REPORT_NEEDED=$FOUND_LEGACY
-  [ "$OPS_MOVED" = "1" ] && REPORT_NEEDED=1
-  [ "${#OPS_CONFLICT[@]}" -gt 0 ] && REPORT_NEEDED=1
-  [ "${#STRAY_DOCS[@]}" -gt 0 ] && REPORT_NEEDED=1
-  [ "${#ROOT_STRAY_R1[@]}" -gt 0 ] && REPORT_NEEDED=1
-  [ "${#ROOT_STRAY_R2[@]}" -gt 0 ] && REPORT_NEEDED=1
-  [ "${#ASSETS_STRAY[@]}" -gt 0 ] && REPORT_NEEDED=1
-  if [ "$REPORT_NEEDED" = "1" ]; then
+  # 生成 MIGRATION-REPORT.md
+  if [ "$REPORT_NEEDED" = "1" ] || [ ${#LEGACY_NOTES[@]} -gt 0 ]; then
     REPORT="MIGRATION-REPORT.md"
     {
       echo "# 迁移报告 — $(date +%Y-%m-%d)"
       echo ""
-      echo "> 由 /spec-rocket migrate 生成。以下旧版文件已重命名为 *.legacy.md 保留内容，"
-      echo "> 请由 AI 按 SKILL.md 的迁移规则将内容转移到新模板文件，完成后删除 *.legacy.md。"
+      echo "> 由 /spec-rocket migrate v3.0 生成。迁移原则：**转移 → 收敛 → 保留 → 删除**。"
+      echo "> 请由 AI 按 SKILL.md 的迁移映射表处理以下内容，完成后保持目录结构完全符合最新规范，零残留。"
       echo ""
-      echo "## 迁移规则速查"
+      echo "## 迁移映射表（旧 → 新）"
       echo ""
-      echo "| 旧文件 | 内容去向 |"
-      echo "|:-------|:---------|"
-      echo "| \`ux-flows.md\` | 旅程部分 → \`user-scenarios.md\`；流程部分 → \`business-flows.md\` |"
-      echo "| \`ui-wireframes.md\` | 布局/交互 → \`prototypes/\` 原型；系统图表 → \`uml-pack.md\` |"
-      echo "| \`user-journey-flows.md\` | 旅程总览 → \`user-scenarios.md\`；流程图 → \`business-flows.md\` |"
-      echo "| \`sprint-000_initial/\` | v2.5.0 已废弃（纯模板副本直接删；含真实内容 → 转移基线设计到 \`sprint-001/\` 后删 .legacy） |"
-      echo "| 全局 \`spec/\` + \`_catalog.yaml\` | 迁移到 \`{apps|businesses|tools}/*/specs/\` 规格库（每个规格一个\"编号+描述\"目录：\`SPEC-{APP|BIZ|TOOL}-NNN_描述/\`，内含 requirements/plan/tasks/check） |"
+      echo "| 旧结构 | 新位置 | 策略 |"
+      echo "|:--|:--|:--|"
+      echo "| \`docs/sprints/sprint-NNN_xxx/\` 文档 | \`sprints/sp-NNN-xxx/docs/\` | 转移（脚本已执行，.legacy 待删） |"
+      echo "| \`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/\` | \`sprints/sp-NNN-xxx/specs/spec-NNN-xxx/\` | AI 按「基于冲刺」字段归入，重新编号 |"
+      echo "| \`ADR/ADR-NNN_xxx.md\` | \`adrs/adr-NNN-xxx.md\` | 转移（脚本已执行，原件待删） |"
+      echo "| \`ux-flows.md\` | 旅程 → \`user-scenarios.md\`；流程 → \`business-flows.md\` | AI 转移 |"
+      echo "| \`ui-wireframes.md\` | 布局/交互 → \`prototypes/\`；系统图表 → \`uml-pack.md\` | AI 转移 |"
+      echo "| \`user-journey-flows.md\` | 旅程总览 → \`user-scenarios.md\`；流程图 → \`business-flows.md\` | AI 转移 |"
       echo ""
-      echo "## 不符合模板文件处理规则（v2.10.0）"
+      echo "## 待 AI 处理项"
       echo ""
-      echo "升级过程中遇到不符合项目模板的文件，按两级策略处理："
-      echo ""
-      echo "1. **规则1 — 优先收敛到 docs/ 设计相关文档**：内容型文档（需求/设计/说明类 .md）由 AI 判断内容归属，合并进 \`docs/\` 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等）"
-      echo "2. **规则2 — 转移并收敛到 assets/**：相关性不大或无法收敛的资产型文件（配置/接口/手册/规范），转移到 \`assets/\` 对应子目录（configs / interfaces / standards / manuals）"
-      echo ""
-      echo "> 已在本次迁移中自动执行的规则2转移见下方「已转移资产」；未自动转移的冲突项由 AI 手动合并。"
-      echo ""
-      echo "## 待迁移文件"
-      echo ""
+      if [ ${#LEGACY_NOTES[@]} -gt 0 ]; then
+        echo "### 已转移待确认（内容已复制，确认后删除原件）"
+        echo ""
+        for n in "${LEGACY_NOTES[@]}"; do
+          echo "- $n"
+        done
+        echo ""
+      fi
+      if [ ${#MODULE_SPECS[@]} -gt 0 ]; then
+        echo "### 模块内 specs/（需迁移到迭代容器）"
+        echo ""
+        for sp in "${MODULE_SPECS[@]}"; do
+          echo "- $sp/"
+        done
+        echo ""
+      fi
+      if [ "${#STRAY_DOCS[@]}" -gt 0 ] || [ "${#ROOT_STRAY_R1[@]}" -gt 0 ]; then
+        echo "### 游离内容文档（规则1，AI 收敛到 docs/ 对应文档）"
+        echo ""
+        for f in "${STRAY_DOCS[@]}" "${ROOT_STRAY_R1[@]}"; do
+          echo "- $f"
+        done
+        echo ""
+      fi
+      if [ "${#ROOT_STRAY_R2[@]}" -gt 0 ]; then
+        echo "### 根目录非规范项（规则2，AI 归位 assets/）"
+        echo ""
+        for f in "${ROOT_STRAY_R2[@]}"; do
+          echo "- $f"
+        done
+        echo ""
+      fi
+      if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
+        echo "### assets/ 待归位（规则2）"
+        echo ""
+        for f in "${ASSETS_STRAY[@]}"; do
+          echo "- $f"
+        done
+        echo ""
+      fi
     } > "$REPORT"
-    for f in "${LEGACY_FILES[@]}"; do
-      if [[ "$f" != \[全局\]* ]] && [ -f "$f" ]; then
-        mv "$f" "${f%.md}.legacy.md"
-        echo "- \`$f\` → 内容转移到新文件后删除" >> "$REPORT"
-      else
-        echo "- $f（目录/文件，请 AI 处理）" >> "$REPORT"
-      fi
-    done
-    # 追加规则2：已转移资产
-    if [ "$OPS_MOVED" = "1" ] || [ "${#OPS_CONFLICT[@]}" -gt 0 ]; then
-      echo "" >> "$REPORT"
-      echo "## 已转移资产（规则2，脚本自动执行）" >> "$REPORT"
-      echo "" >> "$REPORT"
-      if [ "$OPS_MOVED" = "1" ]; then
-        echo "- 运营资产目录已自动归位 \`assets/\` 对应子目录（configs / interfaces / standards / manuals）" >> "$REPORT"
-      fi
-      for c in "${OPS_CONFLICT[@]}"; do
-        echo "- 冲突待合并: $c" >> "$REPORT"
-      done
-    fi
-    # 追加规则1：游离文档（AI 收敛到 docs/）——docs/ 深层 + 根目录内容型
-    if [ "${#STRAY_DOCS[@]}" -gt 0 ] || [ "${#ROOT_STRAY_R1[@]}" -gt 0 ]; then
-      echo "" >> "$REPORT"
-      echo "## 游离文档（规则1，AI 收敛到 docs/）" >> "$REPORT"
-      echo "" >> "$REPORT"
-      echo "以下文档不符合模板结构，由 AI 判断内容归属并合并到 docs/ 对应文档（product-overview / non-functional-reqs / visual-design / sprints/ 等），完成后删除原文件：" >> "$REPORT"
-      for f in "${STRAY_DOCS[@]}" "${ROOT_STRAY_R1[@]}"; do
-        echo "- $f" >> "$REPORT"
-      done
-    fi
-    # 追加规则2：根目录非规范项（AI 归位 assets/）
-    if [ "${#ROOT_STRAY_R2[@]}" -gt 0 ]; then
-      echo "" >> "$REPORT"
-      echo "## 根目录非规范项（规则2，AI 归位 assets/）" >> "$REPORT"
-      echo "" >> "$REPORT"
-      echo "以下根目录文件/目录不符合模板结构，由 AI 判断归属并转移到 assets/ 对应子目录（configs / interfaces / standards / manuals），完成后删除原文件：" >> "$REPORT"
-      for f in "${ROOT_STRAY_R2[@]}"; do
-        echo "- $f" >> "$REPORT"
-      done
-    fi
-    # 追加规则2：assets/ 待归位（AI 归位到四子目录）
-    if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
-      echo "" >> "$REPORT"
-      echo "## assets/ 待归位（规则2，AI 归位到四子目录）" >> "$REPORT"
-      echo "" >> "$REPORT"
-      echo "以下 assets/ 内散落项需归位到对应子目录（configs / interfaces / standards / manuals），由 AI 确认归属后移动：" >> "$REPORT"
-      for f in "${ASSETS_STRAY[@]}"; do
-        echo "- $f" >> "$REPORT"
-      done
-    fi
-    ok "已生成迁移报告: $REPORT（旧文件保留为 *.legacy.md，待 AI 内容转移）"
+    ok "已生成迁移报告: $REPORT（AI 处理完成后删除本文件）"
   fi
 
-  # 提示
   echo ""
-  info "migrate 结构层完成。"
+  info "migrate v3.0 结构层完成。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. 让 AI 读取 MIGRATION-REPORT.md"
-    echo "  2. 按两级规则处理：规则1 游离文档 → 收敛到 docs/ 对应文档；规则2 非规范项 → 归位 assets/ 对应子目录"
-    echo "  3. 旧版文件（*.legacy.md）内容转移后删除"
+    echo "  2. 按映射表处理：转移 → 收敛 → 保留 → 删除"
+    echo "  3. 处理完成后确认目录结构完全符合 v3.0 规范，删除报告与 *.legacy"
   else
     echo "  项目结构已是最新。下一步：运行 /spec-rocket brainstorm 引导写产品文档（或按需完善 assets/）"
   fi
@@ -533,7 +504,7 @@ case "${1:-help}" in
     echo "Usage:"
     echo "  ./spec-rocket init [项目名]    # 初始化新项目（无参=当前目录）"
     echo "  ./spec-rocket update          # 一键更新本地 skill（自动检测 AI 工具）"
-    echo "  ./spec-rocket migrate [路径]   # 旧版项目迁移（不符合模板文件：先收敛 docs，否则收敛 assets）"
+    echo "  ./spec-rocket migrate [路径]   # 旧版项目迁移（转移 → 收敛 → 保留 → 删除，零残留）"
     ;;
   *)
     err "未知命令: $1（可用: init / update / migrate / help）"
