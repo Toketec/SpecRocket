@@ -52,7 +52,7 @@ businesses/auth-service (服务层)
 ## 依赖项（跨 spec）
 
 - {spec-00X}: {依赖的规格（本冲刺内或其他冲刺）}
-- {adr-00X}: {依据的架构决策}
+- {adr-YYYYMMDD-变动名}: {依据的架构变动设计（整份文件夹）}
 
 ## Context from Dependencies
 

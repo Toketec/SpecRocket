@@ -188,12 +188,12 @@ You: Enter ~/projects/legacy-app
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │ Step 1 │ PM solo                                                   │
-│         │ docs/ + sprints/ + prototypes/                          │
-│         │ AI assists with polish, diagrams, prototype templates   │
+│         │ docs/ + sprints/*/docs/ + prototypes/                    │
+│         │ AI assists with polish, diagrams, prototype templates    │
 ├────────────────────────────────────────────────────────────────────┤
 │ Step 2 │ Dev+AI solo                                               │
-│         │ adrs/ + sprints/*/specs/ (multiple specs per sprint)    │
-│         │ Dev gives 4 directions (10min) → AI writes 4 files      │
+│         │ adrs/ (one adr folder per major change) + sprints/*/specs/ │
+│         │ Dev gives 4 directions (10min) → AI writes 4 files       │
 ├────────────────────────────────────────────────────────────────────┤
 │ Step 3 │ PM + Dev review                                          │
 │         │ PM: "Does the spec solve the business need?"            │
@@ -224,7 +224,7 @@ SpecRocket/
 │   ├── CLAUDE.md              ← Claude Code collaboration rules
 │   ├── docs/                  ← Stable-layer product docs (incl. whitepaper)
 │   ├── sprints/_template/     ← Sprint container (docs/ product + specs/ tech)
-│   ├── adrs/                   ← Architecture decision records (adr-NNN-name.md)
+│   ├── adrs/                   ← Architecture change design (adr-YYYYMMDD-name/, 3 docs)
 │   ├── assets/                ← Operations asset templates (configs/interfaces/standards/manuals)
 │   ├── apps/businesses/tools/ ← Pure code domain templates (src/, no specs/)
 │   └── ...
@@ -278,7 +278,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 | Scenario | Recommended path |
 |:----|:---------|
 | 🆕 **New project** | 📟 Manual `./init.sh` or 🤖 AI `/spec-rocket init` → 🤖 `brainstorm` → 5-step flow |
-| 🔄 **Existing project + AI** | 🤖 AI `migrate` → write adrs → Retrospec |
+| 🔄 **Existing project + AI** | 🤖 AI `migrate` → write adrs (one folder per major change) → Retrospec |
 | ⬆️ **Upgrade to latest methodology** | 📟 `./spec-rocket update` → run `migrate` on project to upgrade structure |
 | 🏁 **Hackathon** | 📟/🤖 `init` → skip Step 1 → Step 4 AI coding |
 | 👥 **Team training** | 📟 Manual `init` → read ssot-convention → PPT |

@@ -40,7 +40,7 @@
 | 命令 | 说明 |
 |:----|:------|
 | `/spec-rocket brainstorm` | 按固定顺序生成 5 组文档：产品概览 → 非功能需求 → 视觉设计 → 白皮书 → sprint |
-| `/spec-rocket migrate` | 给现有项目嵌入骨架 / 旧版项目升级到最新模板结构（转移 → 收敛 → 保留 → 删除；旧 sprint 文档→新 sprint 容器、模块 specs→迭代 specs、ADR→adrs） |
+| `/spec-rocket migrate` | 给现有项目嵌入骨架 / 旧版项目升级到最新模板结构（转移 → 收敛 → 保留 → 删除；旧 sprint 文档→新 sprint 容器、模块 specs→迭代 specs、旧 ADR→adrs 文件夹） |
 | `/spec-rocket preview` | 生成 dark-theme 可视化预览页 → `docs/preview.html` |
 | `/spec-rocket update` | 一键更新本地 skill（自动检测 AI 工具） |
 | `./spec-rocket` (CLI) | 脚本方式执行 init / update / migrate |
@@ -50,7 +50,7 @@
 | 角色 | 产出目录 | 说明 |
 |:----|:--------|:----|
 | 👤 PM | `docs/` + `sprints/*/docs/` | 产品概览/非功能/视觉/白皮书 + 冲刺产品设计 |
-| 🔧 Dev | `adrs/` + `sprints/*/specs/` + 代码 | 架构决策 + 迭代内规格（多个 spec 共同促成本次迭代）+ 实现 |
+| 🔧 Dev | `adrs/` + `sprints/*/specs/` + 代码 | 架构变动设计（一次大型变动一个 adr）+ 迭代内规格（多个 spec 共同促成本次迭代）+ 实现 |
 | 🛠️ Ops | `assets/` | 运营资产（被系统/业务直接引用） |
 
 ## 迭代容器（sprints/）
@@ -59,9 +59,9 @@
 
 **规格拆分原则**: 解耦、拆解、相互独立以便并行开发且互不干扰（前端/后端分列、不同服务分列）；颗粒度以「解耦 + 提升 token 利用率减少幻觉」为上限，**不刻意多拆**，方便管理为下限。
 
-## 架构决策（adrs/）
+## 架构变动设计（adrs/）
 
-`adrs/` 存放全局架构决策记录（`adr-NNN-名称.md`），**不随 sprint 走**——不一定每次都改架构，历史累积跨迭代生效。AI 首次进入项目先读 `adrs/` 理解全局。
+`adrs/` 存放**一次大型架构变动的完整设计**（`adr-YYYYMMDD-名称/` 文件夹，含 architecture / data-model / impact 3 份文档），**不随 sprint 走**——不一定每次 sprint 都改架构，历史累积跨迭代生效；但架构要**直观在首层看见**，所以独立存在。AI 首次进入项目先读 `adrs/` 理解全局。
 
 ## 运营资产（assets/）
 

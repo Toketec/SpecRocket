@@ -40,10 +40,9 @@
 │           ├── spec-001-前端用户登录/   # 前端独立规格 → 可并行开发
 │           └── spec-002-后端认证服务/   # 后端独立规格 → 可并行开发
 │
-├── adrs/                          # ★ 架构决策记录（全局历史累积，不随 sprint 走）
-│   ├── _template/adr.md           # adr 模板
-│   ├── adr-001-数据库选型.md       # "为什么选 PostgreSQL"
-│   └── adr-002-认证方案.md         # "JWT + refresh token"
+├── adrs/                          # ★ 架构变动设计库（一次大型变动 = 一个 adr 文件夹）
+│   ├── _template/                 # adr 模板（architecture / data-model / impact）
+│   └── adr-20260808-变动名/        # 一次大型变动的完整设计
 │
 ├── apps/                          # ★ 前端/客户端应用（纯代码域，规格在 sprint 内）
 │   ├── _template/src/
@@ -76,8 +75,8 @@
 
 | Step | 谁做 | 你的角色 |
 |:-----|:-----|:---------|
-| **Step 1** | PM | 辅助——润色文档、画 ASCII 流程图、生成 HTML 原型模板 |
-| **Step 2** | Dev + 你（主力） | Dev 给方向决策 → 你写 adr + 规格四文件（`specs/_template/` 复制为 `specs/spec-XXX_描述/`） |
+| **Step 1** | PM | 辅助——润色文档、画 ASCII 流程图、生成 HTML 原型模板（产出 `docs/` + `sprints/*/docs/`） |
+| **Step 2** | Dev + 你（主力） | Dev 给方向决策 → 你写 adr（一次大型变动一个文件夹）+ 规格四文件（`specs/_template/` 复制为 `specs/spec-XXX_描述/`） |
 | **Step 3** | PM + Dev 评审 | `// 你不参与` |
 | **Step 4** | 你（执行） | 读 spec → 按 plan 实现 → 更新 tasks → 自检 |
 | **Step 5** | Dev 收尾 | 辅助修 bug |
@@ -86,8 +85,8 @@
 
 | Dev 决策（10 分钟） | 你产出的文件 |
 |:-------------------|:------------|
-| 本次迭代拆几个 spec？每个 spec 的边界 | `adrs/adr-NNN-*.md` 架构设计 |
-| 是否需要新 adr | `sprints/sp-NNN-*/specs/spec-XXX_*/requirements.md` 技术方案+边界+验收 |
+| 本次迭代拆几个 spec？每个 spec 的边界 | `adrs/adr-YYYYMMDD-*/`（3 份）架构变动设计——一次大型变动一整份 |
+| 本次变更是大型架构变动吗 | `sprints/sp-NNN-*/specs/spec-XXX_*/requirements.md` 技术方案+边界+验收 |
 | 跨 spec 依赖 | `sprints/sp-NNN-*/specs/spec-XXX_*/plan.md` 实现步骤+文件清单 |
 | 核心函数/API/表名 | `sprints/sp-NNN-*/specs/spec-XXX_*/tasks.md` 任务拆分+验证清单 |
 | | `sprints/sp-NNN-*/specs/spec-XXX_*/check.md` AI 自检+人工验收 |
@@ -113,7 +112,7 @@
 3. **不改方案**: 编码中发现 spec 有问题 → 停，告诉 Dev 回 Step 2/3
 4. **人机协作**: 修改后展示改动，用户确认后提交
 5. **跨 spec 只读 Context Contract**（≤15 行）
-6. **影响架构时同步更新 adr**
+6. **影响架构时更新 adr**: 大型架构变动（新增服务/改数据模型/换技术栈）→ 产出/更新一个 adr 文件夹（整份设计）
 7. **AI 工具无关性**:
    - 你是按纯文件约定工作，不依赖特殊扫描/索引能力
    - 禁止自行探索项目目录来"理解项目"——必须按读顺序逐文件读取
@@ -128,26 +127,22 @@
 ## 四、adr ↔ spec 关系速查
 
 ```
-adrs/ (Why — 为什么做这个决策)
-  └── adr-001-数据库选型.md "为什么选 PostgreSQL"
-      └── sprints/sp-001-*/specs/spec-002-后端订单服务/requirements.md
-          "基于 PostgreSQL 的订单表设计"
-
-adrs/ (What — 整体架构)
-  └── adr-002-认证方案.md "JWT + refresh token"
-      └── sprints/sp-002-*/specs/spec-001-后端认证服务/
-          实现 JWT 认证的规格四文件
+adrs/ (整个系统的技术设计 — 一次大型变动一整份)
+  └── adr-20260808-订单系统重构/
+      ├── architecture.md  "系统上下文 + 组件 + 技术选型"
+      └── data-model.md    "订单/用户实体 + 表结构"
+          └── sprints/sp-001-*/specs/spec-002-后端订单服务/requirements.md
+              "基于本架构的订单服务落地实现方案"
 ```
 
 | 当出现以下情况... | 需要... |
 |:-----------------|:-------|
-| 新增服务 | ✅ 写新 adr |
-| 改数据模型 | ✅ 写新 adr |
-| 换技术栈 | ✅ 写新 adr |
+| 大型架构变动（微服务/数据层重构/换技术栈） | ✅ 一个 adr 文件夹（整份设计） |
+| 新增服务 / 改数据模型 | ✅ 并入本次变动的 adr 文件夹 |
 | 小功能（5 行代码） | ❌ 不需要 adr |
 | bugfix（不改接口） | ❌ 不需要 adr |
 
-> adr 全局历史累积，不随 sprint 走——不是每次迭代都改架构。
+> adr 全局历史累积，不随 sprint 走——不是每次迭代都改架构。**收敛原则: 一次大型变动只出一份 adr 文件夹，不按技术点拆多个 adr。**
 
 ---
 
@@ -201,8 +196,8 @@ cp -r businesses/_template businesses/my-service
 # 创建新规格（在 sprint 内，编号递增）
 cp -r sprints/sp-001-功能名/specs/_template sprints/sp-001-功能名/specs/spec-001-功能名
 
-# 创建新 adr
-cp adrs/_template/adr.md adrs/adr-003-数据模型.md
+# 创建新 adr（一次大型变动 = 一个文件夹，3 份文档）
+cp -r adrs/_template adrs/adr-20260808-变动名
 
 # 创建新原型
 cp sprints/_template/docs/prototypes/prototype.html sprints/sp-001-功能名/docs/prototypes/

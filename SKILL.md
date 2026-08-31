@@ -25,7 +25,7 @@ SpecRocket/                      ← 本仓库
 │   ├── CLAUDE.md               ← Claude Code 协作规则
 │   ├── docs/                   ← 稳定层产品文档模板（含 whitepaper.md）
 │   ├── sprints/_template/      ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
-│   ├── adrs/                   ← 架构决策模板（adr-NNN-名称.md）
+│   ├── adrs/                   ← 架构变动设计模板（adr-YYYYMMDD-名称/，3 份文档）
 │   ├── assets/                 ← 运营资产模板（configs/interfaces/standards/manuals）
 │   ├── apps/businesses/tools/  ← 纯代码域模板（src/，无 specs/）
 │   └── ...
@@ -132,7 +132,7 @@ SpecRocket/                      ← 本仓库
 ### 执行流程
 
 1. 确认 `docs/` 存在，没有就先跑 init
-2. **Step 1️⃣** — 写 product-overview.md：依次提问
+2. **阶段①** — 写 product-overview.md：依次提问
 
    | # | 问题 | 写入哪里 |
    |:--|:-----|:---------|
@@ -141,16 +141,16 @@ SpecRocket/                      ← 本仓库
    | 3 | 最核心的场景是什么？ | 核心场景章节 |
    | 4 | 涉及哪些关键术语？ | 术语表 |
 
-3. **Step 2️⃣** — 写 non-functional-reqs.md：判断项目是否需要性能/安全/合规基线
+3. **阶段②** — 写 non-functional-reqs.md：判断项目是否需要性能/安全/合规基线
    - 有 → 按模板填写关键指标
    - 无 → 写入占位行
-4. **Step 3️⃣** — 写 visual-design.md：判断项目是否有前端界面
+4. **阶段③** — 写 visual-design.md：判断项目是否有前端界面
    - 有 UI → 根据产品类型选策略（完整设计系统 / UI框架定制 / 纯框架默认）
    - 纯后端/脚本/CLI → 写入占位行
-5. **Step 4️⃣** — 写 whitepaper.md：判断是否有对外白皮书需求
+5. **阶段④** — 写 whitepaper.md：判断是否有对外白皮书需求
    - 对外产品 → 填写愿景/定位/理念
    - 内部工具 → 写入占位行
-6. **Step 5️⃣** — 创建 sp-001：一个问题引导
+6. **阶段⑤** — 创建 sp-001：一个问题引导
 
    | # | 问题 | 写入哪里 |
    |:--|:-----|:---------|
@@ -203,7 +203,7 @@ SpecRocket/                      ← 本仓库
 脚本会：
 - **迁移 sprint 容器**：`docs/sprints/sprint-NNN_xxx/` → `sprints/sp-NNN-xxx/docs/`（重命名 + 改路径；检测旧版文件 `ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` 报告由 AI 转移）
 - **迁移模块规格**：`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/` → 按 spec 头部「基于冲刺」字段归入 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（脚本报告，AI 执行内容转移 + 重新编号）
-- **迁移架构决策**：`ADR/ADR-NNN_xxx.md` → `adrs/adr-NNN-xxx.md`
+- **迁移架构变动设计**：`ADR/ADR-NNN_xxx.md`（旧决策记录）→ `adrs/adr-YYYYMMDD-xxx/`（文件夹，3 份文档；内容按新语义收敛由 AI 整合）
 - **清理废弃目录**：`sprint-000_initial/`（纯模板直接删；含内容转 `.legacy` 待转移）；根目录 `ssot-convention*.md` 归档到 `archive/`
 - **补齐新骨架**：`docs/whitepaper.md`、`sprints/_template/`（docs + specs）、`adrs/_template/`
 - **扫描游离文档**：docs/ 全递归（排除 sprints/）+ 根目录非白名单内容 → 报告收敛
@@ -219,7 +219,7 @@ SpecRocket/                      ← 本仓库
 | `user-journey-flows.md` | 旅程总览 → `user-scenarios.md`；流程图 → `business-flows.md` |
 | `docs/sprints/sprint-NNN_xxx/` 其余文档 | → `sprints/sp-NNN-xxx/docs/` 对应文件 |
 | `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | → 归属冲刺的 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（四文件；重新编号；头部改写覆盖范围） |
-| `ADR/ADR-NNN_xxx.md` | → `adrs/adr-NNN-xxx.md` |
+| `ADR/ADR-NNN_xxx.md` | → `adrs/adr-YYYYMMDD-xxx/`（architecture / data-model / impact；旧内容整合进 architecture，其余待 AI 收敛） |
 | 全局 `spec/` + `_catalog.yaml` | 内容归入对应冲刺 specs/ 或 archive/（AI 判断） |
 | `sprint-000_initial.legacy/` | 基线设计转移至 `sp-001-*/docs/` 后删除 |
 
@@ -248,7 +248,6 @@ SpecRocket/                      ← 本仓库
 | 🗺️ **产品地图** | `docs/product-overview.md` | 产品核心功能分区 → 可视化卡片 |
 | 🗺️ **业务地图** | `docs/product-overview.md` 核心场景 + `sprints/` | 用户旅程 / 业务流转关系图 |
 | 🗺️ **架构地图** | `adrs/` 目录 + `apps/` `businesses/` `tools/` + `sprints/*/specs/` + `assets/` | 模块关系 + 技术选型 + 迭代规格分布 + 运营资产（配置/接口/规范/手册） |
-
 下方补充信息（按需展示，无则不显）：
 
 | 信息块 | 来源 |
@@ -256,7 +255,7 @@ SpecRocket/                      ← 本仓库
 | 用户画像 | `docs/product-overview.md` |
 | 关键术语 | `docs/product-overview.md` |
 | Sprint 路线图 | `sprints/` |
-| adr 决策列表 | `adrs/` |
+| adr 变动设计列表 | `adrs/`（一次大型变动一个文件夹） |
 | 技术栈 | `docs/non-functional-reqs.md` |
 | 项目统计 | 全目录扫描（文件数、目录数、行数） |
 
@@ -306,7 +305,7 @@ Dev 把 sp-NNN 的 docs/（冲刺文档）→ 拖到新的 AI 对话中（干净
   ↓
 Dev 给 4 个方向：
   ① 本次迭代拆几个 spec？每个 spec 的边界
-  ② 是否需要新 adr
+  ② 本次变更是大型架构变动吗（是 → 写一个 adr 文件夹，整份设计）
   ③ 跨 spec 依赖
   ④ 核心函数/API/表名
   ↓

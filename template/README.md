@@ -40,8 +40,9 @@ pnpm typecheck
 │           ├── _template/
 │           └── spec-001-前端xxx/ # 多个规格共同促成本次迭代（可并行开发）
 │
-├── adrs/                         # ★ 架构决策记录（全局历史累积）
-│   └── adr-001-数据库选型.md
+├── adrs/                         # ★ 架构变动设计库（一次大型变动 = 一个文件夹）
+│   ├── _template/                # 模板（architecture / data-model / impact）
+│   └── adr-20260808-变动名/       # 一次大型变动的完整设计（3 份文档）
 │
 ├── apps/                         # 前端/客户端应用（纯代码域）
 │   ├── {app-name}/

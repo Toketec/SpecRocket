@@ -3,7 +3,7 @@
 > **版本**: 3.0
 > **用途**: 本文档是 SSOT（Single Source of Truth）规格驱动开发的完整规范。每个团队成员在加入时应阅读一次。
 > **AI 协作入口**: `AGENTS.md`（AI 读取的浓缩版，位于根目录）
-> **核心理念**: 一次冲刺 = 一个完整容器（PM 产品设计 + Dev 技术规格）。specs 聚合在迭代容器内，共同促成一次迭代的所有开发任务；adrs 记录全局架构决策；代码域只关心实现。
+> **核心理念**: 一次冲刺 = 一个完整容器（PM 产品设计 + Dev 技术规格）。specs 聚合在迭代容器内，共同促成一次迭代的所有开发任务；adrs 记录一次大型变动的完整架构设计；代码域只关心实现。
 
 ---
 
@@ -17,7 +17,7 @@
 | 2 | **边界定位清晰，适合企业协作** | 五步法（PM→Dev+AI→评审→AI编码→Dev收尾）明确每个角色职责边界。PM 不需要懂技术实现，Dev 不需要反复解释需求，AI 不跳步骤不改方案 |
 | 3 | **迭代内聚合，支持并行开发** | 一次冲刺拆多个 spec（前端/后端/服务分列），多个 spec 共同促成一次迭代的全部开发任务。规格相互独立 → 可并行开发互不干扰；颗粒度受「解耦 + token 利用率」约束 |
 | 4 | **可脱离 AI 工具独立交付** | `_template/` + 命名约定 + 目录职责表构成完整的项目管理框架。即使所有 AI 工具消失，团队仍可按此结构交付、复用、维护 |
-| 5 | **标准化产品文档 → 单一事实源** | `docs/`（全局锚点）→ `sprints/*/docs/`（版本设计）→ `adrs/`（架构决策）→ `sprints/*/specs/`（技术规格），信息链路完整可追溯 |
+| 5 | **标准化产品文档 → 单一事实源** | `docs/`（全局锚点）→ `sprints/*/docs/`（版本设计）→ `adrs/`（架构变动设计）→ `sprints/*/specs/`（技术规格），信息链路完整可追溯 |
 | 6 | **保留 TDD 思想，简化为 check** | 不追求传统 TDD 的测试先行成本，但保留验收驱动精神：`check.md` 在实现前定义验收预期，实现后 AI 自检 + QA 签收形成双层验证 |
 | 7 | **标准化项目结构（核心）** | 这是框架最重要的设计。只有标准化的结构可以脱离 AI 工具进行可交付、可复用、可维护——即使未来方法论被大模型吸纳，这个结构依然适合团队分工与交付 |
 
@@ -80,9 +80,12 @@ project-root/
 │           ├── spec-002-后端认证服务/  #   后端独立规格 → 可并行开发
 │           └── ...
 │
-├── adrs/                             # ★ 架构决策记录（全局历史累积，不随 sprint 走）
-│   ├── _template/adr.md              # ★ adr 模板
-│   ├── adr-001-数据库选型.md          # ✦ 后续开发中创建的 adr…
+├── adrs/                             # ★ 架构变动设计库（一次大型变动 = 一个 adr 文件夹）
+│   ├── _template/                    # ★ adr 模板（3 份文档）
+│   │   ├── architecture.md           #   架构总览（上下文/组件/流程/技术选型）
+│   │   ├── data-model.md             #   数据模型（实体/关系/表结构）
+│   │   └── impact.md                 #   影响与注意事项（关联模块/部署/回滚）
+│   ├── adr-20260808-订单系统重构/     # ✦ 一次大型变动的完整设计（3 份文档）
 │   └── ...
 │
 ├── assets/                           # ★ 运营资产 — 被系统/业务直接引用的文件
@@ -116,7 +119,7 @@ project-root/
 **核心原则**:
 - `docs/` = **稳定层** — 只放全版本通用的产品规划文档（产品概览、非功能需求、视觉规范、白皮书）。**不动摇的设计决策放这里，每次迭代的细节放 sprint**。
 - `sprints/` = **迭代层** — 每次迭代的完整容器：`docs/`（PM 产品设计）+ `specs/`（Dev 技术规格）。**多个 spec 共同促成一次迭代的所有开发任务**。上次迭代的文档和原型作为历史记录，不覆盖。
-- `adrs/` = **架构决策库** — 系统上下文、数据模型、核心流程、技术选型。**全局历史累积，不一定每次都改架构，所以不放在 sprint 内**。AI 首次进入项目时先读此目录理解全局。
+- `adrs/` = **架构变动设计库** — 一次大型架构变动 = 一个 adr 文件夹（`architecture.md` 架构总览 + `data-model.md` 数据模型 + `impact.md` 影响注意）。**整个系统的技术设计只出现在这里**，其他目录不承载技术设计。**全局历史累积，不一定每次 sprint 都变架构，所以不放在 sprint 内**。AI 首次进入项目时先读此目录理解全局。
 - `apps/` / `businesses/` / `tools/` = **纯代码实现域** — 只关心实现，不再携带规格。
 - `assets/` = **运营资产域** — 被系统/业务/外部直接引用的工程资产（配置模板、对外接口、规范库、说明手册），由 **Ops 运营角色**产出与维护。**判定规则：文件是否被代码/部署/外部系统直接引用？是 → assets/；否且是过程文档 → docs/。** docs/specs 引用 assets 用相对链接，不复制内容（SSOT）
 - `AGENTS.md` = **AI 协作入口**，浓缩规范供 AI 读取
@@ -133,7 +136,7 @@ project-root/
 |:--|:--|:--|
 | 冲刺容器 | `sp-{编号}-{名字}` | `sprints/sp-001-核心交易/` |
 | 规格目录 | `spec-{编号}-{名字}` | `sprints/sp-001-核心交易/specs/spec-001-前端收银台/` |
-| 架构决策 | `adr-{编号}-{名字}` | `adrs/adr-001-数据库选型.md` |
+| 架构变动设计 | `adr-{YYYYMMDD}-{名字}` | `adrs/adr-20260808-订单系统重构/` |
 | 模板目录 | `_template` | `sprints/_template/`、`sprints/_template/specs/_template/` |
 | 编号规则 | 冲刺内递增（001, 002…） | spec 编号在所属冲刺内从 001 起 |
 
@@ -151,7 +154,7 @@ project-root/
 ├──────────────────────────────────────────────────────────┤
 │  Step 2 │ Dev+AI 独作 — 架构设计与规格编写              │
 │          │ 输入: sprints/*/docs/ 的功能描述              │
-│          │ 产出: adrs/ + sprints/*/specs/（多个 spec）   │
+│          │ 产出: adrs/（一次大型变动一个 adr）+ sprints/*/specs/（多个 spec）│
 │          │ Dev 给方向 → AI 写完整 spec 四文件            │
 ├──────────────────────────────────────────────────────────┤
 │  Step 3 │ PM + Dev 共同 — 方案评审                      │
@@ -225,13 +228,13 @@ project-root/
 | 决策 | 示例 |
 |:----|:-----|
 | 本次迭代拆几个 spec？每个 spec 的边界 | `spec-001-前端收银台` / `spec-002-后端订单服务` |
-| 需要新 adr 吗 | 新增服务、改数据模型、引入新技术栈 → 写 adr |
+| 本次变更是大型架构变动吗 | 新增服务、改数据模型、换技术栈 → **一次大型变动 = 一个 adr 文件夹**（整份设计）；小改动不写 adr |
 | 跨 spec 依赖 | spec-002 与 spec-001 的接口契约是什么？ |
 | spec 关键字 | 核心函数名、API 路径、数据表名 |
 
 **AI 的职责**（基于 Dev 的方向自动完成）:
 
-- 写 `adrs/adr-NNN-*.md` 的架构设计文档（系统上下文、数据模型、流程）
+- 写 `adrs/adr-YYYYMMDD-*/` 的架构变动设计文件夹（architecture / data-model / impact 三份）——**一次大型变动一整份**
 - 写 `sprints/sp-NNN-*/specs/spec-XXX_*/` 四文件（requirements / plan / tasks / check）
 
 **Step 2 的产出物必须包含架构设计和技术方案**，不只是一堆空模板。AI 应该写出可供评审的完整方案。
@@ -338,7 +341,7 @@ project-root/
 QA 跑人工验收项。如果项目没有专职 QA，Dev 自行验收，PM 确认业务验收条件满足。
 
 **Q: adrs 为什么不放 sprint 里？**
-不一定每次都改架构。架构决策是全局历史累积，跨 sprint 生效；放入迭代容器会造成重复与分裂。
+不一定每次 sprint 都改架构。架构变动设计是全局历史累积，跨 sprint 生效；但**架构要直观在首层看见**，所以独立存在。一次大型变动 = 一个 adr 文件夹（整份完整设计），不是按技术点拆多个 adr。
 
 ---
 
@@ -446,49 +449,55 @@ cp -r apps/_template apps/my-app
 cp -r businesses/_template businesses/my-service
 ```
 
-### 4.4 adrs/ — 架构决策记录（Dev 产出，全局）
+### 4.4 adrs/ — 架构变动设计库（Dev 产出，全局）
 
 ```
 adrs/
-├── _template/adr.md              # adr 模板
-├── adr-001-数据库选型.md          # "为什么选 PostgreSQL"
-├── adr-002-认证方案.md            # "JWT + refresh token 方案"
+├── _template/                    # adr 模板（cp 建新 adr 文件夹）
+│   ├── architecture.md           # 架构总览（上下文/组件/流程/技术选型）
+│   ├── data-model.md             # 数据模型（实体/关系/表结构）
+│   └── impact.md                 # 影响与注意事项（关联模块/部署/回滚）
+├── adr-20260808-订单系统重构/     # ✦ 一次大型变动的完整设计
+│   ├── architecture.md
+│   ├── data-model.md
+│   └── impact.md
 └── ...
 ```
 
-**什么时候需要写 adr**:
+**核心定位: 一次大型架构变动 = 一个 adr 文件夹（整份完整新结构设计）**。整个系统的技术内容设计（架构、数据、技术选型）**只出现在 adrs/**，其他地方不承载技术设计。
 
-| 场景 | 示例 | 是否必须写 adr |
+**什么时候需要写 adr**（Dev 与 AI 完成一次架构交流后即产出）:
+
+| 场景 | 示例 | 是否写 adr |
 |:----|:-----|:-------------:|
-| 新增服务 | 新加一个 `order-service` | ✅ |
-| 改数据模型 | 改 `users` 表结构、新增核心字段 | ✅ |
-| 换技术栈 | MySQL → PostgreSQL | ✅ |
+| 大型架构变动 | 引入微服务、重构数据层、整体换技术栈 | ✅ **一个 adr 文件夹**（整份设计） |
+| 新增服务 | 新加一个 `order-service`（影响系统架构） | ✅ 并入本次变动的 adr 文件夹 |
+| 改数据模型 | 改 `users` 表结构、新增核心实体 | ✅ 并入本次变动的 adr 文件夹 |
 | 小功能 | 5 行代码改个按钮文案 | ❌ |
 | bugfix | 修复已有逻辑，不改接口 | ❌ |
+
+> ⚠️ **收敛原则**: 一次大型变动只出一份 adr 文件夹，**不按技术点拆多个 adr**（不要"数据库选型一个 adr + 认证方案一个 adr"）。Dev 与 AI 交流完一次架构设计 → 整合为一整份。
 
 **adr 和 spec 的关系**:
 
 ```
-adrs/ (Why — 为什么做这个决策)
-  └── adr-001-数据库选型.md "为什么选 PostgreSQL"
-      └── sprints/sp-001-*/specs/spec-002-后端订单服务/requirements.md
-          "基于 PostgreSQL 的订单表设计"
-
-adrs/ (What — 整体架构)
-  └── adr-002-认证方案.md "JWT + refresh token"
-      └── sprints/sp-002-*/specs/spec-001-后端认证服务/
-          实现 JWT 认证的规格四文件
+adrs/ (整个系统的技术设计 — 一次大型变动一整份)
+  └── adr-20260808-订单系统重构/
+      ├── architecture.md  "系统上下文 + 组件 + 技术选型"
+      └── data-model.md    "订单/用户实体 + 表结构"
+          └── sprints/sp-001-*/specs/spec-002-后端订单服务/requirements.md
+              "基于本架构的订单服务落地实现方案"
 ```
 
-- **adr 是跨 spec 的**，一个 adr 可能影响多个 spec（可跨多个 sprint）
-- **spec 是迭代内的技术方案**，是 adr 决策后的具体落地
-- **adr 不随 sprint 走**：不一定每次都改架构，架构决策全局历史累积
-- **读的顺序**: adrs 先看（理解架构决策）→ 再到具体 sprint 读 spec（理解实现）
+- **adr 是跨 spec 的**，一份 adr 可能影响多个 spec（可跨多个 sprint）
+- **spec 是迭代内的技术方案**，是 adr 架构下的具体落地；spec 内**不重复做技术决策**，只引用 adr 的实现
+- **adr 不随 sprint 走**：不一定每次 sprint 都变架构，但架构要**直观在首层看见**，所以独立存在
+- **读的顺序**: adrs 先看（理解整体架构）→ 再到具体 sprint 读 spec（理解实现）
 
 **创建新 adr**:
 
 ```bash
-cp adrs/_template/adr.md adrs/adr-003-数据模型.md
+cp -r adrs/_template adrs/adr-20260808-变动名
 ```
 
 ### 4.5 assets/ — 运营资产（Ops 产出）
@@ -588,7 +597,7 @@ adr:    proposed → accepted → deprecated → superseded
 |:--|:--|:--|
 | `docs/sprints/sprint-001_xxx/` 下 6 文档+原型 | `sprints/sp-001-xxx/docs/` | 转移（重命名 + 改路径） |
 | `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（按 spec 头部「基于冲刺」字段或 AI 判断归入对应冲刺） | 转移 + 重新编号 |
-| `ADR/ADR-NNN_xxx.md` | `adrs/adr-NNN-xxx.md` | 转移 + 重命名 |
+| `ADR/ADR-NNN_xxx.md`（旧决策记录） | `adrs/adr-YYYYMMDD-xxx/`（架构变动设计文件夹，3 份文档） | 转移 + 重命名，内容按新语义收敛（AI 整合为一整份） |
 | 无法归类的游离文档 | 对应 sprint `docs/` 收敛；仍无法归类 → `archive/` | 收敛 → 保留 → 删 |
 | `sprints/sprint-000_initial/`（纯模板） | 直接删除 | 删除 |
 | `sprints/sprint-000_initial.legacy/`（含内容） | 内容转移至 `sprints/sp-001-*/docs/` 后删除 | 转移 → 删除 |

@@ -225,22 +225,28 @@ cmd_migrate() {
   fi
 
   # ═══════════════════════════════════════════════
-  # 2. 迁移 ADR/ → adrs/
+  # 2. 迁移 ADR/ → adrs/（旧单文件 → 新 adr 文件夹）
   # ═══════════════════════════════════════════════
   if [ -d ADR ]; then
-    info "② 检测到旧结构 ADR/，迁移到 adrs/ ..."
+    info "② 检测到旧结构 ADR/，迁移到 adrs/（一次大型变动 = 一个 adr 文件夹）..."
     mkdir -p adrs
     for f in ADR/ADR-*.md; do
       [ -f "$f" ] || continue
       base=$(basename "$f")
-      newname=$(printf '%s' "$base" | sed 's/^ADR-/adr-/; s/_/-/g')
-      if [ ! -f "adrs/$newname" ]; then
-        cp "$f" "adrs/$newname"
-        ok "    已转移: $base → adrs/$newname"
-        LEGACY_NOTES+=("$f → 已复制至 adrs/$newname，AI 确认后删除原件")
+      # adr-名称 → adr-YYYYMMDD-名称（用迁移当天日期）
+      name=$(printf '%s' "$base" | sed 's/^ADR-//; s/\.md$//; s/_/-/g')
+      newdir="adrs/adr-$(date +%Y%m%d)-$name"
+      if [ ! -d "$newdir" ]; then
+        mkdir -p "$newdir"
+        cp "$f" "$newdir/architecture.md"
+        # 补齐另两份占位，提示 AI 按新语义收敛
+        printf '# 数据模型\n\n> 待 AI 按新语义补充（一次大型变动 = 一个 adr 文件夹）。\n' > "$newdir/data-model.md"
+        printf '# 影响与注意事项\n\n> 待 AI 按新语义补充（关联模块/部署/回滚）。\n' > "$newdir/impact.md"
+        ok "    已转移: $base → $newdir/（架构变动设计文件夹）"
+        LEGACY_NOTES+=("$f → 已转移至 $newdir/，旧决策记录已并入 architecture.md，data-model/impact 待 AI 收敛")
         REPORT_NEEDED=1
       else
-        warn "    adrs/$newname 已存在，跳过（内容请 AI 合并）"
+        warn "    $newdir 已存在，跳过（内容请 AI 合并）"
       fi
     done
     # ADR 内其他游离 .md → 报告
@@ -249,6 +255,26 @@ cmd_migrate() {
       LEGACY_NOTES+=("$f（ADR 内游离文档，AI 判断归属）")
       REPORT_NEEDED=1
     done < <(find ADR -type f -name "*.md" 2>/dev/null || true)
+  fi
+
+  # 2b. 收敛 v3.0 单文件时代遗留的 adrs/*.md（非 _template）→ 文件夹
+  if [ -d adrs ]; then
+    while IFS= read -r f; do
+      case "$f" in adrs/_template/*|adrs/*/) continue;; esac
+      [ -f "$f" ] || continue
+      base=$(basename "$f")
+      name=$(printf '%s' "$base" | sed 's/^adr-//; s/\.md$//; s/_/-/g')
+      newdir="adrs/adr-$(date +%Y%m%d)-$name"
+      if [ ! -d "$newdir" ]; then
+        mkdir -p "$newdir"
+        mv "$f" "$newdir/architecture.md"
+        printf '# 数据模型\n\n> 待 AI 按新语义补充（一次大型变动 = 一个 adr 文件夹）。\n' > "$newdir/data-model.md"
+        printf '# 影响与注意事项\n\n> 待 AI 按新语义补充（关联模块/部署/回滚）。\n' > "$newdir/impact.md"
+        ok "    已收敛: $base → $newdir/（单文件 → 文件夹，3 份文档）"
+        LEGACY_NOTES+=("$base → 已收敛至 $newdir/，内容并入 architecture.md，其余待 AI 整合")
+        REPORT_NEEDED=1
+      fi
+    done < <(find adrs -maxdepth 1 -type f -name "*.md" 2>/dev/null || true)
   fi
 
   # ═══════════════════════════════════════════════
