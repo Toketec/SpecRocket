@@ -61,7 +61,3 @@ businesses/auth-service (服务层)
 GET /api/{resource} → {type}
 POST /api/{resource} → {type}
 ```
-
-## 生命周期状态
-
-> 当前: **draft** → review → approved → active → done → archived

@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "principle": "SpecRocket 仓库整体承载同一套核心方法论。每种表达都必须能脱离其他表达独立支撑其使用场景；跨表达允许内容重复，但意义必须一致。",
+  "expressions": {
+    "manual": {
+      "path": "ssot-convention.zh.md",
+      "type": "text",
+      "purpose": "面向人和 AI 的完整方法论正文"
+    },
+    "training": {
+      "path": "SSOT-开发方法论-培训.pptx",
+      "type": "pptx",
+      "purpose": "可脱离仓库直接开展培训的演示表达"
+    },
+    "skill": {
+      "path": "SKILL.md",
+      "type": "text",
+      "purpose": "可独立安装并支撑五个 Agent 命令的技能表达"
+    },
+    "template_agents": {
+      "path": "template/AGENTS.md",
+      "type": "text",
+      "purpose": "模板生成项目后的完整 Agent 开发入口"
+    },
+    "template_readme": {
+      "path": "template/README.md",
+      "type": "text",
+      "purpose": "模板生成项目后的项目说明与唯一总体进度入口"
+    },
+    "template_assets": {
+      "path": "template/assets/README.md",
+      "type": "text",
+      "purpose": "模板生成项目后的运营资产规则"
+    },
+    "readme_zh": {
+      "path": "README.md",
+      "type": "text",
+      "purpose": "面向中文读者的项目背景、价值与完整使用介绍"
+    },
+    "readme_en": {
+      "path": "README.en.md",
+      "type": "text",
+      "purpose": "面向英文读者的独立项目介绍"
+    },
+    "cli": {
+      "path": "spec-rocket",
+      "type": "text",
+      "purpose": "init、update、migrate 三个可脚本化命令的实际实现"
+    },
+    "root_agents": {
+      "path": "AGENTS.md",
+      "type": "text",
+      "purpose": "SpecRocket 仓库自身的 Agent 维护入口"
+    },
+    "root_claude": {
+      "path": "CLAUDE.md",
+      "type": "text",
+      "purpose": "SpecRocket 仓库的 Claude Code 引用入口"
+    },
+    "template_claude": {
+      "path": "template/CLAUDE.md",
+      "type": "text",
+      "purpose": "模板生成项目后的 Claude Code 引用入口"
+    }
+  },
+  "agentPortability": {
+    "principle": "通用规则和命令语义不依赖任何单一 Agent；厂商专属文件只能作为指向通用入口的薄桥接层。",
+    "universalEntrypoints": [
+      {
+        "expression": "root_agents",
+        "allOf": ["所有 Agent", "SKILL.md", "template/", "Agent 可根据任务自主选择", "所有受影响表达", "新概念必须", "交付前必须通过", "不保存检查清单"],
+        "noneOf": ["仅支持 Claude", "仅支持 Codex", "必须使用 Claude Code"]
+      },
+      {
+        "expression": "template_agents",
+        "allOf": ["所有 Agent", "AGENTS.md", "agent 无关"],
+        "noneOf": ["仅支持 Claude", "仅支持 Codex", "必须使用 Claude Code"]
+      },
+      {
+        "expression": "skill",
+        "allOf": ["任何 AI 编码代理", "init", "brainstorm", "migrate", "preview", "update"],
+        "noneOf": ["仅支持 Claude", "仅支持 Codex", "必须使用 Claude Code"]
+      }
+    ],
+    "vendorBridges": [
+      {
+        "expression": "root_claude",
+        "mustReference": "AGENTS.md",
+        "maxLines": 20,
+        "noneOf": ["五步开发流程", "requirements.md", "Step 3"]
+      },
+      {
+        "expression": "template_claude",
+        "mustReference": "AGENTS.md",
+        "maxLines": 20,
+        "noneOf": ["五步开发流程", "requirements.md", "Step 3"]
+      }
+    ],
+    "localSelfCheck": {
+      "maxDurationMs": 5000,
+      "forbiddenRuntimeDependencies": [".github/", "GITHUB_ACTIONS", "actions/checkout", "fetch(", "curl "]
+    }
+  },
+  "concepts": [
+    {
+      "id": "agent-commands",
+      "meaning": "Agent 层提供 init、brainstorm、migrate、preview、update 五个命令；CLI 只实现其中可脚本化的 init、update、migrate。",
+      "coverage": {
+        "skill": { "level": "operational", "allOf": ["init", "brainstorm", "migrate", "preview", "update"] },
+        "readme_zh": { "level": "overview", "allOf": ["init", "brainstorm", "migrate", "preview", "update"] },
+        "readme_en": { "level": "overview", "allOf": ["init", "brainstorm", "migrate", "preview", "update"] },
+        "cli": { "level": "runtime-subset", "allOf": ["cmd_init", "cmd_update", "cmd_migrate"] }
+      }
+    },
+    {
+      "id": "five-step-flow",
+      "meaning": "产品设计、规格编写、方案评审、按规格编码、人工收尾构成完整五步流程。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["五步开发流程", "Step 1", "Step 2", "Step 3", "Step 4", "Step 5"] },
+        "training": { "level": "training", "allOf": ["五步开发流程", "Step 1", "Step 2", "Step 3", "Step 4", "Step 5"] },
+        "template_agents": { "level": "operational", "allOf": ["五步开发流程", "Step 1", "Step 2", "Step 3", "Step 4", "Step 5"] },
+        "readme_zh": { "level": "overview", "allOf": ["五步开发流程", "Step 1", "Step 2", "Step 3", "Step 4", "Step 5"] },
+        "readme_en": { "level": "overview", "allOf": ["5-Step Development Flow", "Step 1", "Step 2", "Step 3", "Step 4", "Step 5"] }
+      }
+    },
+    {
+      "id": "spec-four-files",
+      "meaning": "每个 Spec 使用 requirements、plan、tasks、check 四文件形成设计、执行和验收闭环。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
+        "training": { "level": "training", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
+        "skill": { "level": "operational", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
+        "template_agents": { "level": "operational", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
+        "readme_zh": { "level": "overview", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
+        "readme_en": { "level": "overview", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] }
+      }
+    },
+    {
+      "id": "review-gate",
+      "meaning": "未经 Step 3 的 PM 与技术评审，不得进入 Step 4 编码。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["Step 3", "Step 4", "评审"] },
+        "training": { "level": "training", "allOf": ["Step 3", "Step 4", "评审"] },
+        "template_agents": { "level": "operational", "allOf": ["不跳 step", "Step 3", "Step 4"] },
+        "root_agents": { "level": "repository-rule", "allOf": ["Step 3", "Step 4"] }
+      }
+    },
+    {
+      "id": "document-current-state",
+      "meaning": "普通文档只保留当前有效内容，历史交给 Git；项目总体进度只在 README，Spec 执行状态保留在 tasks/check。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["最近变更", "README.md", "tasks.md", "check.md", "Git"] },
+        "skill": { "level": "operational", "allOf": ["最近变更", "README.md", "tasks.md", "check.md", "Git"] },
+        "template_agents": { "level": "operational", "allOf": ["最近变更", "README.md", "tasks.md", "check.md", "Git"] },
+        "template_readme": { "level": "project-entry", "allOf": ["项目进度", "tasks.md", "check.md"] },
+        "root_agents": { "level": "repository-rule", "allOf": ["最近变更", "README.md", "tasks.md", "check.md", "Git"] },
+        "readme_zh": { "level": "project-entry", "allOf": ["项目进度", "唯一维护位置"] },
+        "readme_en": { "level": "reference", "allOf": ["Project Status", "maintained only"] }
+      }
+    },
+    {
+      "id": "single-current-contract",
+      "meaning": "公共契约属于代码实现，每个接口只保留一份当前有效定义，历史由 Git 提供。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["公共契约", "当前有效", "Git"] },
+        "skill": { "level": "operational", "allOf": ["公共契约", "当前有效", "Git"] },
+        "template_agents": { "level": "operational", "allOf": ["公共契约", "当前有效", "Git"] },
+        "template_assets": { "level": "asset-rule", "allOf": ["公共契约", "当前有效", "Git"] },
+        "root_agents": { "level": "repository-rule", "allOf": ["公共契约", "当前有效", "Git"] }
+      }
+    },
+    {
+      "id": "claude-bridge",
+      "meaning": "CLAUDE.md 只承载 Claude 专属入口，通用规则以 AGENTS.md 为准。",
+      "coverage": {
+        "root_claude": { "level": "bridge", "allOf": ["Claude Code", "AGENTS.md"] },
+        "template_claude": { "level": "bridge", "allOf": ["Claude Code", "AGENTS.md"] },
+        "root_agents": { "level": "repository-rule", "allOf": ["CLAUDE.md", "AGENTS.md"] }
+      }
+    }
+  ]
+}

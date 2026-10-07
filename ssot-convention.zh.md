@@ -1,6 +1,6 @@
 # SSOT — 规格驱动开发规范手册
 
-> **版本**: 3.0
+> **版本**: 3.5.0
 > **用途**: 本文档是 SSOT（Single Source of Truth）规格驱动开发的完整规范。每个团队成员在加入时应阅读一次。
 > **AI 协作入口**: `AGENTS.md`（AI 读取的浓缩版，位于根目录）
 > **核心理念**: 一次冲刺 = 一个完整容器（PM 产品设计 + Dev 技术规格）。specs 聚合在迭代容器内，共同促成一次迭代的所有开发任务；adrs 记录一次大型变动的完整架构设计；代码域只关心实现。
@@ -38,7 +38,7 @@
 project-root/
 │
 ├── AGENTS.md                         # ★ AI 协作入口（五步开发流程规范）
-├── CLAUDE.md                         # ★ AI 指令文件（agent 自动加载）
+├── CLAUDE.md                         # Claude Code 入口（引用 AGENTS.md）
 ├── README.md                         # ★ 项目介绍（`init` 时填入项目名）
 │
 ├── docs/                             # ★ 稳定层 — 全版本通用的产品规划文档
@@ -181,7 +181,7 @@ project-root/
 | `docs/non-functional-reqs.md` | ⭐⭐⭐ | **必须存在**，无要求也要一行占位。性能/SLA/安全/合规基线 |
 | `docs/visual-design.md` | ⭐⭐⭐ | **必须存在**，无 UI 也要一行占位。视觉方向 |
 | `docs/whitepaper.md` | ⭐⭐ | 产品愿景/市场定位/核心理念。无对外需求可一行占位 |
-| `sprints/*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。全局功能索引+版本路线图 |
+| `sprints/*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点的项目建议写。本冲刺功能索引，不维护进度状态 |
 | `sprints/*/docs/user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览（叙述式阶段表）+ 用例清单。Dev 理解业务的基础 |
 | `sprints/*/docs/business-flows.md` | ⭐⭐⭐ | 核心业务流程图（泳道/时序/状态）。**业务闭环一眼可见** |
 | `sprints/*/docs/uml-pack.md` | ⭐⭐ | 软件工程图表包（用例/ER/类图/C4）。**按需最小化绘制** |
@@ -401,7 +401,7 @@ sprints/sp-NNN-名称/docs/prototypes/
 sprints/sp-NNN-名称/
 ├── docs/                           # PM 产品设计
 │   ├── SPRINT-features.md          # 冲刺目标 + 功能清单 + 业务流程 + 验收条件
-│   ├── functional-overview.md      # 本版本功能需求总览 + 版本路线图
+│   ├── functional-overview.md      # 本版本功能需求总览
 │   ├── user-scenarios.md           # 本版本用户旅程总览 + 用例清单
 │   ├── business-flows.md           # 核心业务流程图（Mermaid，必写）
 │   ├── uml-pack.md                 # UML 图表包（用例/ER/类图/C4，按需最小化）
@@ -511,6 +511,7 @@ cp -r adrs/_template adrs/adr-20260808-变动名
 `assets/` 存放**被系统/业务直接引用的工程资产**（配置模板、对外接口、规范库、说明手册），由 **Ops 运营角色**产出与维护。
 
 - 四类按需取用：`configs/`（配置模板）、`interfaces/`（对外接口）、`standards/`（规范库）、`manuals/`（说明文档）
+- 公共契约的版本与历史维护规则见「六、文档与契约维护边界」
 - docs/specs 引用本目录文件用**相对链接**，不复制内容（SSOT）
 
 ---
@@ -560,28 +561,14 @@ A spec 想确认依赖方 B 的接口格式，直接在 A 的 `requirements.md` 
 
 ---
 
-## 六、生命周期状态管理
+## 六、文档与契约维护边界
 
-### 状态流转
-
-```
-sprint: drafting → review → approved → active → done
-spec:   draft → review → approved → active → done → archived
-adr:    proposed → accepted → deprecated → superseded
-```
-
-### 状态说明
-
-| 状态 | 含义 | 谁修改 |
-|:----|:-----|:-------|
-| draft | Dev 在写 spec | Dev |
-| review | 等待 TL 审查 | Dev → TL |
-| approved | TL 批准，可开始实现 | TL |
-| active | Dev 在实现 | Dev |
-| done | check.md 全部通过 | QA 签收 |
-| archived | 被替代或历史记录 | TL |
-
-> 状态直接在 spec 文件顶部标记，或由各规格自行管理。不再需要全局 catalog。
+- 产品、架构、冲刺、计划和需求文档只描述当前有效的设计、约束与实现，不维护“最近变更”“最后更新”、修订历史或文档生命周期状态；历史由 Git 提供。
+- 项目整体的粗粒度功能进度只维护在根目录 `README.md`，不描述实现细节。
+- 规格中的 `tasks.md` 与 `check.md` 必须维护任务、自检和人工验收状态，这是规格执行闭环的一部分。
+- 业务实体状态、UI 状态机和兼容性版本要求属于设计事实，不属于项目进度状态，应在对应设计中正常维护。
+- `assets/interfaces/` 中的公共契约属于代码实现的一部分，每个接口只保留一份当前有效的权威定义，并与实现同步修改；不按日期或修订号复制历史契约。
+- 如果系统同时支持多个协议版本，在同一份当前契约中描述实际仍受支持的版本，历史差异由 Git 提供。
 
 ---
 

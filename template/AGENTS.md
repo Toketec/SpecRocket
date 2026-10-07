@@ -110,7 +110,7 @@
 | `docs/non-functional-reqs.md` | ⭐⭐⭐ | **必须存在**，无要求也要写一行占位。性能/SLA/安全/合规基线 |
 | `docs/visual-design.md` | ⭐⭐⭐ | **必须存在**，无 UI 也要写一行占位。全局唯一审美边界（颜色/大小/设计语言/风格/动效），**禁业务设计** |
 | `docs/whitepaper.md` | ⭐⭐ | **建议存在**，无对外需求可一行占位。愿景/市场/价值/商机，**质量门槛：全盘视野/无版本关联/低认知门槛** |
-| `sprints/sp-NNN-*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点项目建议写。功能索引+路线图 |
+| `sprints/sp-NNN-*/docs/functional-overview.md` | ⭐⭐ | 5+ 功能点项目建议写。本冲刺功能索引，不维护进度状态 |
 | `sprints/sp-NNN-*/docs/user-scenarios.md` | ⭐⭐⭐ | 用户旅程总览 + 用例清单。Dev 理解业务的基础 |
 | `sprints/sp-NNN-*/docs/business-flows.md` | ⭐⭐⭐ | 核心业务流程图（Mermaid）。**业务闭环一眼可见** |
 | `sprints/sp-NNN-*/docs/uml-pack.md` | ⭐⭐ | 软件工程图表包。**按需最小化绘制**，极简项目可一行占位 |
@@ -118,20 +118,6 @@
 | `sprints/sp-NNN-*/docs/SPRINT-features.md` | ⭐⭐⭐ | 每次冲刺的功能描述（含业务验收条件） |
 
 > ⚠️ 必填（⭐⭐⭐）：`non-functional-reqs.md` 与 `visual-design.md` 过去常被 AI 漏写，极简项目也要一行占位说明为什么不需要。
-
-### 📋 编辑顺序（必须遵守，不跳序）
-
-Step 1 中文档按以下顺序编辑，每步完成后再进入下一步：
-
-| 序 | 文件 | 原因 |
-|:--:|:----|:-----|
-| 1️⃣ | `docs/product-overview.md` | 全局锚点，先定义产品是什么 |
-| 2️⃣ | `docs/non-functional-reqs.md` | 技术约束基线（性能/安全/合规），影响技术选型 |
-| 3️⃣ | `docs/visual-design.md` | 视觉方向（或明确无 UI），影响前端框架选型 |
-| 4️⃣ | `docs/whitepaper.md` | 白皮书（愿景/定位），影响对外叙事 |
-| 5️⃣ | `sprints/sp-NNN-*/docs/` | 版本迭代设计，依赖前四步的全局决策 |
-
-> 例如：纯脚本工具 → 1️⃣产品概览 → 2️⃣"无特殊非功能需求要求"占位 → 3️⃣"无前端界面，不涉及视觉设计"占位 → 4️⃣"内部工具，无对外白皮书"占位 → 5️⃣sprint。
 
 ### 📌 占位规则
 
@@ -243,13 +229,12 @@ Dev 发现边界 bug → AI 推荐修复 → Dev 确认。
    - SpecRocket 是纯文件约定，不依赖任何 AI 工具的特殊扫描/索引/上下文管理能力
    - AI 禁止自行探索项目目录结构来"理解项目"——必须按固定读顺序（AGENTS.md → adrs/ → sprints/*/docs/ → specs/）逐文件读取
    - Step 4 编码时，严格按 `plan.md` 的文件清单实现，不自动搜索或引用项目其他位置的文件
-   - 跨 spec 引用仅通过 Context Contract（≤15 行），禁止主动遍历其他规格的 specs/
 9. **按需读取（任务粒度分级，控制 token）**: 按任务规模决定读取范围，**禁止任何任务都全量重读 docs/**：
    - **P0 首次进入 / 架构级改动** → 全量读（规则 1 的标准读顺序）
    - **P1 局部功能改动** → 只读目标 sprint specs/ + 受影响的 docs 文件 + 相关 adr
    - **P2 文案 / 微小调整** → 只读目标文件本身
    - 拿不准时按低一级处理；发现信息不足再升级读取，而不是一开始就全量读
-10. **增量更新（只改受影响段落）**: 修改文档/代码时**只更新受影响的部分**，禁止整篇重写或顺手"全面刷新"其他文件。文档标题下方维护一行「最近变更」记录（日期 + 改动要点），供后续任务快速判断影响面
+10. **增量更新（只改受影响段落）**: 修改文档/代码时**只更新受影响的部分**，禁止整篇重写或顺手"全面刷新"其他文件。文档只保留当前有效内容，不维护「最近变更」「最后更新」、修订历史或生命周期状态；历史由 Git 提供。全局粗粒度功能进度只维护在 `README.md`，规格执行状态只维护在 `tasks.md` 与 `check.md`
 11. **图表规范（业务闭环可视化）**: 
     - 产品设计文档至少包含 **1 个 Mermaid 流程图**（用户旅程总览或核心业务泳道图），让业务闭环一眼可见；复杂交互配时序图，有状态机配状态图
     - `uml-pack.md` 遵循**最小化数量原则**：按项目实际需要按需绘制，不追求全量；能用一个图说清就不画第二个，极简项目整文件一行占位
@@ -265,7 +250,7 @@ Dev 发现边界 bug → AI 推荐修复 → Dev 确认。
 ```
 project-root/
 ├── AGENTS.md                  # ★ AI 协作入口（本文档）
-├── CLAUDE.md                  # ★ AI 指令文件
+├── CLAUDE.md                  # Claude Code 入口（引用 AGENTS.md）
 ├── README.md                  # 项目介绍
 │
 ├── docs/                      # ★ 稳定层 — 全版本通用的产品规划文档
@@ -280,7 +265,7 @@ project-root/
 │   ├── _template/             # sprint 模板（创建新 sprint 时 cp）
 │   │   ├── docs/              # ★ 冲刺产品文档（PM 产出）
 │   │   │   ├── SPRINT-features.md    # 冲刺目标 + 功能清单 + 业务验收条件
-│   │   │   ├── functional-overview.md # 本版本功能总览 + 路线图
+│   │   │   ├── functional-overview.md # 本版本功能总览
 │   │   │   ├── user-scenarios.md     # 本版本用户旅程 + 用例
 │   │   │   ├── business-flows.md     # 核心业务流程图（泳道/时序/状态，Mermaid 必写）
 │   │   │   ├── uml-pack.md           # UML 图表包（按需，最小化原则）
@@ -366,7 +351,7 @@ sprints/sp-001-核心交易/specs/
 
 **新建规格**：`cp -r specs/_template specs/spec-{XXX}_{规格名}`，编号在冲刺内递增（001, 002…），描述用下划线连接（与 `sp-001-功能名` 同款机制）。
 
-**规格编写原则**: ①人为划分（边界人定）②业务隔离（零耦合）③数据/中间件前置 ④前端优先（mock 挡 API）。解耦上限、不刻意多拆下限。
+**规格编写原则**: 遵循「4.2 Step 2」中的完整规则，不在本节重复定义。
 
 **原因**: 一次迭代的开发任务是一个整体（前端+后端+服务），spec 按迭代聚合才能保证并行开发互不干扰、上下文干净、冻结即全冻结。代码域（apps/businesses/tools）只关心实现，不再维护规格。
 
@@ -508,28 +493,14 @@ adrs 本身构成了系统的"架构史"——每次大型变动的完整设计�
 
 ---
 
-## 九、生命周期状态管理
+## 九、文档与契约维护边界
 
-### 状态流转
-
-```
-sprint: drafting → review → approved → active → done
-spec:   draft → review → approved → active → done → archived
-adr:    proposed → accepted → deprecated → superseded（一次大型变动一个 adr 文件夹）
-```
-
-### 状态说明
-
-| 状态 | 含义 | 谁修改 |
-|:----|:-----|:-------|
-| draft | Dev 在写 spec | Dev |
-| review | 等待 TL 审查 | Dev → TL |
-| approved | TL 批准，可开始实现 | TL |
-| active | Dev 在实现 | Dev |
-| done | check.md 全部通过 | QA 签收 |
-| archived | 被替代或历史记录 | TL |
-
-> 状态直接在 spec 文件顶部标记，或由各规格自行管理。不再需要全局 catalog。
+- 产品、架构、冲刺、计划和需求文档只描述当前有效的设计、约束与实现，不维护“最近变更”“最后更新”、修订历史或文档生命周期状态；历史由 Git 提供。
+- 项目整体的粗粒度功能进度只维护在根目录 `README.md`，不描述实现细节。
+- 规格中的 `tasks.md` 与 `check.md` 必须维护任务、自检和人工验收状态，这是规格执行闭环的一部分。
+- 业务实体状态、UI 状态机和兼容性版本要求属于设计事实，不属于项目进度状态，应在对应设计中正常维护。
+- `assets/interfaces/` 中的公共契约属于代码实现的一部分，每个接口只保留一份当前有效的权威定义，并与实现同步修改；不按日期或修订号复制历史契约。
+- 如果系统同时支持多个协议版本，在同一份当前契约中描述实际仍受支持的版本，历史差异由 Git 提供。
 
 ---
 
@@ -579,7 +550,7 @@ mkdir -p apps/ businesses/ tools/ adrs/ docs/ sprints/
 
 ## 十二、审计追踪
 
-每个 spec 的 `tasks.md` 维护状态历史：
+每个 spec 的 `tasks.md` 维护任务状态和验证证据：
 
 ```
 T01 | 实现注册 API  | plan.md  | @dev_a  | 30min  | ☐ → ✅ (2026-07-20, curl 返回 201)
@@ -601,7 +572,7 @@ git clone https://github.com/Toketec/SpecRocket.git
 cd SpecRocket && ./spec-rocket init "项目名"
 ```
 
-> SpecRocket 是 agent 无关的 CLI 引导工具，任何 AI 编码代理均可通过 `CLAUDE.md` 自动识别并使用。
+> SpecRocket 是 agent 无关的 CLI 引导工具。所有 Agent 以 `AGENTS.md` 为通用协作入口；`CLAUDE.md` 只为 Claude Code 提供引用入口。
 
 ### 手动操作（无 SpecRocket）
 

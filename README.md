@@ -1,7 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/status-🚀%20active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/github/license/Toketec/SpecRocket?style=flat-square" alt="License">
-  <img src="https://img.shields.io/github/last-commit/Toketec/SpecRocket?style=flat-square" alt="Last Commit">
   <img src="https://img.shields.io/badge/PRs-welcome-ff69b4?style=flat-square" alt="PRs Welcome">
 </p>
 
@@ -26,7 +24,7 @@
   <a href="#-五步开发流程">📋 五步流程</a> •
   <a href="#-与同类方案对比">⚔️ 对比</a> •
   <a href="#-适用场景">🏗️ 场景</a> •
-  <a href="#-roadmap">🗺️ Roadmap</a>
+  <a href="#-项目进度">🗺️ 项目进度</a>
 </p>
 
 <p align="center">
@@ -240,6 +238,8 @@ AI：已进入 ~/projects/my-app（空目录）
 └────────────────────────────────────────────────────────────────────┘
 ```
 
+**Spec 四文件：** `requirements.md` 定义需求与验收标准，`plan.md` 定义技术方案，`tasks.md` 跟踪实施任务，`check.md` 承载 AI 自检与人工验收。
+
 **关键设计：** PM 和 Dev 只做 2 件真人决策的事（产品设计 + 评审），其余交给 AI。**AI 按规格编码，不跳步骤、不改方案。**
 
 ---
@@ -248,6 +248,8 @@ AI：已进入 ~/projects/my-app（空目录）
 
 ```
 SpecRocket/
+├── AGENTS.md         ← 本仓库通用 AI 协作入口
+├── CLAUDE.md         ← Claude Code 入口（引用 AGENTS.md）
 ├── SKILL.md          ← 标准 skill 文件（AI 斜杠命令入口）
 ├── init.sh           ← 手动 init 脚本（无 AI 时用）
 ├── spec-rocket       ← CLI 脚本（init / update / migrate）
@@ -255,7 +257,7 @@ SpecRocket/
 ├── SSOT-开发方法论-培训.pptx ← 培训 PPT（仅主仓库）
 ├── template/               ← 项目模板框架（init/migrate 复制此目录）
 │   ├── AGENTS.md              ← AI 协作规则
-│   ├── CLAUDE.md              ← Claude Code 协作规则
+│   ├── CLAUDE.md              ← Claude Code 入口（引用 AGENTS.md）
 │   ├── docs/                  ← 稳定层产品文档模板（含 whitepaper）
 │   ├── sprints/_template/     ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
 │   ├── adrs/                   ← 架构变动设计模板（adr-YYYYMMDD-名称/，3 份文档）
@@ -294,16 +296,16 @@ SpecRocket 设计为 **任何 AI 编码代理均可驱动**。只要你的 AI �
 | Agent | 识别方式 |
 |:------|:---------|
 | **Hermes Agent** | `SKILL.md` 标准格式 |
-| Claude Code | 导入 `SKILL.md` 内容 |
-| Cursor | 导入 `SKILL.md` 内容 |
-| Windsurf | 导入 `SKILL.md` 内容 |
-| Cline / Roo Code | 导入 `SKILL.md` 内容 |
-| Trae | 导入 `SKILL.md` 内容 |
-| Codex CLI | 导入 `SKILL.md` 内容 |
-| Aider | 导入 `SKILL.md` 内容 |
-| OpenClaw | 导入 `SKILL.md` 内容 |
+| Claude Code | `CLAUDE.md` 引用 `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| Cursor | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| Windsurf | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| Cline / Roo Code | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| Trae | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| Codex CLI | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| Aider | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
+| OpenClaw | `AGENTS.md`；斜杠命令读取 `SKILL.md` |
 
-> 不挑 AI，不锁平台。**`SKILL.md` 是通用入口，任何 AI 都可通过注入内容的方式使用。**
+> 不挑 AI，不锁平台。**`AGENTS.md` 是项目协作主入口，`SKILL.md` 是 SpecRocket 斜杠命令入口。**
 
 ---
 
@@ -336,13 +338,15 @@ SpecRocket 设计为 **任何 AI 编码代理均可驱动**。只要你的 AI �
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ 项目进度
+
+> 本节是 SpecRocket 整体功能进度的唯一维护位置，只记录粗粒度能力，不描述实现细节。
 
 - [x] `init` / `brainstorm` / `migrate` / `preview` / `update` slash commands
 - [x] 五步开发流程 & 完整规范手册
 - [x] 中英双语文档结构
 - [ ] 英文版 ssot-convention
-- [ ] GitHub Actions 模板（CI + spec 校验）
+- [x] 本地一致性与命令回归自检（无托管平台依赖）
 - [ ] VSCode 扩展（一键 init）
 - [ ] `retrospec` 子命令（自动分析现有项目 → 生成骨架）
 - [ ] Web UI 配置面板
@@ -364,6 +368,13 @@ SpecRocket 是一个社区驱动的项目。欢迎各种形式的贡献：
 git clone --recursive https://github.com/Toketec/SpecRocket.git
 cd SpecRocket
 # 改完提 PR！
+```
+
+修改核心方法论时，请同步检查规范手册、培训 PPT、Skill、项目模板、中英文 README 和命令实现中受影响的表达；它们必须各自独可用，且语义一致。提交前运行：
+
+```bash
+node scripts/check-methodology-consistency.mjs
+node scripts/test-cli-regression.mjs
 ```
 
 ---

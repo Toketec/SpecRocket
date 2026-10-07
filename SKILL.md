@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 3.4.0
+version: 3.5.0
 license: MIT
 ---
 
@@ -15,6 +15,8 @@ license: MIT
 
 ```
 SpecRocket/                      ← 本仓库
+├── AGENTS.md                   ← 本仓库通用 AI 协作入口
+├── CLAUDE.md                   ← Claude Code 入口（引用 AGENTS.md）
 ├── SKILL.md                    ← 标准 skill 文件（AI 斜杠命令）
 ├── spec-rocket                 ← CLI 脚本（init / update / migrate）
 ├── init.sh                     ← 手动 init 脚本（无 AI 时用）
@@ -22,7 +24,7 @@ SpecRocket/                      ← 本仓库
 ├── SSOT-开发方法论-培训.pptx ← 培训 PPT（仅主仓库）
 ├── template/               ← 项目模板框架（init/migrate 复制此目录）
 │   ├── AGENTS.md               ← AI 协作规则
-│   ├── CLAUDE.md               ← Claude Code 协作规则
+│   ├── CLAUDE.md               ← Claude Code 入口（引用 AGENTS.md）
 │   ├── docs/                   ← 稳定层产品文档模板（含 whitepaper.md）
 │   ├── sprints/_template/      ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
 │   ├── adrs/                   ← 架构变动设计模板（adr-YYYYMMDD-名称/，3 份文档）
@@ -32,6 +34,15 @@ SpecRocket/                      ← 本仓库
 ├── README.md                   ← 项目介绍
 ├── LICENSE                     ← MIT License
 ```
+
+## SSOT 维护边界
+
+- 产品、架构、冲刺、计划和需求文档只描述当前有效的设计、约束与实现，不维护“最近变更”“最后更新”、修订历史或文档生命周期状态；历史由 Git 提供。
+- 项目整体的粗粒度功能进度只维护在根目录 `README.md`，不描述实现细节。
+- 规格中的 `tasks.md` 与 `check.md` 必须维护任务、自检和人工验收状态，这是规格执行闭环的一部分。
+- 业务实体状态、UI 状态机和兼容性版本要求属于设计事实，不属于项目进度状态，应在对应设计中正常维护。
+- `assets/interfaces/` 中的公共契约属于代码实现的一部分，每个接口只保留一份当前有效的权威定义，并与实现同步修改；不按日期或修订号复制历史契约。
+- 如果系统同时支持多个协议版本，在同一份当前契约中描述实际仍受支持的版本，历史差异由 Git 提供。
 
 ## 斜杠命令
 
@@ -84,12 +95,12 @@ SpecRocket/                      ← 本仓库
 | **Hermes Agent** | `~/.hermes/skills/spec-rocket/` | 复制最新 `SKILL.md` |
 | **spec-rocket-light**（若安装） | `~/.hermes/skills/spec-rocket-light/` | 同步 light 版 SKILL.md |
 | **Codex** | 项目级 `AGENTS.md`（全局 `~/.codex/AGENTS.md` 谨慎） | 检测到全局含 SpecRocket 内容 → 提示手动同步；推荐项目级由 init/migrate 注入 |
-| **Claude Code** | 项目级 `CLAUDE.md`（每个项目一份） | 无需全局更新；项目升级用 `/spec-rocket migrate` |
+| **Claude Code** | 项目级 `AGENTS.md` + `CLAUDE.md` 引用入口 | 无需全局更新；项目升级用 `/spec-rocket migrate` |
 | **Cursor** | 项目级 `.cursor/rules/` 或 `.cursorrules` | 同上 |
 | **Windsurf** | 项目级 `.windsurf/rules/` | 同上 |
-| **Cline** | 项目级 `CLAUDE.md` | 同上 |
+| **Cline** | 项目级 `AGENTS.md` | 同上 |
 
-> **核心原则**：SpecRocket 是纯文件约定。`update` 保证「本地源」最新（仓库 git pull + 有全局 skill 概念的工具同步），项目级规则文件（CLAUDE.md / AGENTS.md 等）随各项目执行 `migrate` 更新。
+> **核心原则**：SpecRocket 是纯文件约定。`AGENTS.md` 是项目通用协作入口，`CLAUDE.md` 仅保留 Claude 专属内容并引用 `AGENTS.md`。`update` 保证「本地源」最新（仓库 git pull + 有全局 skill 概念的工具同步），项目级规则文件随各项目执行 `migrate` 更新。
 
 **AI 斜杠命令执行时（无 CLI 环境）：**
 1. `git pull` 本地 SpecRocket 仓库（若为 clone）
@@ -353,7 +364,7 @@ sprints/sp-001-核心交易/specs/
 │   └── check.md
 └── spec-001-前端收银台/        # 具体规格（编号+描述）
     ├── requirements.md
-    └── ...
+└── ...
 ```
 
 新建规格 = `cp -r specs/_template specs/spec-{XXX}_{规格名}`，编号 `spec-{三位数}` 在冲刺内递增，描述下划线连接（与 `sp-001-功能名` 同款机制）。
