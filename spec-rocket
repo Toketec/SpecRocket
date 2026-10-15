@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口 (v3.5.0)
+# 规格驱动开发（SDD）框架的命令入口 (v4.0.0)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 一键更新本地 skill（工具感知）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="3.5.0"
+VERSION="4.0.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 USER_BASE="${SPECROCKET_USER_HOME:-$HOME}"
@@ -55,7 +55,7 @@ cmd_init() {
     git add . >/dev/null
     git commit -m "init: SpecRocket project skeleton" >/dev/null 2>&1 || warn "git commit 失败（可能未配置用户信息），可稍后手动提交"
   fi
-  ok "项目已初始化（v$VERSION 结构：docs/ + sprints/ + adrs/ + apps/businesses/tools + assets/）"
+  ok "项目已初始化（v$VERSION 结构：docs/ + architecture/ + sprints/ + apps/businesses/tools + assets/）"
   echo "  下一步：运行 /spec-rocket brainstorm 引导写产品文档"
 }
 
@@ -170,6 +170,8 @@ cmd_migrate() {
   ROOT_STRAY_R1=()    # 规则1：根目录内容型文档 → 收敛 docs/
   ROOT_STRAY_R2=()    # 规则2：根目录非规范项 → 归位 assets/
   ASSETS_STRAY=()
+  ARCHITECTURE_STRAY=() # architecture/ 根目录除三份当前文档外的内容，需 AI 收敛
+  LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
 
   # ═══════════════════════════════════════════════
   # 1. 迁移旧 sprint 容器：docs/sprints/sprint-NNN_xxx/ → sprints/sp-NNN-xxx/docs/
@@ -188,14 +190,29 @@ cmd_migrate() {
     for sprint in docs/sprints/sprint-*; do
       [ -d "$sprint" ] || continue
       base=$(basename "$sprint")
+      [ "$base" = "sprint-000_initial" ] && continue
+      case "$base" in *.legacy) continue;; esac
       newname=$(printf '%s' "$base" | sed 's/^sprint-/sp-/; s/_/-/g')
       if [ -d "sprints/$newname" ]; then
-        warn "    目标 sprints/$newname 已存在，跳过（内容请 AI 合并）"
+        legacy="$sprint.legacy"
+        if [ ! -e "$legacy" ]; then
+          mv "$sprint" "$legacy"
+          warn "    目标 sprints/$newname 已存在，旧内容完整保留为 $legacy"
+          LEGACY_NOTES+=("$legacy → 与 sprints/$newname/ 对比合并，确认无遗漏后删除")
+        else
+          warn "    目标 sprints/$newname 与 $legacy 均已存在，保留 $sprint 待 AI 对比"
+          LEGACY_NOTES+=("$sprint、$legacy 与 sprints/$newname/ 存在冲突，AI 对比合并")
+        fi
+        REPORT_NEEDED=1
         continue
       fi
       mkdir -p "sprints/$newname/docs"
-      # 转移内容（不删除源，保留 .legacy 供 AI 确认）
-      cp -r "$sprint"/* "sprints/$newname/docs/" 2>/dev/null || true
+      # 转移产品文档；specs 单独进入新容器，禁止复制到 docs/ 下形成重复来源
+      for entry in "$sprint"/*; do
+        [ -e "$entry" ] || continue
+        [ "$(basename "$entry")" = "specs" ] && continue
+        cp -r "$entry" "sprints/$newname/docs/"
+      done
       # sprint 内含 specs/ 的情况（v2.12 结构异常）→ 移到新 specs/
       if [ -d "$sprint/specs" ]; then
         cp -r "$sprint/specs" "sprints/$newname/specs" 2>/dev/null || true
@@ -220,64 +237,98 @@ cmd_migrate() {
       fi
     fi
 
-    # 转移 _template（若有旧模板文件散落）——新模板由下方统一补齐
-    rm -rf docs/sprints 2>/dev/null || true
-    if [ -z "$(ls -A sprints 2>/dev/null)" ]; then
-      rmdir sprints 2>/dev/null || true
-    fi
+    # 旧模板可删，但 .legacy 必须保留给 AI 确认，禁止整体删除 docs/sprints/
+    rm -rf docs/sprints/_template 2>/dev/null || true
+    rmdir docs/sprints 2>/dev/null || true
   fi
 
   # ═══════════════════════════════════════════════
-  # 2. 迁移 ADR/ → adrs/（旧单文件 → 新 adr 文件夹）
+  # 2. 迁移历代 ADR 结构 → architecture/adrs/
+  #    旧单文件可直接转移；v3.x 三文件夹完整保留为 .legacy，由 AI 提炼决策后删除
   # ═══════════════════════════════════════════════
+  mkdir -p architecture/adrs
   if [ -d ADR ]; then
-    info "② 检测到旧结构 ADR/，迁移到 adrs/（一次大型变动 = 一个 adr 文件夹）..."
-    mkdir -p adrs
+    info "② 检测到旧结构 ADR/，迁移到 architecture/adrs/ ..."
     for f in ADR/ADR-*.md; do
       [ -f "$f" ] || continue
       base=$(basename "$f")
-      # adr-名称 → adr-YYYYMMDD-名称（用迁移当天日期）
       name=$(printf '%s' "$base" | sed 's/^ADR-//; s/\.md$//; s/_/-/g')
-      newdir="adrs/adr-$(date +%Y%m%d)-$name"
-      if [ ! -d "$newdir" ]; then
-        mkdir -p "$newdir"
-        cp "$f" "$newdir/architecture.md"
-        # 补齐另两份占位，提示 AI 按新语义收敛
-        printf '# 数据模型\n\n> 待 AI 按新语义补充（一次大型变动 = 一个 adr 文件夹）。\n' > "$newdir/data-model.md"
-        printf '# 影响与注意事项\n\n> 待 AI 按新语义补充（关联模块/部署/回滚）。\n' > "$newdir/impact.md"
-        ok "    已转移: $base → $newdir/（架构变动设计文件夹）"
-        LEGACY_NOTES+=("$f → 已转移至 $newdir/，旧决策记录已并入 architecture.md，data-model/impact 待 AI 收敛")
+      target="architecture/adrs/adr-$(date +%Y%m%d)-$name.md"
+      if [ ! -e "$target" ]; then
+        mv "$f" "$target"
+        ok "    已转移: $base → $target（历史架构决策）"
+        LEGACY_NOTES+=("$target → AI 补齐背景/决策/影响/生效规格，并把当前有效结果收敛到 architecture/*.md")
         REPORT_NEEDED=1
       else
-        warn "    $newdir 已存在，跳过（内容请 AI 合并）"
+        warn "    $target 已存在，保留原文件并交由 AI 合并"
+        LEGACY_NOTES+=("$f → $target 已存在，AI 对比合并后删除原文件")
+        REPORT_NEEDED=1
       fi
     done
-    # ADR 内其他游离 .md → 报告
     while IFS= read -r f; do
       case "$f" in ADR/_template/*|ADR/ADR-*.md) continue;; esac
       LEGACY_NOTES+=("$f（ADR 内游离文档，AI 判断归属）")
       REPORT_NEEDED=1
     done < <(find ADR -type f -name "*.md" 2>/dev/null || true)
+    if [ -d ADR/_template ]; then
+      legacy="architecture/adrs/legacy-v2-template"
+      if [ ! -e "$legacy" ]; then
+        mv ADR/_template "$legacy"
+        LEGACY_NOTES+=("$legacy/ → 核对是否含项目专属架构内容；无则删除")
+        REPORT_NEEDED=1
+      else
+        LEGACY_NOTES+=("ADR/_template/ 与 $legacy/ 同时存在，AI 对比后保留项目专属内容")
+        REPORT_NEEDED=1
+      fi
+    fi
+    rmdir ADR 2>/dev/null || true
   fi
 
-  # 2b. 收敛 v3.0 单文件时代遗留的 adrs/*.md（非 _template）→ 文件夹
+  # 2b. v3.x 根 adrs/adr-* 迁入 architecture/adrs/
   if [ -d adrs ]; then
+    if [ -d adrs/_template ]; then
+      legacy="architecture/adrs/legacy-v3-template"
+      if [ ! -e "$legacy" ]; then
+        mv adrs/_template "$legacy"
+        LEGACY_NOTES+=("$legacy/ → 核对是否含项目专属架构内容；无则删除")
+        REPORT_NEEDED=1
+      else
+        LEGACY_NOTES+=("adrs/_template/ 与 $legacy/ 同时存在，AI 对比后保留项目专属内容")
+        REPORT_NEEDED=1
+      fi
+    fi
     while IFS= read -r f; do
-      case "$f" in adrs/_template/*|adrs/*/) continue;; esac
       [ -f "$f" ] || continue
       base=$(basename "$f")
       name=$(printf '%s' "$base" | sed 's/^adr-//; s/\.md$//; s/_/-/g')
-      newdir="adrs/adr-$(date +%Y%m%d)-$name"
-      if [ ! -d "$newdir" ]; then
-        mkdir -p "$newdir"
-        mv "$f" "$newdir/architecture.md"
-        printf '# 数据模型\n\n> 待 AI 按新语义补充（一次大型变动 = 一个 adr 文件夹）。\n' > "$newdir/data-model.md"
-        printf '# 影响与注意事项\n\n> 待 AI 按新语义补充（关联模块/部署/回滚）。\n' > "$newdir/impact.md"
-        ok "    已收敛: $base → $newdir/（单文件 → 文件夹，3 份文档）"
-        LEGACY_NOTES+=("$base → 已收敛至 $newdir/，内容并入 architecture.md，其余待 AI 整合")
+      target="architecture/adrs/adr-$name.md"
+      if [ ! -e "$target" ]; then
+        mv "$f" "$target"
+        ok "    已转移: $f → $target"
+        LEGACY_NOTES+=("$target → AI 收敛为单一架构决策，并同步当前 architecture/*.md")
+        REPORT_NEEDED=1
+      else
+        LEGACY_NOTES+=("$f → $target 已存在，AI 对比合并")
         REPORT_NEEDED=1
       fi
     done < <(find adrs -maxdepth 1 -type f -name "*.md" 2>/dev/null || true)
+
+    while IFS= read -r olddir; do
+      [ -d "$olddir" ] || continue
+      base=$(basename "$olddir")
+      legacy="architecture/adrs/$base.legacy"
+      if [ ! -e "$legacy" ]; then
+        mv "$olddir" "$legacy"
+        ok "    已保留: $olddir/ → $legacy/（v3.x 三文件架构快照）"
+        LEGACY_NOTES+=("$legacy/ → AI 提炼为 architecture/adrs/$base.md，将最新有效结果合并到 architecture/*.md，确认无遗漏后删除 .legacy")
+        REPORT_NEEDED=1
+      else
+        warn "    $legacy 已存在，保留 $olddir/ 待 AI 合并"
+        LEGACY_NOTES+=("$olddir/ 与 $legacy/ 存在冲突，AI 对比合并")
+        REPORT_NEEDED=1
+      fi
+    done < <(find adrs -mindepth 1 -maxdepth 1 -type d 2>/dev/null || true)
+    rmdir adrs 2>/dev/null || true
   fi
 
   # ═══════════════════════════════════════════════
@@ -296,6 +347,16 @@ cmd_migrate() {
       echo "    - $sp/（AI 按 spec 头部「基于冲刺」字段归入对应冲刺，重新编号 spec-NNN-xxx）"
     done
     REPORT_NEEDED=1
+  fi
+
+  # 已有迭代规格需补齐 v4 架构落地边界；只报告，不自动猜测业务语义
+  if [ -d sprints ]; then
+    while IFS= read -r req; do
+      if ! grep -q "架构落地边界" "$req" 2>/dev/null; then
+        LEGACY_SPECS+=("$req")
+        REPORT_NEEDED=1
+      fi
+    done < <(find sprints -path "*/specs/*/requirements.md" ! -path "*/_template/*" ! -path "*.legacy*" 2>/dev/null || true)
   fi
 
   # ═══════════════════════════════════════════════
@@ -324,7 +385,7 @@ cmd_migrate() {
   fi
 
   # ═══════════════════════════════════════════════
-  # 5. 补齐新骨架（docs 四件套 + sprints/_template/ + adrs/_template/ + assets/）
+  # 5. 补齐新骨架（docs + architecture + 最新 sprint/spec 模板 + assets）
   # ═══════════════════════════════════════════════
   # docs/ 四件套
   mkdir -p docs
@@ -334,6 +395,25 @@ cmd_migrate() {
       ok "    补齐: docs/$f"
     fi
   done
+  # architecture/ 当前架构三文件 + 单文件 ADR 模板
+  mkdir -p architecture/adrs
+  for f in architecture.md data-model.md runtime.md; do
+    if [ ! -f "architecture/$f" ] && [ -f "$TEMPLATE/architecture/$f" ]; then
+      cp "$TEMPLATE/architecture/$f" "architecture/$f"
+      ok "    补齐: architecture/$f"
+      LEGACY_NOTES+=("architecture/$f → AI 结合当前代码、旧 ADR 与部署配置收敛真实当前架构，不保留模板占位")
+      REPORT_NEEDED=1
+    fi
+  done
+  if [ ! -f architecture/adrs/_template.md ] && [ -f "$TEMPLATE/architecture/adrs/_template.md" ]; then
+    cp "$TEMPLATE/architecture/adrs/_template.md" architecture/adrs/_template.md
+    ok "    补齐: architecture/adrs/_template.md"
+  fi
+  # architecture/ 根目录只允许三份当前文档和 adrs/，不自动删除或猜测其他架构资料
+  while IFS= read -r f; do
+    ARCHITECTURE_STRAY+=("$f")
+    REPORT_NEEDED=1
+  done < <(find architecture -mindepth 1 -maxdepth 1 ! -name "architecture.md" ! -name "data-model.md" ! -name "runtime.md" ! -name "adrs" 2>/dev/null || true)
   # 已有 sprint 容器补齐 prototypes.md（UI 设计文档，v3.2.1）
   if [ -d sprints ]; then
     while IFS= read -r pd; do
@@ -343,17 +423,32 @@ cmd_migrate() {
       fi
     done < <(find sprints -maxdepth 5 -type d -name prototypes 2>/dev/null || true)
   fi
-  # sprints/_template/
-  if [ ! -d sprints/_template ] && [ -d "$TEMPLATE/sprints/_template" ]; then
+  # sprints/_template/ 是框架模板，升级时保留旧副本并安装最新版，避免旧项目继续生成过时 spec
+  if [ -d "$TEMPLATE/sprints/_template" ]; then
     mkdir -p sprints
-    cp -r "$TEMPLATE/sprints/_template" sprints/_template
-    ok "    补齐: sprints/_template/（docs/ + specs/ 模板）"
+    if [ ! -d sprints/_template ]; then
+      cp -r "$TEMPLATE/sprints/_template" sprints/_template
+      ok "    补齐: sprints/_template/（docs/ + specs/ 模板）"
+    elif ! diff -qr sprints/_template "$TEMPLATE/sprints/_template" >/dev/null 2>&1; then
+      if [ ! -e sprints/_template.legacy-v3 ]; then
+        mv sprints/_template sprints/_template.legacy-v3
+        cp -r "$TEMPLATE/sprints/_template" sprints/_template
+        ok "    已升级: sprints/_template/（旧模板保留为 _template.legacy-v3）"
+        LEGACY_NOTES+=("sprints/_template.legacy-v3/ → AI 确认无项目专属模板内容遗漏后删除")
+        REPORT_NEEDED=1
+      else
+        warn "    sprints/_template/ 与最新模板不一致，且 _template.legacy-v3 已存在，请 AI 合并"
+        REPORT_NEEDED=1
+      fi
+    fi
   fi
-  # adrs/_template/
-  if [ ! -d adrs/_template ] && [ -d "$TEMPLATE/adrs/_template" ]; then
-    mkdir -p adrs
-    cp -r "$TEMPLATE/adrs/_template" adrs/_template
-    ok "    补齐: adrs/_template/"
+  # 旧项目 AGENTS.md 可含项目专属规则，不覆盖；报告 AI 合并 v4 方法论入口
+  if [ ! -f AGENTS.md ] && [ -f "$TEMPLATE/AGENTS.md" ]; then
+    cp "$TEMPLATE/AGENTS.md" AGENTS.md
+    ok "    补齐: AGENTS.md"
+  elif [ -f AGENTS.md ] && ! grep -q "architecture/runtime.md" AGENTS.md 2>/dev/null; then
+    LEGACY_NOTES+=("AGENTS.md → 保留项目专属规则，AI 按最新 template/AGENTS.md 合并 architecture/ + 阶段规格规则")
+    REPORT_NEEDED=1
   fi
   # assets/ 骨架（v2.9 沿用）
   if [ ! -d assets ]; then
@@ -426,7 +521,7 @@ cmd_migrate() {
   while IFS= read -r d; do
     base=$(basename "$d")
     case "$base" in
-      docs|sprints|adrs|apps|businesses|tools|assets|archive) continue ;;
+      docs|architecture|sprints|apps|businesses|tools|assets|archive) continue ;;
       .*) continue ;;
     esac
     ROOT_STRAY_R2+=("$d")
@@ -480,8 +575,20 @@ cmd_migrate() {
     done
     REPORT_NEEDED=1
   fi
+  if [ "${#ARCHITECTURE_STRAY[@]}" -gt 0 ]; then
+    warn "architecture/ 根目录只允许三份当前架构文档，以下内容需由 AI 收敛后移出（禁止新增 README）："
+    for f in "${ARCHITECTURE_STRAY[@]}"; do
+      echo "    - $f"
+    done
+  fi
   if [ "${#MODULE_SPECS[@]}" -gt 0 ]; then
     REPORT_NEEDED=1
+  fi
+  if [ "${#LEGACY_SPECS[@]}" -gt 0 ]; then
+    warn "检测到旧规格缺少架构落地边界，由 AI 逐个补齐，禁止脚本猜测语义："
+    for req in "${LEGACY_SPECS[@]}"; do
+      echo "    - $req"
+    done
   fi
 
   # 生成 MIGRATION-REPORT.md
@@ -499,7 +606,9 @@ cmd_migrate() {
       echo "|:--|:--|:--|"
       echo "| \`docs/sprints/sprint-NNN_xxx/\` 文档 | \`sprints/sp-NNN-xxx/docs/\` | 转移（脚本已执行，.legacy 待删） |"
       echo "| \`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/\` | \`sprints/sp-NNN-xxx/specs/spec-NNN-xxx/\` | AI 按「基于冲刺」字段归入，重新编号 |"
-      echo "| \`ADR/ADR-NNN_xxx.md\` | \`adrs/adr-NNN-xxx.md\` | 转移（脚本已执行，原件待删） |"
+      echo "| \`ADR/ADR-NNN_xxx.md\` | \`architecture/adrs/adr-YYYYMMDD-xxx.md\` | 转移为单文件历史决策，AI 补齐决策语义 |"
+      echo "| \`adrs/adr-*/\` 三文件快照 | \`architecture/adrs/adr-*.legacy/\` | 完整保留，AI 提炼单文件 ADR 并收敛当前架构 |"
+      echo "| 旧 spec \`requirements.md\` | 原规格内补齐架构基线/进入/实现程度/退出/临时边界 | AI 依据现有代码与规格语义补齐 |"
       echo "| \`ux-flows.md\` | 旅程 → \`user-scenarios.md\`；流程 → \`business-flows.md\` | AI 转移 |"
       echo "| \`ui-wireframes.md\` | 布局/交互 → \`prototypes/\`；系统图表 → \`uml-pack.md\` | AI 转移 |"
       echo "| \`user-journey-flows.md\` | 旅程总览 → \`user-scenarios.md\`；流程图 → \`business-flows.md\` | AI 转移 |"
@@ -519,6 +628,16 @@ cmd_migrate() {
         echo ""
         for sp in "${MODULE_SPECS[@]}"; do
           echo "- $sp/"
+        done
+        echo ""
+      fi
+      if [ ${#LEGACY_SPECS[@]} -gt 0 ]; then
+        echo "### 旧规格阶段语义补齐"
+        echo ""
+        echo "> 逐个核对当时代码、上下游规格与验收记录，补齐架构基线、进入状态、实现程度、退出状态、临时实现和收口规格。已完成规格只补齐事实，不借迁移改写历史交付边界。"
+        echo ""
+        for req in "${LEGACY_SPECS[@]}"; do
+          echo "- $req"
         done
         echo ""
       fi
@@ -552,6 +671,16 @@ cmd_migrate() {
         done
         echo ""
       fi
+      if [ "${#ARCHITECTURE_STRAY[@]}" -gt 0 ]; then
+        echo "### architecture/ 根目录待收敛项"
+        echo ""
+        echo "> 当前架构根目录只保留 architecture.md、data-model.md、runtime.md，不建立 README。将当前有效事实合并到三份文档；历史决策进入 architecture/adrs/；操作手册或配置进入 assets/。"
+        echo ""
+        for f in "${ARCHITECTURE_STRAY[@]}"; do
+          echo "- $f"
+        done
+        echo ""
+      fi
     } > "$REPORT"
     ok "已生成迁移报告: $REPORT（AI 处理完成后删除本文件）"
   fi
@@ -561,7 +690,7 @@ cmd_migrate() {
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. AI 读取 MIGRATION-REPORT.md 并先理解项目（②理解）"
     echo "  2. 按映射表保持原有设计并转移（③保持）"
-    echo "  3. 处理完成后确认目录结构完全符合最新规范，删除报告与 *.legacy"
+    echo "  3. 处理完成后确认目录结构完全符合最新规范，删除报告与所有 .legacy 保留项"
   else
     echo "  项目结构已是最新。下一步：运行 /spec-rocket brainstorm 引导写产品文档（或按需完善 assets/）"
   fi

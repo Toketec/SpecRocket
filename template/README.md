@@ -34,15 +34,18 @@ pnpm typecheck
 │
 ├── sprints/                      # ★ 迭代层 — 每次迭代的完整容器
 │   ├── _template/                # sprint 模板（docs/ + specs/）
-│   └── sp-001_功能名/            # 具体冲刺：docs/（产品设计）+ specs/（技术规格）
+│   └── sp-001-功能名/            # 具体冲刺：docs/（产品设计）+ specs/（技术规格）
 │       ├── docs/
 │       └── specs/
 │           ├── _template/
 │           └── spec-001-前端xxx/ # 多个规格共同促成本次迭代（可并行开发）
 │
-├── adrs/                         # ★ 架构变动设计库（一次大型变动 = 一个文件夹）
-│   ├── _template/                # 模板（architecture / data-model / impact）
-│   └── adr-20260808-变动名/       # 一次大型变动的完整设计（3 份文档）
+├── architecture/                 # ★ 当前技术架构（最多 3 份 Markdown，不设 README）
+│   ├── architecture.md           # 项目代码服务、模块、边界、调用关系与技术约束
+│   ├── data-model.md             # 当前实体、关系、数据归属与演进约束
+│   ├── runtime.md                # 中间件、外部服务、部署形态、配置、可用性与恢复边界
+│   └── adrs/                     # 架构决策历史（单文件、不可变）
+│       └── _template.md
 │
 ├── apps/                         # 前端/客户端应用（纯代码域，直接放框架项目）
 │   └── {app-name}/

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "principle": "SpecRocket 仓库整体承载同一套核心方法论。每种表达都必须能脱离其他表达独立支撑其使用场景；跨表达允许内容重复，但意义必须一致。",
   "expressions": {
     "manual": {
@@ -31,6 +31,26 @@
       "path": "template/assets/README.md",
       "type": "text",
       "purpose": "模板生成项目后的运营资产规则"
+    },
+    "template_architecture": {
+      "path": "template/architecture/architecture.md",
+      "type": "text",
+      "purpose": "模板生成项目后的当前代码架构入口"
+    },
+    "template_data_model": {
+      "path": "template/architecture/data-model.md",
+      "type": "text",
+      "purpose": "模板生成项目后的当前数据架构入口"
+    },
+    "template_runtime": {
+      "path": "template/architecture/runtime.md",
+      "type": "text",
+      "purpose": "模板生成项目后的运行依赖与部署形态入口"
+    },
+    "template_spec_requirements": {
+      "path": "template/sprints/_template/specs/_template/requirements.md",
+      "type": "text",
+      "purpose": "每个阶段规格的架构落地与可复原语义模板"
     },
     "readme_zh": {
       "path": "README.md",
@@ -133,6 +153,46 @@
         "template_agents": { "level": "operational", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
         "readme_zh": { "level": "overview", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] },
         "readme_en": { "level": "overview", "allOf": ["requirements.md", "plan.md", "tasks.md", "check.md"] }
+      }
+    },
+    {
+      "id": "architecture-current-and-history",
+      "meaning": "architecture 根目录最多三份当前架构文档且不设 README；adrs 只保存低频、不可变的单文件架构决策历史。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["architecture.md", "data-model.md", "runtime.md", "不添加 README", "架构决策历史"] },
+        "training": { "level": "training", "allOf": ["architecture/", "runtime.md", "ADR", "当前架构"] },
+        "skill": { "level": "operational", "allOf": ["architecture/{architecture,data-model,runtime}.md", "architecture/adrs/_template.md", "单文件 ADR"] },
+        "template_agents": { "level": "operational", "allOf": ["最多这三份 Markdown", "不添加 README", "架构不变量", "单文件 ADR"] },
+        "template_readme": { "level": "project-entry", "allOf": ["architecture.md", "data-model.md", "runtime.md", "不设 README"] },
+        "template_architecture": { "level": "template", "allOf": ["技术架构", "系统边界", "模块与职责"] },
+        "template_data_model": { "level": "template", "allOf": ["数据模型", "数据归属", "演进约束"] },
+        "template_runtime": { "level": "template", "allOf": ["运行架构", "中间件", "外部服务", "部署形态"] },
+        "readme_zh": { "level": "overview", "allOf": ["architecture/", "architecture/adrs/", "当前架构"] },
+        "readme_en": { "level": "overview", "allOf": ["architecture/", "architecture/adrs/", "current architecture"] },
+        "cli": { "level": "migration-runtime", "allOf": ["architecture/adrs", "runtime.md", "LEGACY_SPECS"] }
+      }
+    },
+    {
+      "id": "spec-stage-reconstruction",
+      "meaning": "Spec 是当前架构的阶段实现切片，必须记录基线、进入状态、实现程度、退出状态、临时实现与收口责任；按有向依赖顺序可等价复原阶段交付。",
+      "coverage": {
+        "manual": { "level": "full", "allOf": ["进入状态", "实现程度", "退出状态", "收口责任", "等价复原"] },
+        "training": { "level": "training", "allOf": ["进入状态", "实现程度", "退出状态", "收口责任", "等价复原"] },
+        "skill": { "level": "operational", "allOf": ["进入状态", "实现程度", "退出状态", "收口责任", "等价复原"] },
+        "template_agents": { "level": "operational", "allOf": ["进入状态", "实现程度", "退出状态", "收口责任", "等价复原"] },
+        "template_spec_requirements": { "level": "template", "allOf": ["当前架构基线", "进入状态", "本规格实现程度", "退出状态", "临时实现与收口责任"] },
+        "readme_zh": { "level": "overview", "allOf": ["进入/退出状态", "实现程度", "可复原"] },
+        "readme_en": { "level": "overview", "allOf": ["entry/exit states", "implementation degree", "reproducible"] },
+        "cli": { "level": "migration-runtime", "allOf": ["架构落地边界", "LEGACY_SPECS", "旧规格阶段语义补齐"] }
+      }
+    },
+    {
+      "id": "migration-v4-preservation",
+      "meaning": "migrate 同时识别旧 ADR、v3 三文件 ADR 和旧规格，先完整保留无法自动判断的内容，再由 AI 收敛当前架构与阶段语义。",
+      "coverage": {
+        "skill": { "level": "operational", "allOf": ["ADR/ADR-NNN_xxx.md", "adrs/adr-*/", ".legacy/", "旧规格阶段语义"] },
+        "manual": { "level": "full", "allOf": ["ADR/ADR-NNN_xxx.md", "adrs/adr-*/", ".legacy/", "旧 spec"] },
+        "cli": { "level": "runtime", "allOf": ["ADR/ADR-*.md", "adrs/adr-*", ".legacy", "LEGACY_SPECS"] }
       }
     },
     {

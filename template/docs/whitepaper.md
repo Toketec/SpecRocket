@@ -58,7 +58,7 @@
 
 ## 五、技术理念与架构哲学 (Technology Philosophy)
 
-{可选。本产品在技术上的核心立场，例如：规格驱动、单一事实源、AI 无关性。不写具体选型（选型进 adrs/）}
+{可选。本产品在技术上的核心立场，例如：规格驱动、单一事实源、AI 无关性。不写具体选型（当前选型进 architecture/，变更原因按需进 architecture/adrs/）}
 
 ## 六、路线图展望 (Roadmap Outlook)
 

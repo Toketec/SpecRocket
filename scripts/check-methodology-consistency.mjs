@@ -81,6 +81,10 @@ const requiredTemplateFiles = [
   "template/docs/non-functional-reqs.md",
   "template/docs/visual-design.md",
   "template/docs/whitepaper.md",
+  "template/architecture/architecture.md",
+  "template/architecture/data-model.md",
+  "template/architecture/runtime.md",
+  "template/architecture/adrs/_template.md",
   "template/sprints/_template/specs/_template/requirements.md",
   "template/sprints/_template/specs/_template/plan.md",
   "template/sprints/_template/specs/_template/tasks.md",
@@ -92,6 +96,36 @@ for (const path of requiredTemplateFiles) {
   } catch {
     fail(`模板缺少文件: ${path}`);
   }
+}
+
+const architectureRoot = join(root, "template", "architecture");
+const architectureMarkdown = readdirSync(architectureRoot, { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+  .map((entry) => entry.name)
+  .sort();
+const expectedArchitectureMarkdown = ["architecture.md", "data-model.md", "runtime.md"];
+if (JSON.stringify(architectureMarkdown) !== JSON.stringify(expectedArchitectureMarkdown)) {
+  fail(
+    `template/architecture 根目录只能有 ${expectedArchitectureMarkdown.join("、")}，实际为 ${architectureMarkdown.join("、") || "空"}`,
+  );
+}
+try {
+  if (statSync(join(root, "template", "adrs")).isDirectory()) {
+    fail("template/ 不得继续保留旧 adrs/；历史决策模板必须位于 architecture/adrs/_template.md");
+  }
+} catch {
+  // 旧目录不存在，符合 v4 结构。
+}
+
+const specRequirements = expressionText("template_spec_requirements");
+for (const heading of [
+  "## 架构落地边界",
+  "### 进入状态",
+  "### 本规格实现程度",
+  "### 退出状态",
+  "### 临时实现与收口责任",
+]) {
+  if (!specRequirements.includes(heading)) fail(`规格模板缺少阶段语义标题: ${heading}`);
 }
 
 const skillVersion = expressionText("skill").match(/^version:\s*([^\s]+)$/m)?.[1];

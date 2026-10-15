@@ -1,7 +1,7 @@
 ---
 name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
-version: 3.5.0
+version: 4.0.0
 license: MIT
 ---
 
@@ -27,7 +27,7 @@ SpecRocket/                      ← 本仓库
 │   ├── CLAUDE.md               ← Claude Code 入口（引用 AGENTS.md）
 │   ├── docs/                   ← 稳定层产品文档模板（含 whitepaper.md）
 │   ├── sprints/_template/      ← 迭代容器模板（docs/ 产品设计 + specs/ 技术规格）
-│   ├── adrs/                   ← 架构变动设计模板（adr-YYYYMMDD-名称/，3 份文档）
+│   ├── architecture/           ← 当前架构 3 文件 + adrs/ 单文件决策历史（无 README）
 │   ├── assets/                 ← 运营资产模板（configs/interfaces/standards/manuals）
 │   ├── apps/businesses/tools/  ← 纯代码域模板（直接放框架项目，无 specs/）
 │   └── ...
@@ -37,7 +37,7 @@ SpecRocket/                      ← 本仓库
 
 ## SSOT 维护边界
 
-- 产品、架构、冲刺、计划和需求文档只描述当前有效的设计、约束与实现，不维护“最近变更”“最后更新”、修订历史或文档生命周期状态；历史由 Git 提供。
+- 产品、当前架构、冲刺、计划和需求文档只描述当前有效的设计、约束与实现，不维护“最近变更”“最后更新”、修订历史或文档生命周期状态；历史由 Git 提供。`architecture/adrs/` 是唯一的架构决策历史例外。
 - 项目整体的粗粒度功能进度只维护在根目录 `README.md`，不描述实现细节。
 - 规格中的 `tasks.md` 与 `check.md` 必须维护任务、自检和人工验收状态，这是规格执行闭环的一部分。
 - 业务实体状态、UI 状态机和兼容性版本要求属于设计事实，不属于项目进度状态，应在对应设计中正常维护。
@@ -181,8 +181,8 @@ SpecRocket/                      ← 本仓库
 ```
 ① 介入   CLI 扫描项目结构（旧结构/游离内容/骨架缺失 → 生成报告）
 ② 理解   AI 读项目：README + 源码结构 + 现有文档 → 理解产品/业务/技术现状与设计意图
-③ 保持   原有设计不变：内容转移不丢失；业务设计保留（如 visual-design 业务设计 → prototypes.md）
-④ 重构   补齐最新骨架 + 迁移旧结构 + 收敛游离文档 → 符合最新模板标准
+③ 保持   原有设计不变：旧架构、规格阶段事实与业务设计完整保留，无法自动判断的内容先进入 .legacy
+④ 重构   补齐最新骨架 + 收敛当前架构 + 补齐旧规格阶段语义 → 符合最新模板标准
 ⑤ 验收   零残留检查 → 删除报告与 .legacy → 完成
 ```
 
@@ -193,7 +193,8 @@ SpecRocket/                      ← 本仓库
 脚本扫描并处理结构层：
 - **迁移 sprint 容器**：`docs/sprints/sprint-NNN_xxx/` → `sprints/sp-NNN-xxx/docs/`（重命名 + 改路径；检测旧版文件 `ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` 报告由 AI 转移）
 - **迁移模块规格**：`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/` → 按 spec 头部「基于冲刺」字段归入 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（脚本报告，AI 执行内容转移 + 重新编号）
-- **迁移架构变动设计**：`ADR/ADR-NNN_xxx.md`（旧决策记录）→ `adrs/adr-YYYYMMDD-xxx/`（文件夹，3 份文档；内容按新语义收敛由 AI 整合）
+- **迁移历代架构结构**：`ADR/ADR-NNN_xxx.md` → `architecture/adrs/adr-YYYYMMDD-xxx.md`；3.x `adrs/adr-*/` 三文件目录 → `architecture/adrs/adr-*.legacy/`，完整保留后由 AI 提炼为单文件 ADR，并把当前有效结果收敛进 `architecture/*.md`
+- **扫描旧规格阶段语义**：已有 `requirements.md` 缺少“架构落地边界”时只报告，不由脚本猜测；AI 结合代码、上下游规格和验收记录补齐架构基线、进入状态、实现程度、退出状态、临时实现与收口责任
 - **清理废弃目录**：`sprint-000_initial/`（纯模板直接删；含内容转 `.legacy` 待转移）；根目录 `ssot-convention*.md` 归档到 `archive/`
 - **处理遗留 LICENSE**：模板默认证书（MIT + Toketec 署名）→ 归档；自定义证书 → 保留
 - **扫描 visual-design 混入业务设计**：检测 `docs/visual-design.md` 中疑似业务形态（页面/布局/内容/线框关键词）→ 报告 AI 转移到 `sprints/*/docs/prototypes/prototypes.md`，visual-design.md 只留审美边界
@@ -211,6 +212,7 @@ AI 在动手前先读项目——**理解是保持的前提，不知道原有设
 | 源码目录结构 | 模块划分、领域边界 |
 | 现有文档（docs/ 等） | 已有产品/业务设计意图 |
 | 关键配置（package.json / Cargo.toml 等） | 技术栈 |
+| 现有部署配置、服务编排与旧 ADR | 当前运行依赖、架构不变量和历史决策 |
 
 **第 3 步：保持（AI 执行，按迁移映射表）**
 
@@ -224,18 +226,22 @@ AI 在动手前先读项目——**理解是保持的前提，不知道原有设
 | `visual-design.md` 混入的业务设计（页面/布局/内容/线框） | → `sprints/sp-NNN-*/docs/prototypes/prototypes.md`（无对应冲刺 → 最近冲刺或 archive/）；visual-design.md 只留审美边界 |
 | `docs/sprints/sprint-NNN_xxx/` 其余文档 | → `sprints/sp-NNN-xxx/docs/` 对应文件 |
 | `{apps\|businesses\|tools}/*/specs/SPEC-{APP\|BIZ\|TOOL}-NNN_xxx/` | → 归属冲刺的 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（四文件；重新编号；头部改写覆盖范围） |
-| `ADR/ADR-NNN_xxx.md` | → `adrs/adr-YYYYMMDD-xxx/`（architecture / data-model / impact；旧内容整合进 architecture，其余待 AI 收敛） |
+| `ADR/ADR-NNN_xxx.md` | → `architecture/adrs/adr-YYYYMMDD-xxx.md`，补齐背景/决策/影响/生效规格；当前有效结果写入 `architecture/*.md` |
+| `adrs/adr-*/` 三文件目录 | → `architecture/adrs/adr-*.legacy/` 完整保留；AI 提炼单文件 ADR、收敛当前架构，确认无遗漏后删除 `.legacy/` |
+| 旧 spec `requirements.md` | 原位补齐架构基线、进入/退出状态、实现程度、临时实现与收口责任；已完成规格只补事实，不改写历史交付边界 |
 | 全局 `spec/` + `_catalog.yaml` | 内容归入对应冲刺 specs/ 或 archive/（AI 判断） |
 | `sprint-000_initial.legacy/` | 基线设计转移至 `sp-001-*/docs/` 后删除 |
 
 **第 4 步：重构（脚本 + AI）**
 
-- **补齐新骨架**（只添加不存在的文件，不覆盖已有内容）：`AGENTS.md`、`.gitignore`、`docs/*`（product-overview / non-functional-reqs / visual-design / whitepaper）、`sprints/_template/`（docs + specs，含 prototypes/ 的 prototypes.md + prototype.html）、`adrs/_template/`、`apps|businesses|tools/` `.gitkeep`、`assets/`
+- **补齐新骨架**（只添加不存在的文件，不覆盖已有业务内容）：`AGENTS.md`、`.gitignore`、`docs/*`、`architecture/{architecture,data-model,runtime}.md`、`architecture/adrs/_template.md`、最新版 `sprints/_template/`、`apps|businesses|tools/` `.gitkeep`、`assets/`
+- **收敛当前架构**：结合代码、数据迁移、部署配置和旧 ADR，填写三份当前文档并删除模板占位；`runtime.md` 同时覆盖中间件、外部服务、支持的部署形态、配置/密钥、可用性、观测与恢复边界
+- **升级规则入口和规格模板**：保留项目专属 AGENTS 规则后合并最新架构/阶段规格规则；旧 `_template` 不同则先保留为 `.legacy-v3`，安装最新版后由 AI 核对清理
 - **已有 sprint 补齐**：`prototypes/prototypes.md` 缺失时从模板复制（UI 设计文档）
 - **收敛游离文档**：按映射表归入对应 sprint docs/ 或 assets/ 或 archive/
 
 **第 5 步：验收（AI 执行）**
-- 确认 `*.legacy.md` 内容已全部转移 → 删除 `*.legacy.md` 和 `MIGRATION-REPORT.md`
+- 确认所有 `.legacy` 内容已转移，当前架构无模板占位，旧规格阶段语义已补齐 → 删除 `.legacy` 和 `MIGRATION-REPORT.md`
 - 更新 AGENTS.md 目录结构描述（如有手动改动）
 - **最终目录结构完全符合最新规范，零残留**
 
@@ -259,7 +265,7 @@ AI 在动手前先读项目——**理解是保持的前提，不知道原有设
 |:----|:---------|:---------|
 | 🗺️ **产品地图** | `docs/product-overview.md` | 产品核心功能分区 → 可视化卡片 |
 | 🗺️ **业务地图** | `docs/product-overview.md` 核心场景 + `sprints/` | 用户旅程 / 业务流转关系图 |
-| 🗺️ **架构地图** | `adrs/` 目录 + `apps/` `businesses/` `tools/` + `sprints/*/specs/` + `assets/` | 模块关系 + 技术选型 + 迭代规格分布 + 运营资产（配置/接口/规范/手册） |
+| 🗺️ **架构地图** | `architecture/*.md` + `apps/` `businesses/` `tools/` + `sprints/*/specs/` + `assets/` | 当前模块/数据/运行依赖 + 迭代规格分布 + 运营资产 |
 下方补充信息（按需展示，无则不显）：
 
 | 信息块 | 来源 |
@@ -267,7 +273,7 @@ AI 在动手前先读项目——**理解是保持的前提，不知道原有设
 | 用户画像 | `docs/product-overview.md` |
 | 关键术语 | `docs/product-overview.md` |
 | Sprint 路线图 | `sprints/` |
-| adr 变动设计列表 | `adrs/`（一次大型变动一个文件夹） |
+| ADR 决策历史 | `architecture/adrs/`（仅列单文件历史决策，不代替当前架构） |
 | 技术栈 | `docs/non-functional-reqs.md` |
 | 项目统计 | 全目录扫描（文件数、目录数、行数） |
 
@@ -317,9 +323,9 @@ Dev 把 sp-NNN 的 docs/（冲刺文档）→ 拖到新的 AI 对话中（干净
   ↓
 Dev 给 4 个方向：
   ① 本次迭代拆几个 spec？每个 spec 的边界
-  ② 本次变更是大型架构变动吗（是 → 写一个 adr 文件夹，整份设计）
-  ③ 跨 spec 依赖
-  ④ 核心函数/API/表名
+  ② 是否改变架构不变量（是 → 新增单文件 ADR，并同步当前架构）
+  ③ spec 的有向依赖、稳定契约与最终收口责任
+  ④ 每个 spec 的进入状态、实现程度、退出状态和核心函数/API/表名
   ↓
 AI 在干净上下文中写 specs 四文件
   ↓
@@ -328,17 +334,19 @@ PM + Dev 评审
 
 ### 📐 规格编写原则（核心）
 
-> **总纲**: 规格在原则上是**人的任务划分**——一切设计完成后，对开发工作的任务划分；由于这一步往往分出很多 spec，应受人监督、匹配团队工作步骤。但实际操作中 **AI 是主要执笔者**（Dev 给方向 → AI 写四文件）。以下原则既约束人的拆分决策，**更约束 AI 起草 spec 的方向**：AI 按此生产、禁止自由发挥，避免进展到后期推翻前期，利于人机协作。
+> **总纲**: 规格在原则上是**人的实现切片划分**——它描述当前架构在这个小迭代中被实现到什么程度。spec 边界受人监督，AI 是主要执笔者。规格不是新的系统架构，也不要求每个 spec 自己形成完整业务闭环。
 
-> **为什么一次冲刺要拆多个规格？** 把一次开发任务**解耦、拆解、尽量相互独立**，以便**并行开发且互不干扰**——前端和后端分离成多个规格项、不同服务分成不同规格项。多个 spec 共同促成一次迭代的所有开发任务（必然包含前端、后端或其他服务）。
+> **为什么一次冲刺要拆多个规格？** 把大模块切成可执行、可验收、可组合的实现切片。优先降低耦合，但允许无法消除的显式有向依赖；关键不是假装零依赖，而是冻结契约、限定阶段差异并明确由谁收口。
 
 #### A. 拆分治理（怎么拆）
 
 | 原则 | 说明 |
 |:----|:----|
 | ① 人为规格划分 | spec 边界**由人主导、受人监督**，匹配团队工作步骤；**AI 可提议拆分方案，不得擅自定稿**——扩拆/改边界/跨隔离一律回到人确认 |
-| ② 规格业务隔离 | 每个 spec 只处理**一项独立任务**，与其他 spec **尽量零耦合零依赖**；spec 错了只改自己，**不牵连已完成的 spec**。跨 spec 只走 Context Contract |
+| ② 规格边界与阶段语义 | 每个 spec 只处理一项可执行任务，写清当前架构基线、进入状态、本规格实现程度和退出状态；依赖按 Context Contract 显式有向表达 |
 | ✅ 解耦 | 能独立开发/独立验收的边界才拆（前端/后端、不同服务、不同领域）——解耦=能并行互不干扰；②隔离=变更失败不扩散，两者互补 |
+| ✅ 可复原 | 假设删除实现代码，任一 Agent 按 sprint/spec 依赖顺序执行，应能等价复原各阶段功能、业务逻辑、数据行为和产品外观；不要求源码字节一致 |
+| ✅ 临时实现可收口 | Mock、适配器、占位字段必须与正式实现共用契约，并在规格内指定替换它的后续 spec；禁止无主 TODO |
 | ✅ 提升 token 利用率减少幻觉 | spec 上下文要小到 AI 能完整理解；过大 → 幻觉增多 |
 | ❌ 不刻意多拆 | 没有独立边界不硬拆；拆太多 → 管理成本上升 |
 | 上限 | 「解耦 + token 利用率」 |
@@ -348,10 +356,10 @@ PM + Dev 评审
 
 | 原则 | 说明 |
 |:----|:----|
-| ③ 数据模型与中间件前置 | 系统**真正进入编码前**备好符合设计要求的最新构件：SQL、数据模型落库/migration、数据库、存储、队列等。地基任务先行，编码 spec 不边写边补地基 |
-| ④ 前端 app 优先 | 先落地**看得见摸得着的前端**，在 UI/交互原型验证阶段就发现问题，而非联调时才重大变更；此阶段 API/数据依赖用 **mock** 解决，业务服务由后续 spec 补足后接入真实数据 |
+| ③ 依赖前置 | 数据模型、中间件、公共契约和其他被依赖能力优先；若为了可见性先做前端，必须先冻结 Mock 与正式服务共用的契约 |
+| ④ 按收口路径排序 | `plan.md` 的顺序应从进入状态稳定推进到退出状态，后续 spec 能沿契约替换临时实现，不依赖原作者口头知识 |
 
-### Specs 目录层级（v3.0）
+### Specs 目录层级（v4.0）
 
 每个冲刺容器内有 `specs/` 规格库，内含 `_template/`（四文件模板）+ 每个规格一个"编号+描述"独立目录：
 
@@ -367,7 +375,7 @@ sprints/sp-001-核心交易/specs/
 └── ...
 ```
 
-新建规格 = `cp -r specs/_template specs/spec-{XXX}_{规格名}`，编号 `spec-{三位数}` 在冲刺内递增，描述下划线连接（与 `sp-001-功能名` 同款机制）。
+新建规格 = `cp -r specs/_template specs/spec-{XXX}-{规格名}`，编号 `spec-{三位数}` 在冲刺内递增，描述使用短横线。
 
 ## 完整使用路径
 

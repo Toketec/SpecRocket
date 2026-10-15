@@ -98,7 +98,7 @@ Issues and PRs welcome.
 |:-:|:--------|:---------|
 | 1 | **AI context loss** | 5-step flow, each step produces artifacts, AI has full context |
 | 2 | **Endless requirements back-and-forth** | PM writes product docs → Dev+AI write spec → one review pass |
-| 3 | **Architecture decisions lost** | adrs/ directory persists forever — newcomers and new AIs understand the full picture in 3 minutes |
+| 3 | **Current architecture mixed with decision history** | `architecture/` keeps the current three-file view; `architecture/adrs/` preserves key decision history |
 | 4 | **Unclear acceptance criteria** | `check.md` built-in checklist — AI self-checks + QA signs off |
 | 5 | **Vibecoding handover disaster** | 5-step guarantees structured code with clear module boundaries. Code written by AI, handled by devs |
 | 6 | **Tool lock-in** | Not a plugin, not a CLI dependency — pure file structure. **Any terminal + Git = it works** |
@@ -190,8 +190,8 @@ You: Enter ~/projects/legacy-app
 │         │ AI assists with polish, diagrams, prototype templates    │
 ├────────────────────────────────────────────────────────────────────┤
 │ Step 2 │ Dev+AI solo                                               │
-│         │ adrs/ (one adr folder per major change) + sprints/*/specs/ │
-│         │ Dev gives 4 directions (10min) → AI writes 4 files       │
+│         │ current architecture + needed ADR + sprints/*/specs/      │
+│         │ Dev sets boundaries, dependencies and stage states        │
 ├────────────────────────────────────────────────────────────────────┤
 │ Step 3 │ PM + Dev review                                          │
 │         │ PM: "Does the spec solve the business need?"            │
@@ -206,7 +206,7 @@ You: Enter ~/projects/legacy-app
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-**The four Spec files:** `requirements.md` defines requirements and acceptance criteria, `plan.md` defines the technical design, `tasks.md` tracks implementation work, and `check.md` records AI self-checks and human acceptance.
+**The four Spec files:** `requirements.md` records the architecture baseline, entry/exit states, implementation degree and local design; `plan.md` defines a reproducible implementation path; `tasks.md` tracks work and directed dependencies; `check.md` records AI self-checks and human acceptance.
 
 **Key design:** PM and Dev only do 2 real decision-making tasks (product design + review). Everything else is AI. **AI codes per spec, no skipping steps, no changing plans.**
 
@@ -226,7 +226,7 @@ SpecRocket/
 │   ├── CLAUDE.md              ← Claude Code entry (references AGENTS.md)
 │   ├── docs/                  ← Stable-layer product docs (incl. whitepaper)
 │   ├── sprints/_template/     ← Sprint container (docs/ product + specs/ tech)
-│   ├── adrs/                   ← Architecture change design (adr-YYYYMMDD-name/, 3 docs)
+│   ├── architecture/           ← 3 current architecture docs + single-file ADR history (no README)
 │   ├── assets/                ← Operations asset templates (configs/interfaces/standards/manuals)
 │   ├── apps/businesses/tools/ ← Pure code domain (framework projects directly, no specs/)
 │   └── ...
@@ -247,7 +247,7 @@ SpecRocket/
 | **Team roles** | ✅ 5-step method | ❌ | ❌ | ❌ | ❌ |
 | **Iteration support** | ✅ sprints/NNN | ❌ One-shot | ❌ | ❌ | ❌ |
 | **Product documentation** | ✅ Complete templates | ❌ Spec only | ❌ | ❌ | ❌ |
-| **adrs/Architecture** | ✅ Built-in | ❌ | ❌ | ❌ | ❌ |
+| **Current architecture + ADR history** | ✅ Built-in | ❌ | ❌ | ❌ | ❌ |
 | **Acceptance strategy** | ✅ check.md | ❌ | ❌ | ❌ | ❌ |
 | **Learning curve** | ⭐ **30 minutes** | ⭐⭐ | ⭐ | ⭐ | ⭐⭐⭐⭐⭐ |
 
@@ -280,7 +280,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 | Scenario | Recommended path |
 |:----|:---------|
 | 🆕 **New project** | 📟 Manual `./init.sh` or 🤖 AI `/spec-rocket init` → 🤖 `brainstorm` → 5-step flow |
-| 🔄 **Existing project + AI** | 🤖 AI `migrate` → write adrs (one folder per major change) → Retrospec |
+| 🔄 **Existing project + AI** | 🤖 AI `migrate` → consolidate current architecture and ADR history → restore legacy spec stage semantics → Retrospec |
 | ⬆️ **Upgrade to latest methodology** | 📟 `./spec-rocket update` → run `migrate` on project to upgrade structure |
 | 🏁 **Hackathon** | 📟/🤖 `init` → skip Step 1 → Step 4 AI coding |
 | 👥 **Team training** | 📟 Manual `init` → read ssot-convention → PPT |
