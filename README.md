@@ -314,7 +314,7 @@ SpecRocket 设计为 **任何 AI 编码代理均可驱动**。只要你的 AI �
 | 场景 | 推荐路径 |
 |:----|:---------|
 | 🆕 **新项目启动** | 📟 手动 `./init.sh` 或 🤖 AI `/spec-rocket init` → 🤖 AI `brainstorm` → 五步流程 |
-| 🔄 **现有项目引入 AI 协作** | 🤖 AI `migrate` → 收敛当前架构/历史 ADR → 补齐旧规格阶段语义 → Retrospec |
+| 🔄 **现有项目引入 AI 协作** | 🤖 AI `migrate` → 用证据矩阵收敛当前架构/历史 ADR → 通过脱离 ADR 的独立阅读门禁 → 补齐旧规格阶段语义 → Retrospec |
 | ⬆️ **升级到最新方法论** | 📟 `./spec-rocket update` 更新 skill → 对项目执行 `migrate` 升级结构 |
 | 🏁 **Hackathon 快速验证** | 📟/🤖 `init` → 跳过 Step 1 → 直接 Step 4 AI 编码 |
 | 👥 **团队培训** | 📟 手动 `init` 看骨架 → 读 ssot-convention → PPT |

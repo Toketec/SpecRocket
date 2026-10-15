@@ -196,6 +196,21 @@
       }
     },
     {
+      "id": "architecture-migration-completeness",
+      "meaning": "migrate 必须逐项分类架构证据，将所有当前有效事实映射进三份当前架构，并通过脱离 ADR 的独立阅读门禁；ADR 不得成为当前规则的唯一载体。",
+      "coverage": {
+        "skill": { "level": "operational", "allOf": ["架构证据矩阵", "独立阅读门禁", "唯一载体"] },
+        "manual": { "level": "full", "allOf": ["架构证据矩阵", "独立阅读门禁", "当前有效、纯历史、混合"] },
+        "template_agents": { "level": "operational", "allOf": ["证据矩阵", "独立阅读门禁", "当前有效、纯历史、混合"] },
+        "template_architecture": { "level": "template", "allOf": ["无需打开 ADR", "模块拓扑与依赖方向", "失败与恢复边界"] },
+        "template_data_model": { "level": "template", "allOf": ["无需打开 ADR", "可变工作态与不可变事实", "一致性、并发与审计"] },
+        "template_runtime": { "level": "template", "allOf": ["无需打开 ADR", "运行单元与故障域", "重试、幂等与容量保护"] },
+        "readme_zh": { "level": "overview", "allOf": ["证据矩阵", "独立阅读门禁"] },
+        "readme_en": { "level": "overview", "allOf": ["architecture evidence", "ADR-independent reading gate"] },
+        "cli": { "level": "migration-runtime", "allOf": ["当前架构收敛证据矩阵", "架构独立阅读门禁", "当前有效 / 纯历史 / 混合"] }
+      }
+    },
+    {
       "id": "review-gate",
       "meaning": "未经 Step 3 的 PM 与技术评审，不得进入 Step 4 编码。",
       "coverage": {

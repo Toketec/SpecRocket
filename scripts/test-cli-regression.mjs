@@ -56,7 +56,7 @@ function filesUnder(directory) {
 
 try {
   const help = run(["help"]);
-  assert.match(help, /SpecRocket CLI v4\.0\.0/);
+  assert.match(help, /SpecRocket CLI v4\.0\.1/);
 
   const generated = join(sandbox, "generated");
   run(["init", "generated"]);
@@ -169,6 +169,10 @@ try {
   assert.match(migrationReport, /sp-002-staged\/specs\/spec-001-ui\/requirements\.md/);
   assert.match(migrationReport, /architecture\/README\.md/);
   assert.match(migrationReport, /architecture\/diagrams/);
+  assert.match(migrationReport, /当前架构收敛证据矩阵/);
+  assert.match(migrationReport, /架构独立阅读门禁/);
+  assert.match(migrationReport, /adr-cache\.md.*待填写.*待填写.*待填写/);
+  assert.match(migrationReport, /adr-20260808-orders\.legacy\/.*待填写.*待填写.*待填写/);
   assert.equal(
     statSync(join(legacy, "docs", "sprints", "sprint-001_demo.legacy")).isDirectory(),
     true,
@@ -202,7 +206,7 @@ try {
     join(isolatedHome, ".hermes", "skills", "spec-rocket", "SKILL.md"),
     "utf8",
   );
-  assert.match(installedSkill, /^version:\s*4\.0\.0$/m);
+  assert.match(installedSkill, /^\s+version:\s*["']?4\.0\.1["']?$/m);
   assert.deepEqual(installedSkill, readFileSync(join(root, "SKILL.md"), "utf8"));
 
   console.log(`CLI 本地回归通过：init / migrate / update，耗时 ${Date.now() - startedAt}ms。`);

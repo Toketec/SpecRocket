@@ -280,7 +280,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 | Scenario | Recommended path |
 |:----|:---------|
 | 🆕 **New project** | 📟 Manual `./init.sh` or 🤖 AI `/spec-rocket init` → 🤖 `brainstorm` → 5-step flow |
-| 🔄 **Existing project + AI** | 🤖 AI `migrate` → consolidate current architecture and ADR history → restore legacy spec stage semantics → Retrospec |
+| 🔄 **Existing project + AI** | 🤖 AI `migrate` → classify architecture evidence → consolidate current architecture and ADR history → pass the ADR-independent reading gate → restore legacy spec stage semantics → Retrospec |
 | ⬆️ **Upgrade to latest methodology** | 📟 `./spec-rocket update` → run `migrate` on project to upgrade structure |
 | 🏁 **Hackathon** | 📟/🤖 `init` → skip Step 1 → Step 4 AI coding |
 | 👥 **Team training** | 📟 Manual `init` → read ssot-convention → PPT |

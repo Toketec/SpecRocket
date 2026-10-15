@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口 (v4.0.0)
+# 规格驱动开发（SDD）框架的命令入口 (v4.0.1)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 一键更新本地 skill（工具感知）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="4.0.0"
+VERSION="4.0.1"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 USER_BASE="${SPECROCKET_USER_HOME:-$HOME}"
@@ -171,6 +171,7 @@ cmd_migrate() {
   ROOT_STRAY_R2=()    # 规则2：根目录非规范项 → 归位 assets/
   ASSETS_STRAY=()
   ARCHITECTURE_STRAY=() # architecture/ 根目录除三份当前文档外的内容，需 AI 收敛
+  ARCHITECTURE_SOURCES=() # 当前架构收敛证据：每项都必须在报告中完成分类和去向映射
   LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
 
   # ═══════════════════════════════════════════════
@@ -540,6 +541,16 @@ cmd_migrate() {
     fi
   fi
 
+  # 架构迁移不能只生成摘要：登记所有历史决策/旧快照，强制 AI 逐项判断当前性并映射到当前架构章节。
+  if [ -d architecture/adrs ]; then
+    while IFS= read -r f; do
+      ARCHITECTURE_SOURCES+=("$f")
+    done < <(find architecture/adrs -mindepth 1 -maxdepth 1 -type f -name "adr-*.md" ! -name "_template.md" 2>/dev/null | sort || true)
+    while IFS= read -r d; do
+      ARCHITECTURE_SOURCES+=("$d/")
+    done < <(find architecture/adrs -mindepth 1 -maxdepth 1 -type d \( -name "*.legacy" -o -name "legacy-*" \) 2>/dev/null | sort || true)
+  fi
+
   # ═══════════════════════════════════════════════
   # 7. 报告输出
   # ═══════════════════════════════════════════════
@@ -599,6 +610,7 @@ cmd_migrate() {
       echo ""
       echo "> 由 /spec-rocket migrate v$VERSION 生成。重构原则：**转移 → 收敛 → 保留 → 删除**。"
       echo "> 请由 AI 按 SKILL.md 流程处理：②理解项目 → ③保持原有设计 → ④重构 → ⑤验收，完成后目录结构完全符合最新规范，零残留。"
+      echo "> **阻断规则**：三份当前架构必须能脱离 ADR 独立说明系统；下方证据矩阵存在空项，或任一当前有效规则仍只能从 ADR 得知时，不得删除本报告。"
       echo ""
       echo "## 迁移映射表（旧 → 新）"
       echo ""
@@ -612,6 +624,34 @@ cmd_migrate() {
       echo "| \`ux-flows.md\` | 旅程 → \`user-scenarios.md\`；流程 → \`business-flows.md\` | AI 转移 |"
       echo "| \`ui-wireframes.md\` | 布局/交互 → \`prototypes/\`；系统图表 → \`uml-pack.md\` | AI 转移 |"
       echo "| \`user-journey-flows.md\` | 旅程总览 → \`user-scenarios.md\`；流程图 → \`business-flows.md\` | AI 转移 |"
+      echo ""
+      echo "## 当前架构收敛证据矩阵（必须逐项填写）"
+      echo ""
+      echo "> 当前性只能填写：当前有效 / 纯历史 / 混合。当前有效或混合必须写明目标文档及具体章节；纯历史必须写明失效或替代依据。禁止只填写‘已处理’。"
+      echo ""
+      echo "| 来源 | 当前性 | 当前事实写入的目标章节 | 历史决策/冲突处理结论 |"
+      echo "|:-----|:-------|:-----------------------|:-----------------------|"
+      if [ ${#ARCHITECTURE_SOURCES[@]} -gt 0 ]; then
+        for source in "${ARCHITECTURE_SOURCES[@]}"; do
+          printf '| `%s` | 待填写 | 待填写 | 待填写 |\n' "$source"
+        done
+      else
+        echo "| 现有代码、数据迁移与部署配置 | 待填写 | 待填写 | 无旧 ADR 时仍需从当前实现重建架构 |"
+      fi
+      echo "| 当前代码与模块入口 | 当前有效 | 待填写 | 记录与旧 ADR 不一致处及采用依据 |"
+      echo "| 数据 migration/schema | 当前有效 | 待填写 | 记录实体、状态、一致性与兼容性证据 |"
+      echo "| 部署编排、CI 与配置模板 | 当前有效 | 待填写 | 记录运行单元、依赖、健康、故障与恢复证据 |"
+      echo "| 公共契约与外部端口 | 当前有效 | 待填写 | 记录协议边界、版本与供应商隔离证据 |"
+      echo ""
+      echo "### 架构独立阅读门禁"
+      echo ""
+      echo "完成迁移前，由不打开 \`architecture/adrs/\` 的读者仅阅读三份当前架构，并逐项回答："
+      echo ""
+      echo "- [ ] 系统负责什么、不负责什么，模块和信任边界如何划分？"
+      echo "- [ ] 核心业务/技术链路如何流转，成功、失败、重试和人工处置在哪里发生？"
+      echo "- [ ] 数据事实源、聚合关系、可变/不可变分层、状态转换和一致性规则是什么？"
+      echo "- [ ] 系统由哪些运行单元和故障域组成，如何配置、判活、扩缩、备份和恢复？"
+      echo "- [ ] 每项当前有效/混合来源都已映射到具体章节，没有当前规则只留在 ADR？"
       echo ""
       echo "## 待 AI 处理项"
       echo ""
@@ -689,8 +729,8 @@ cmd_migrate() {
   info "migrate v$VERSION 介入完成（结构层）。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. AI 读取 MIGRATION-REPORT.md 并先理解项目（②理解）"
-    echo "  2. 按映射表保持原有设计并转移（③保持）"
-    echo "  3. 处理完成后确认目录结构完全符合最新规范，删除报告与所有 .legacy 保留项"
+    echo "  2. 逐项填写架构证据矩阵，再按映射表保持原有设计并转移（③保持）"
+    echo "  3. 三份当前架构通过独立阅读门禁后，才删除报告与所有 .legacy 保留项"
   else
     echo "  项目结构已是最新。下一步：运行 /spec-rocket brainstorm 引导写产品文档（或按需完善 assets/）"
   fi

@@ -128,7 +128,7 @@ for (const heading of [
   if (!specRequirements.includes(heading)) fail(`规格模板缺少阶段语义标题: ${heading}`);
 }
 
-const skillVersion = expressionText("skill").match(/^version:\s*([^\s]+)$/m)?.[1];
+const skillVersion = expressionText("skill").match(/^\s+version:\s*["']?([^\s"']+)["']?$/m)?.[1];
 const cliVersion = expressionText("cli").match(/^VERSION="([^"]+)"$/m)?.[1];
 if (!skillVersion || !cliVersion || skillVersion !== cliVersion) {
   fail(`版本不一致: SKILL=${skillVersion ?? "缺失"}, CLI=${cliVersion ?? "缺失"}`);
