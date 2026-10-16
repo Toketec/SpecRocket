@@ -208,6 +208,8 @@ You: Enter ~/projects/legacy-app
 
 **The four Spec files:** `requirements.md` records the architecture baseline, entry/exit states, implementation degree and local design; `plan.md` defines a reproducible implementation path; `tasks.md` tracks work and directed dependencies; `check.md` records AI self-checks and human acceptance.
 
+**Contracts activate at collaboration boundaries:** in Step 2, AI identifies cross-service, cross-language, independently deployed, or externally consumed boundaries from current project facts. Internal calls within one module do not require an extra public contract. A shared boundary must identify its producer, consumers, and authoritative contract under `assets/interfaces/` before parallel development begins. The user decides whether to build contract or data-model support tools; if selected, they proceed as ordinary product capabilities under `tools/` through their own reviewed specs.
+
 **Key design:** PM and Dev only do 2 real decision-making tasks (product design + review). Everything else is AI. **AI codes per spec, no skipping steps, no changing plans.**
 
 ---
@@ -309,12 +311,7 @@ cd SpecRocket
 # Make changes and PR!
 ```
 
-When changing the core methodology, check every affected expression: the full manual, training deck, Skill, project template, both READMEs, and command implementation. Each must remain independently usable and semantically consistent. Before submitting, run:
-
-```bash
-node scripts/check-methodology-consistency.mjs
-node scripts/test-cli-regression.mjs
-```
+When changing the core methodology, check every affected expression: the full manual, training deck, Skill, project template, both READMEs, and command implementation. Each must remain independently usable and semantically consistent. Validate only the affected scope; do not store governance matrices, check scripts, or process reports in the repository.
 
 ---
 
