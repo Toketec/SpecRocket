@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  **👤 Tony Wang (王圣滔)** — FLYKITES AI×Web3 资深技术专家 · 大湾区连续创业者 · 前鼎捷软件资深专家
+  👤 Tony Wang (王圣滔) — FLYKITES AI×Web3 资深技术专家 · 大湾区连续创业者 · 深信服国际AI专家 · 前鼎捷软件资深专家
 </p>
 
 <p align="center">
@@ -93,9 +93,9 @@ AI 写了什么 → 没人懂 → 没人敢改 → 重写。
 
 ## 👤 作者的话
 
-我是 **Tony Wang（王圣滔）**。现 FLYKITES PTE LTD（Singapore）AI×Web3 资深技术专家，大湾区连续创业者。
+我是 **Tony Wang（王圣滔）**。现 深信服国际AI专家 前FLYKITES PTE LTD（Singapore）AI×Web3 资深技术专家，大湾区连续创业者。
 
-8 年来从企业软件走到 AI Native——前鼎捷软件资深专家，2015 年发起早期互联网跑腿（跑酷/达达）从 0 验证 O2O 配送需求，江苏省品牌学会优秀项目负责人，新加坡国家青年理事会 NYC & Youth Plan 长期合作伙伴。主导多个企业级 AI Native 落地项目，参与 Funtana Web3 社群本地化运营、Pannetwork AI 链上支付（已获融资）。
+8 年来从企业软件走到 AI Native——前鼎捷软件资深专家，2015 年发起早期互联网跑腿（跑酷/达达）从 0 验证 O2O 配送需求，江苏省品牌学会优秀项目负责人，新加坡国家青年理事会 NYC & Youth Plan 长期合作伙伴，深信服国际专家。主导多个企业级 AI Native 落地项目，参与 Funtana Web3 社群本地化运营、Pannetwork AI 链上支付（已获融资）。
 
 这一路试遍所有主流方案，踩遍所有坑——最终凝结成 SpecRocket。它不是实验室理论，是我交过的学费换来的答案。
 
