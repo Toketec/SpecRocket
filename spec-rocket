@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口
+# 规格驱动开发（SDD）框架的命令入口 (v4.1.4)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 一键更新本地 skill（工具感知）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="4.1.3"
+VERSION="4.1.4"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 USER_BASE="${SPECROCKET_USER_HOME:-$HOME}"
@@ -173,7 +173,8 @@ cmd_migrate() {
   ARCHITECTURE_STRAY=() # architecture/ 根目录除三份当前文档外的内容，需 AI 收敛
   ARCHITECTURE_SOURCES=() # 当前架构收敛证据：每项都必须在报告中完成分类和去向映射
   LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
-  DERIVED_STATE_HITS=() # hash/版本号/时间戳/指纹候选；仅报告，由 AI 按实际消费者分类
+  DERIVED_STATE_HITS=() # hash/版本号/时间戳/指纹/摘要候选，由 AI 按真实用途处理
+  AGENTS_RULE_PENDING=0 # 已有 AGENTS.md 是否缺少最新版禁止全局派生状态规则
 
   # ═══════════════════════════════════════════════
   # 1. 迁移旧 sprint 容器：docs/sprints/sprint-NNN_xxx/ → sprints/sp-NNN-xxx/docs/
@@ -444,12 +445,70 @@ cmd_migrate() {
       fi
     fi
   fi
-  # 旧项目 AGENTS.md 可含项目专属规则，不覆盖；报告 AI 合并 v4 方法论入口
+  # 旧项目 AGENTS.md 可含项目专属规则。标准章节由脚本定点升级；非标准结构由 AI 实际合并后才能完成。
+  sync_agents_derived_rule() {
+    local agents_file="$1" tmp_file
+    grep -q '^## 五、AI 执行规则' "$agents_file" 2>/dev/null || return 1
+    tmp_file=$(mktemp "${TMPDIR:-/tmp}/specrocket-agents.XXXXXX") || return 1
+    awk '
+      BEGIN { in_rules = 0; inserted = 0; shift = 0; last_number = 0 }
+      /^## 五、AI 执行规则/ { in_rules = 1; print; next }
+      in_rules && /^## / {
+        if (!inserted) {
+          print last_number + 1 ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
+          inserted = 1
+        }
+        in_rules = 0
+      }
+      /\*\*禁止全局派生状态\*\*/ {
+        if (in_rules) {
+          rule_number = $0
+          sub(/\..*$/, "", rule_number)
+          print rule_number ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
+          last_number = rule_number + 0
+          inserted = 1
+        }
+        next
+      }
+      /^- 禁止全局派生状态[:：]/ { next }
+      in_rules && /^[0-9]+\. \*\*/ {
+        rule_number = $0
+        sub(/\..*$/, "", rule_number)
+        last_number = rule_number + 0
+        if (!inserted && /\*\*AI 工具无关性/) {
+          print rule_number ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
+          inserted = 1
+          shift = 1
+        }
+        if (shift) {
+          sub(/^[0-9]+\./, rule_number + 1 ".")
+          last_number = rule_number + 1
+        }
+      }
+      { print }
+      END {
+        if (in_rules && !inserted) {
+          print last_number + 1 ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
+        }
+      }
+    ' "$agents_file" > "$tmp_file"
+    if cmp -s "$agents_file" "$tmp_file"; then
+      rm -f "$tmp_file"
+    else
+      mv "$tmp_file" "$agents_file"
+      ok "    已升级: AGENTS.md（禁止全局派生状态已迁入 AI 执行规则）"
+    fi
+    return 0
+  }
+
   if [ ! -f AGENTS.md ] && [ -f "$TEMPLATE/AGENTS.md" ]; then
     cp "$TEMPLATE/AGENTS.md" AGENTS.md
     ok "    补齐: AGENTS.md"
-  elif [ -f AGENTS.md ] && ! grep -q "architecture/runtime.md" AGENTS.md 2>/dev/null; then
-    LEGACY_NOTES+=("AGENTS.md → 保留项目专属规则，AI 按最新 template/AGENTS.md 合并 architecture/ + 阶段规格规则")
+  elif [ -f AGENTS.md ] && sync_agents_derived_rule AGENTS.md; then
+    :
+  else
+    AGENTS_RULE_PENDING=1
+    LEGACY_NOTES+=("AGENTS.md → 保留项目专属规则，并实际把最新‘禁止全局派生状态’合并到‘AI 执行规则’；不得只记录待更新")
     REPORT_NEEDED=1
   fi
   # assets/ 骨架（v2.9 沿用）
@@ -469,8 +528,9 @@ cmd_migrate() {
     while IFS= read -r f; do
       base=$(basename "$f")
       [ "$base" = "README.md" ] && continue
+      [ "$base" = "state" ] && continue
       ASSETS_STRAY+=("$f")
-    done < <(find assets -maxdepth 1 -mindepth 1 ! -name "configs" ! -name "interfaces" ! -name "standards" ! -name "manuals" ! -name "state" 2>/dev/null || true)
+    done < <(find assets -maxdepth 1 -mindepth 1 ! -name "configs" ! -name "interfaces" ! -name "standards" ! -name "manuals" 2>/dev/null || true)
   fi
   # 运营资产目录自动归位（规则2）
   move_ops_dir() { # $1=源目录 $2=目标子目录
@@ -542,27 +602,6 @@ cmd_migrate() {
     fi
   fi
 
-  # 6c. 派生信息候选扫描：关键词命中不是结论，禁止脚本自动改动。
-  while IFS= read -r -d '' f; do
-    while IFS= read -r hit; do
-      [ -n "$hit" ] && DERIVED_STATE_HITS+=("$f:$hit")
-    done < <(grep -niE '(hash|checksum|fingerprint|digest|version|timestamp|哈希|指纹|版本号|时间戳)[^[:alnum:]_]{0,4}[:=]|v?[0-9]+\.[0-9]+\.[0-9]+([.+-][[:alnum:]._-]+)?|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}|(^|[^[:xdigit:]])[[:xdigit:]]{12,64}([^[:xdigit:]]|$)' "$f" 2>/dev/null || true)
-  done < <(find . -type f \
-    ! -path './.git/*' ! -path './node_modules/*' ! -path './vendor/*' \
-    ! -path './dist/*' ! -path './build/*' ! -path './target/*' ! -path './archive/*' \
-    ! -path './assets/state/*' ! -name 'AGENTS.md' ! -name 'CLAUDE.md' ! -name 'MIGRATION-REPORT.md' \
-    ! -name 'package-lock.json' ! -name 'npm-shrinkwrap.json' ! -name 'pnpm-lock.yaml' \
-    \( -name '*.md' -o -name '*.txt' -o -name '*.json' -o -name '*.yaml' -o -name '*.yml' \
-       -o -name '*.toml' -o -name '*.xml' -o -name '*.env' -o -name '*.sh' -o -name '*.py' \
-       -o -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' \
-       -o -name '*.jsx' -o -name '*.go' -o -name '*.rs' -o -name '*.java' -o -name '*.kt' \
-       -o -name '*.swift' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' \) \
-    -print0 2>/dev/null)
-  if [ "${#DERIVED_STATE_HITS[@]}" -gt 0 ]; then
-    REPORT_NEEDED=1
-    warn "检测到 hash、版本号、时间戳或指纹候选；仅写入报告，由 AI 查明实际读取方后分类处理。"
-  fi
-
   # 架构迁移不能只生成摘要：登记所有历史决策/旧快照，强制 AI 逐项判断当前性并映射到当前架构章节。
   if [ -d architecture/adrs ]; then
     while IFS= read -r f; do
@@ -601,8 +640,32 @@ cmd_migrate() {
     echo "$VD_HITS" | sed 's/^/    /'
     echo "    → 确为业务设计时：转移到 sprints/*/docs/prototypes/prototypes.md，visual-design.md 只留审美边界"
   fi
+
+  # 6c. 历史派生状态扫描：只定位候选，由 AI 查明真实用途后清理或收敛。
+  if [ -d assets/state ]; then
+    DERIVED_STATE_HITS+=("assets/state/（旧版 Agent 状态目录，逐项迁出必要业务信息后删除）")
+  fi
+  while IFS= read -r -d '' f; do
+    while IFS= read -r hit; do
+      [ -n "$hit" ] && DERIVED_STATE_HITS+=("$f:$hit")
+    done < <(grep -niE '(hash|checksum|fingerprint|digest|version|timestamp|哈希|指纹|版本号|时间戳|摘要)[^[:alnum:]_]{0,4}[:=]|v?[0-9]+\.[0-9]+\.[0-9]+([.+-][[:alnum:]._-]+)?|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}|(^|[^[:xdigit:]])[[:xdigit:]]{12,64}([^[:xdigit:]]|$)' "$f" 2>/dev/null || true)
+  done < <(find . -type f \
+    ! -path './.git/*' ! -path './node_modules/*' ! -path './vendor/*' \
+    ! -path './dist/*' ! -path './build/*' ! -path './target/*' ! -path './archive/*' \
+    ! -name 'AGENTS.md' ! -name 'CLAUDE.md' ! -name 'MIGRATION-REPORT.md' \
+    ! -name 'package-lock.json' ! -name 'npm-shrinkwrap.json' ! -name 'pnpm-lock.yaml' \
+    \( -name '*.md' -o -name '*.txt' -o -name '*.json' -o -name '*.yaml' -o -name '*.yml' \
+       -o -name '*.toml' -o -name '*.xml' -o -name '*.env' -o -name '*.sh' -o -name '*.py' \
+       -o -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' \
+       -o -name '*.jsx' -o -name '*.go' -o -name '*.rs' -o -name '*.java' -o -name '*.kt' \
+       -o -name '*.swift' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' \) \
+    -print0 2>/dev/null)
+  if [ "${#DERIVED_STATE_HITS[@]}" -gt 0 ]; then
+    REPORT_NEEDED=1
+    warn "检测到 hash、版本号、时间戳、指纹或摘要候选；AI 必须按真实用途清理历史残留，不能转存为 Agent 状态。"
+  fi
   if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
-    warn "检测到 assets/ 内散落项（规则2：归位到 configs/interfaces/standards/manuals，Agent 自用信息可进入 state/）："
+    warn "检测到 assets/ 内散落项（规则2：归位到 configs/interfaces/standards/manuals）："
     for f in "${ASSETS_STRAY[@]}"; do
       echo "    - $f"
     done
@@ -633,6 +696,7 @@ cmd_migrate() {
       echo "> 由 /spec-rocket migrate v$VERSION 生成。重构原则：**转移 → 收敛 → 保留 → 删除**。"
       echo "> 请由 AI 按 SKILL.md 流程处理：②理解项目 → ③保持原有设计 → ④重构 → ⑤验收，完成后目录结构完全符合最新规范，零残留。"
       echo "> **阻断规则**：三份当前架构必须能脱离 ADR 独立说明系统；下方证据矩阵或协作边界矩阵存在空项，共享边界缺少生产方、消费方、权威契约或兼容策略，或任一当前有效规则仍只能从 ADR 得知时，不得删除本报告。"
+      echo "> **派生状态规则**：Agent 自用或无实际用途的 hash、版本号、时间戳、指纹、摘要及其副本必须删除，不得迁入 \`assets/state/\` 或其他目录；必要信息只保留唯一权威来源。"
       echo ""
       echo "## 迁移映射表（旧 → 新）"
       echo ""
@@ -675,19 +739,28 @@ cmd_migrate() {
       echo ""
       echo "> 契约/模型检查、生成、Mock 或可视化工具不是迁移默认产物。AI 只说明价值、成本和适用边界；用户决定建设后，在 \`tools/\` 中另建正常 spec 推进。"
       echo ""
-      echo "## 派生信息分类矩阵（逐项判断）"
+      echo "## 历史派生状态处理矩阵（逐项完成）"
       echo ""
-      echo "> 关键词命中只表示候选。必须找到实际读取方后分类：业务信息保留唯一权威来源；仍有价值的 Agent 自用信息集中到 \`assets/state/\`；无实际消费者的信息删除；无法判断时保持原状并阻断迁移。"
+      echo "> 先查明真实用途。业务、发布、构建、安全或兼容性明确需要的只保留唯一权威位置；仅供 Agent 或没有实际用途的直接删除。不得把候选转存到 \`assets/state/\`。无法判断用途时阻断迁移，禁止批量刷新数值。"
       echo ""
-      echo "| 候选位置与内容 | 重复位置 | 实际读取方 | 分类 | 唯一权威位置 / 处理动作 |"
-      echo "|:---------------|:---------|:-----------|:-----|:------------------------|"
+      echo "| 候选位置与内容 | 其他副本 | 真实用途/读取方 | 处理动作 | 唯一权威位置 |"
+      echo "|:---------------|:---------|:----------------|:---------|:-------------|"
       if [ "${#DERIVED_STATE_HITS[@]}" -gt 0 ]; then
         for hit in "${DERIVED_STATE_HITS[@]}"; do
           safe_hit=${hit//|/\\|}
           printf '| `%s` | 待填写 | 待填写 | 待填写 | 待填写 |\n' "$safe_hit"
         done
       else
-        echo "| 未发现关键词候选 | 不适用 | 不适用 | 不适用 | 不适用 |"
+        echo "| 未发现候选 | 不适用 | 不适用 | 不适用 | 不适用 |"
+      fi
+      echo ""
+      echo "## 规则入口升级"
+      echo ""
+      if [ "$AGENTS_RULE_PENDING" = "1" ]; then
+        echo "- [ ] 已保留项目专属规则，并把最新‘禁止全局派生状态’实际合并到 \`AGENTS.md\` 的‘AI 执行规则’部分"
+        echo "- [ ] 已清除允许 \`assets/state/\` 或允许 Agent 自用派生状态的冲突表述"
+      else
+        echo "- [x] \`AGENTS.md\` 已包含最新版‘禁止全局派生状态’规则"
       fi
       echo ""
       echo "### 架构独立阅读门禁"
@@ -776,8 +849,8 @@ cmd_migrate() {
   info "migrate v$VERSION 介入完成（结构层）。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. AI 读取 MIGRATION-REPORT.md 并先理解项目（②理解）"
-    echo "  2. 逐项填写架构证据、协作边界和派生信息矩阵，再按映射表保持原有设计并转移（③保持）"
-    echo "  3. 当前架构、契约、数据与派生信息门禁通过后，才删除报告与所有 .legacy 保留项"
+    echo "  2. 逐项填写架构证据、协作边界和历史派生状态矩阵，并实际升级 AGENTS.md（③保持/④重构）"
+    echo "  3. 当前架构、契约、数据、派生状态和规则入口门禁通过后，才删除报告与所有 .legacy 保留项"
   else
     echo "  项目结构已是最新。AI 仍须按 SKILL.md 审计协作边界、契约和数据基线；无共享边界或持久化时明确不适用。"
   fi
