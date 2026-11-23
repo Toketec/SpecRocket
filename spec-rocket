@@ -174,7 +174,16 @@ cmd_migrate() {
   ARCHITECTURE_SOURCES=() # 当前架构收敛证据：每项都必须在报告中完成分类和去向映射
   LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
   DERIVED_STATE_HITS=() # hash/版本号/时间戳/指纹/摘要候选，由 AI 按真实用途处理
+  ROOT_GUIDE_LEGACY=() # 规则入口同步前保留的旧文件，需 AI 逐项归位有效项目事实
   ROOT_GUIDES_PENDING=0 # 模板根目录规范 Markdown 是否未能同步
+
+  for existing_guide_legacy in AGENTS.legacy.md CLAUDE.legacy.md; do
+    if [ -f "$existing_guide_legacy" ]; then
+      ROOT_GUIDE_LEGACY+=("$existing_guide_legacy")
+      LEGACY_NOTES+=("$existing_guide_legacy → 对照现有 SSOT 逐项去重，仅归位其中唯一且仍有效的项目事实，完成后删除")
+      REPORT_NEEDED=1
+    fi
+  done
 
   # ═══════════════════════════════════════════════
   # 1. 迁移旧 sprint 容器：docs/sprints/sprint-NNN_xxx/ → sprints/sp-NNN-xxx/docs/
@@ -445,9 +454,9 @@ cmd_migrate() {
       fi
     fi
   fi
-  # 模板根目录 Markdown 中，README.md 承载项目业务信息，其余为框架规范入口并按整文件同步。
+  # 模板根目录 Markdown 中，README.md 承载项目业务信息；其余规则入口先无损保留旧文件，再按整文件同步。
   sync_template_root_guides() {
-    local project_name source_file target_file tmp_file
+    local project_name source_file target_file legacy_file tmp_file
     if [ -f AGENTS.md ]; then
       project_name=$(sed -n '1s/^# \(.*\) — AGENTS\.md$/\1/p' AGENTS.md)
     fi
@@ -477,6 +486,22 @@ cmd_migrate() {
       if [ -f "$target_file" ] && cmp -s "$target_file" "$tmp_file"; then
         rm -f "$tmp_file"
       else
+        legacy_file="${target_file%.md}.legacy.md"
+        if [ -f "$target_file" ]; then
+          if [ -e "$legacy_file" ]; then
+            warn "    $target_file 与最新版模板不同，但 $legacy_file 已存在；请先完成旧内容归位，未覆盖现文件"
+            rm -f "$tmp_file"
+            return 1
+          fi
+          cp "$target_file" "$legacy_file" || {
+            rm -f "$tmp_file"
+            return 1
+          }
+          ROOT_GUIDE_LEGACY+=("$legacy_file")
+          LEGACY_NOTES+=("$legacy_file → 对照现有 SSOT 逐项去重，仅归位其中唯一且仍有效的项目事实，完成后删除")
+          REPORT_NEEDED=1
+          ok "    已保留: $target_file → $legacy_file（待语义归位）"
+        fi
         mv "$tmp_file" "$target_file"
         ok "    已同步: $target_file（模板根目录规范）"
       fi
@@ -488,7 +513,7 @@ cmd_migrate() {
     :
   else
     ROOT_GUIDES_PENDING=1
-    LEGACY_NOTES+=("模板根目录规范 Markdown → 实际同步最新版内容；README.md 作为项目业务文档保留")
+    LEGACY_NOTES+=("模板根目录规范 Markdown → 先处理现有 *.legacy.md，再同步最新版内容；README.md 作为项目业务文档保留")
     REPORT_NEEDED=1
   fi
   # assets/ 骨架（v2.9 沿用）
@@ -737,10 +762,23 @@ cmd_migrate() {
       echo "## 项目级规则入口同步"
       echo ""
       if [ "$ROOT_GUIDES_PENDING" = "1" ]; then
-        echo "- [ ] 已同步 template/ 根目录规范 Markdown；项目 \`README.md\` 保留"
+        echo "- [ ] 已解决旧规则入口保留文件冲突，并同步 template/ 根目录规范 Markdown"
         echo "- [ ] 已清除允许 \`assets/state/\` 或允许 Agent 自用派生状态的冲突表述"
       else
         echo "- [x] template/ 根目录规范 Markdown 已同步；项目 \`README.md\` 已保留"
+      fi
+      if [ "${#ROOT_GUIDE_LEGACY[@]}" -gt 0 ]; then
+        echo "- [ ] 旧规则入口已完成去重：重复或失效内容不再保留，唯一且仍有效的项目事实已归位"
+        echo ""
+        echo "### 旧规则入口核对与归位矩阵"
+        echo ""
+        echo "> 旧文件只是临时保全来源，不是权威事实源。先与代码、配置及现有 SSOT 对照：已有内容只记录其权威位置，不重复写入；冲突或已失效内容按当前事实删除；只有尚未存在于其他位置、且能由当前项目事实确认仍有效的内容才归位。项目概况、技术栈和粗粒度能力状态进入 \`README.md\`；产品事实进入 \`docs/\` 或最新 Sprint；架构/数据/运行事实进入 \`architecture/\`；部署、接口和标准进入 \`assets/\`。"
+        echo ""
+        echo "| 保留文件 | 内容摘要 | 对照依据/现有 SSOT | 判定（重复/失效/唯一有效） | 处理结论 |"
+        echo "|:---------|:---------|:-------------------|:---------------------------|:---------|"
+        for legacy_file in "${ROOT_GUIDE_LEGACY[@]}"; do
+          printf '| `%s` | 待填写 | 待填写 | 待填写 | 待填写 |\n' "$legacy_file"
+        done
       fi
       echo ""
       echo "### 架构独立阅读门禁"
