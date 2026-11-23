@@ -72,7 +72,7 @@ project-root/
 │   │           ├── tasks.md
 │   │           └── check.md
 │   │
-│   └── sp-001-功能名/                # ✦ 具体冲刺 — 每次迭代一个完整容器
+│   └── sp-001-冲刺名/                # ✦ 具体冲刺 — 每次迭代一个完整容器
 │       ├── docs/                     #   本冲刺的产品设计（PM）
 │       │   └── ...
 │       └── specs/                    #   本冲刺的技术规格（Dev）
@@ -385,7 +385,7 @@ QA 跑人工验收项。如果项目没有专职 QA，Dev 自行验收，PM 确�
 对于有客户端的项目（Web/移动端），PM 应在对应 sprint 的 `prototypes/` 目录中同时产出 **UI 设计文档** 与 **交互原型**：
 
 ```text
-sprints/sp-NNN-名称/docs/prototypes/
+sprints/sp-NNN-冲刺名/docs/prototypes/
 ├── prototypes.md       # UI 设计说明 — 本版本页面结构/布局/内容/线框/文案（随版本变动）
 └── prototype.html      # 可交互原型（纯演示，不写说明文字/线框）
 ```
@@ -412,7 +412,7 @@ sprints/sp-NNN-名称/docs/prototypes/
 ### 4.2 sprints/ — 迭代层：每次迭代的完整容器
 
 ```
-sprints/sp-NNN-名称/
+sprints/sp-NNN-冲刺名/
 ├── docs/                           # PM 产品设计
 │   ├── SPRINT-features.md          # 冲刺目标 + 功能清单 + 业务流程 + 验收条件
 │   ├── functional-overview.md      # 本版本功能需求总览
@@ -433,9 +433,16 @@ sprints/sp-NNN-名称/
 
 每个 sprint 是一个独立的、完整的版本容器（产品设计 + 技术规格）。PM 在每个大版本迭代时完整复制一次模板，填入本次版本的完整产品设计；Dev 在 Step 2 时在 `specs/` 中拆解规格。
 
+**PM 需求分流**：编号最大的 Sprint 是当前 Sprint；创建新 Sprint 即表示此前 Sprint 已完成并转为只读历史。是否新建 Sprint 由人决定，项目尚无实际 Sprint 时先询问用户。
+
+- **改需求**：PM 修改当前 Sprint 已有功能点。即使对应 spec 已进入 Step 4，只要当前 Sprint 尚未发版，仍可先更新本 Sprint 的 docs 和对应 spec，重走 Step 2/3 评审，再重新实现、调试并同步受影响的 `tasks.md` / `check.md`。
+- **新需求**：当前 Sprint 不存在对应功能点。无论是全新功能，还是调整历史 Sprint 实现过的功能，都在当前 Sprint 补充 docs、创建新 spec 并走 Step 2/3；历史 Sprint 的 docs、spec 和当时方案只作参考，不回写。
+
+这是为适应 AI 辅助开发中需求变化快于人工规划而允许的迭代方式。
+
 **为什么要一个版本一个容器？**
 - ✅ **迭代完整自包含** — 一次迭代的所有产出（产品设计 + 技术规格）在同一目录，Dev 只看本 sprint 即可理解要做什么
-- ✅ **冻结即全冻结** — sprint 冻结 = docs + specs 全部冻结，迭代边界干净
+- ✅ **人工关闭后整体冻结** — 人明确结束 sprint 后，docs + specs 整体冻结；单个 spec 进入 Step 4 不自动关闭 sprint
 - ✅ **原型可回溯** — 上一个版本的原型不会被覆盖，随时可以回顾
 - ✅ **历史对比** — 两个 sprint 的 user-scenarios.md 放在一起，一眼看出本次迭代改了哪些场景
 
@@ -443,10 +450,10 @@ sprints/sp-NNN-名称/
 
 ```bash
 # 从模板创建新 sprint（完整容器：docs/ + specs/）
-cp -r sprints/_template sprints/sp-NNN-名称
+cp -r sprints/_template sprints/sp-NNN-冲刺名
 
 # 或从上一个 sprint 复制（保持一致的文档结构）
-cp -r sprints/sp-001-xxx/* sprints/sp-002-xxx/
+cp -r sprints/sp-NNN-旧冲刺名/* sprints/sp-MMM-新冲刺名/
 ```
 
 ### 4.3 apps/ / businesses/ / tools/ — 纯代码实现域（Dev 产出）
@@ -510,7 +517,7 @@ cp architecture/adrs/_template.md architecture/adrs/adr-0001-决策名.md
 ### 5.1 规格目录结构
 
 ```
-sprints/sp-NNN-名称/specs/
+sprints/sp-NNN-冲刺名/specs/
 ├── _template/                       # 规格模板（cp 建新规格）
 │   ├── requirements.md
 │   ├── plan.md
@@ -614,8 +621,8 @@ A spec 想确认依赖方 B 的接口格式，直接在 A 的 `requirements.md` 
 
 ### 8.4 迭代边界陷阱
 
-**错误做法**: Step 4 编码中 PM 改需求，AI 边写边改。
-**正确做法**: 新需求进下一个 sprint，当前 sprint 以冻结的 spec 为准。
+**错误做法**: 回写历史 sprint，或把当前 sprint 的所有需求变化都当成新 spec。
+**正确做法**: 当前 sprint 已有功能点发生变化时，更新对应 docs 和 spec，重走 Step 2/3 后重新实现；当前 sprint 没有对应功能点时，作为新需求在当前 sprint 新建 spec。是否新建下一 sprint 由人决定。
 
 ### 8.5 视觉设计混入业务设计陷阱
 

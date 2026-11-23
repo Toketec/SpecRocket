@@ -421,6 +421,8 @@ Step 2: Dev 把 sprint 文档 → 拖到新的 AI 对话（干净上下文）
 Step 4: AI 只读 requirements.md + plan.md → 编码
 ```
 
+编号最大的 Sprint 是当前 Sprint：修改其中已有功能点时更新对应 docs/spec 并重走 Step 2/3；当前 Sprint 没有对应功能点时新建 spec。历史 Sprint 只作参考，对历史功能的后续调整也作为当前 Sprint 的新需求。
+
 AI 不需要自己"扫描整个项目"。每个环节的输入和输出都是预先定义好的文件，不同工具的扫描方式差异在这个流程中几乎没有影响。
 
 **第三层：Context Contract（≤15 行）的边界约束**

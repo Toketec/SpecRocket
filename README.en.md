@@ -350,6 +350,8 @@ Step 2: Dev drops sprint docs → into a fresh AI conversation (clean context)
 Step 4: AI reads only requirements.md + plan.md → codes
 ```
 
+The highest-numbered Sprint is current. A change to one of its existing features updates the corresponding docs and spec, then repeats Steps 2–3. Anything absent from the current Sprint is a new requirement with a new spec; older Sprints remain read-only references.
+
 The AI never needs to "scan the whole project" on its own. Every step's input and output are pre-defined files. Differences in how tools scan directories have almost no impact on this flow.
 
 **Layer 3: Context Contract (≤15 lines) boundary**

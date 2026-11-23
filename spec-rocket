@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口 (v4.1.4)
+# 规格驱动开发（SDD）框架的命令入口 (v4.2.0)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 一键更新本地 skill（工具感知）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="4.1.4"
+VERSION="4.2.0"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 USER_BASE="${SPECROCKET_USER_HOME:-$HOME}"
@@ -174,7 +174,7 @@ cmd_migrate() {
   ARCHITECTURE_SOURCES=() # 当前架构收敛证据：每项都必须在报告中完成分类和去向映射
   LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
   DERIVED_STATE_HITS=() # hash/版本号/时间戳/指纹/摘要候选，由 AI 按真实用途处理
-  AGENTS_RULE_PENDING=0 # 已有 AGENTS.md 是否缺少最新版禁止全局派生状态规则
+  ROOT_GUIDES_PENDING=0 # 模板根目录规范 Markdown 是否未能同步
 
   # ═══════════════════════════════════════════════
   # 1. 迁移旧 sprint 容器：docs/sprints/sprint-NNN_xxx/ → sprints/sp-NNN-xxx/docs/
@@ -445,70 +445,50 @@ cmd_migrate() {
       fi
     fi
   fi
-  # 旧项目 AGENTS.md 可含项目专属规则。标准章节由脚本定点升级；非标准结构由 AI 实际合并后才能完成。
-  sync_agents_derived_rule() {
-    local agents_file="$1" tmp_file
-    grep -q '^## 五、AI 执行规则' "$agents_file" 2>/dev/null || return 1
-    tmp_file=$(mktemp "${TMPDIR:-/tmp}/specrocket-agents.XXXXXX") || return 1
-    awk '
-      BEGIN { in_rules = 0; inserted = 0; shift = 0; last_number = 0 }
-      /^## 五、AI 执行规则/ { in_rules = 1; print; next }
-      in_rules && /^## / {
-        if (!inserted) {
-          print last_number + 1 ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
-          inserted = 1
-        }
-        in_rules = 0
-      }
-      /\*\*禁止全局派生状态\*\*/ {
-        if (in_rules) {
-          rule_number = $0
-          sub(/\..*$/, "", rule_number)
-          print rule_number ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
-          last_number = rule_number + 0
-          inserted = 1
-        }
-        next
-      }
-      /^- 禁止全局派生状态[:：]/ { next }
-      in_rules && /^[0-9]+\. \*\*/ {
-        rule_number = $0
-        sub(/\..*$/, "", rule_number)
-        last_number = rule_number + 0
-        if (!inserted && /\*\*AI 工具无关性/) {
-          print rule_number ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
-          inserted = 1
-          shift = 1
-        }
-        if (shift) {
-          sub(/^[0-9]+\./, rule_number + 1 ".")
-          last_number = rule_number + 1
-        }
-      }
-      { print }
-      END {
-        if (in_rules && !inserted) {
-          print last_number + 1 ". **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。"
-        }
-      }
-    ' "$agents_file" > "$tmp_file"
-    if cmp -s "$agents_file" "$tmp_file"; then
-      rm -f "$tmp_file"
-    else
-      mv "$tmp_file" "$agents_file"
-      ok "    已升级: AGENTS.md（禁止全局派生状态已迁入 AI 执行规则）"
+  # 模板根目录 Markdown 中，README.md 承载项目业务信息，其余为框架规范入口并按整文件同步。
+  sync_template_root_guides() {
+    local project_name source_file target_file tmp_file
+    if [ -f AGENTS.md ]; then
+      project_name=$(sed -n '1s/^# \(.*\) — AGENTS\.md$/\1/p' AGENTS.md)
     fi
+    if [ -z "$project_name" ] && [ -f README.md ]; then
+      project_name=$(sed -n '1s/^# //p' README.md)
+    fi
+    [ -n "$project_name" ] || project_name=$(basename "$(pwd)")
+
+    for source_file in "$TEMPLATE"/*.md; do
+      [ -f "$source_file" ] || continue
+      target_file=$(basename "$source_file")
+      [ "$target_file" = "README.md" ] && continue
+      tmp_file=$(mktemp "${TMPDIR:-/tmp}/specrocket-root-guide.XXXXXX") || return 1
+      awk -v name="$project_name" '
+        function replace_project_name(line, token, pos) {
+          token = "{项目名}"
+          while ((pos = index(line, token)) > 0) {
+            line = substr(line, 1, pos - 1) name substr(line, pos + length(token))
+          }
+          return line
+        }
+        { print replace_project_name($0) }
+      ' "$source_file" > "$tmp_file" || {
+        rm -f "$tmp_file"
+        return 1
+      }
+      if [ -f "$target_file" ] && cmp -s "$target_file" "$tmp_file"; then
+        rm -f "$tmp_file"
+      else
+        mv "$tmp_file" "$target_file"
+        ok "    已同步: $target_file（模板根目录规范）"
+      fi
+    done
     return 0
   }
 
-  if [ ! -f AGENTS.md ] && [ -f "$TEMPLATE/AGENTS.md" ]; then
-    cp "$TEMPLATE/AGENTS.md" AGENTS.md
-    ok "    补齐: AGENTS.md"
-  elif [ -f AGENTS.md ] && sync_agents_derived_rule AGENTS.md; then
+  if sync_template_root_guides; then
     :
   else
-    AGENTS_RULE_PENDING=1
-    LEGACY_NOTES+=("AGENTS.md → 保留项目专属规则，并实际把最新‘禁止全局派生状态’合并到‘AI 执行规则’；不得只记录待更新")
+    ROOT_GUIDES_PENDING=1
+    LEGACY_NOTES+=("模板根目录规范 Markdown → 实际同步最新版内容；README.md 作为项目业务文档保留")
     REPORT_NEEDED=1
   fi
   # assets/ 骨架（v2.9 沿用）
@@ -754,13 +734,13 @@ cmd_migrate() {
         echo "| 未发现候选 | 不适用 | 不适用 | 不适用 | 不适用 |"
       fi
       echo ""
-      echo "## 规则入口升级"
+      echo "## 项目级规则入口同步"
       echo ""
-      if [ "$AGENTS_RULE_PENDING" = "1" ]; then
-        echo "- [ ] 已保留项目专属规则，并把最新‘禁止全局派生状态’实际合并到 \`AGENTS.md\` 的‘AI 执行规则’部分"
+      if [ "$ROOT_GUIDES_PENDING" = "1" ]; then
+        echo "- [ ] 已同步 template/ 根目录规范 Markdown；项目 \`README.md\` 保留"
         echo "- [ ] 已清除允许 \`assets/state/\` 或允许 Agent 自用派生状态的冲突表述"
       else
-        echo "- [x] \`AGENTS.md\` 已包含最新版‘禁止全局派生状态’规则"
+        echo "- [x] template/ 根目录规范 Markdown 已同步；项目 \`README.md\` 已保留"
       fi
       echo ""
       echo "### 架构独立阅读门禁"
@@ -849,8 +829,8 @@ cmd_migrate() {
   info "migrate v$VERSION 介入完成（结构层）。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. AI 读取 MIGRATION-REPORT.md 并先理解项目（②理解）"
-    echo "  2. 逐项填写架构证据、协作边界和历史派生状态矩阵，并实际升级 AGENTS.md（③保持/④重构）"
-    echo "  3. 当前架构、契约、数据、派生状态和规则入口门禁通过后，才删除报告与所有 .legacy 保留项"
+    echo "  2. 逐项填写架构证据、协作边界和历史派生状态矩阵，并同步项目级规则入口（③保持/④重构）"
+    echo "  3. 当前架构、契约、数据、派生状态和项目级规则入口门禁通过后，才删除报告与所有 .legacy 保留项"
   else
     echo "  项目结构已是最新。AI 仍须按 SKILL.md 审计协作边界、契约和数据基线；无共享边界或持久化时明确不适用。"
   fi

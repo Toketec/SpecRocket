@@ -1,4 +1,4 @@
-# SPRINT-{NNN}: {冲刺名称 — 面向 PM/业务方}
+# SPRINT-{NNN}: {冲刺名 — 面向 PM/业务方}
 
 > **负责人**: PM / 产品经理
 > **所属迭代**: {Sprint 编号，如 Sprint 12}

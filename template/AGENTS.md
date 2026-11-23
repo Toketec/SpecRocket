@@ -211,7 +211,7 @@ Dev 发现边界 bug → AI 推荐修复 → Dev 确认。
 | Step 2 的 spec 要写多详细？ | 必须写清架构基线、进入/退出状态、实现程度、有向依赖、临时边界和收口责任，足以让其他 Agent 重建等价阶段交付 |
 | Step 3 评审通不过怎么办？ | PM 看不懂 → 规范没写清楚；TL 不通过 → 架构有隐患。打回 Step 2 修改 |
 | Step 4 AI 发现 spec 有坑怎么办？ | 停，告诉 Dev，打回 Step 2/3。不能边写边改 |
-| AI 已经进入 Step 4，PM 又改了需求？ | 新需求进下一个 sprint，当前 sprint 以冻结的 spec 为准 |
+| PM 提需求时怎么分流？ | 最新 sprint 已有对应功能点（包括 Step 4 中）= 改需求，更新其 docs 和 spec 后重走 Step 2/3；否则 = 新需求，在最新 sprint 补 docs 并新建 spec。历史 sprint 只参考 |
 | 一个 sprint 拆几个 spec？ | 按可独立执行和验证的实现切片拆分；允许契约化的有向依赖，不刻意追求零依赖或多拆 |
 
 ---
@@ -219,29 +219,30 @@ Dev 发现边界 bug → AI 推荐修复 → Dev 确认。
 ## 五、AI 执行规则
 
 0. **角色识别优先**：收到任务后先按「角色识别」节判断属于哪个角色。PM 角色 → 文档编辑遵循编辑顺序；Dev 角色 → 按读顺序进入 specs 工作。
-1. **读顺序**: AGENTS.md → `architecture/architecture.md` → 按任务需要读 `data-model.md` / `runtime.md` → sprints/*/docs/ → 目标 specs/。`architecture/adrs/` 只在追溯决策原因、架构改动或历史重建时按需读取，禁止每次全量重读
-2. **不跳 step**: 没有经过 Step 3 评审的 spec，AI 不能进入 Step 4 编码
-3. **不改方案**: AI 编码中发现 spec 有问题 → 停，告诉 Dev 回 Step 2/3，不能边写边改
-4. **人机协作**: 所有文件 AI 都可编辑。修改后展示改动，用户确认后提交
-5. **跨 spec 不读全量**: 下游只读上游在本 spec 中写入的 Context Contract（≤15 行）；依赖必须有向、契约稳定、收口有主
-6. **架构决策变更**: 系统边界、数据归属、一致性/安全模型或核心技术选择变化 → 新增一份 `architecture/adrs/adr-NNNN-*.md`，同步更新 `architecture/` 当前文档并回到 Step 3 评审；普通字段、接口或 Mock 替换不自动视为架构变更
-7. **禁止自动 git commit/push**: 先展示改动，等用户确认
-8. **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。
-9. **AI 工具无关性（Tool Independence）**:
+1. **Sprint 归属**：编号最大的 Sprint 是当前 Sprint，其余只作历史参考。需求修改当前 Sprint 已有功能点（即使 spec 已进入 Step 4）→ 更新其 docs 和对应 spec，重走 Step 2/3 后重新实现；否则 → 作为新需求补入当前 Sprint docs 并新建 spec。只有用户决定才新建 Sprint；没有 Sprint 先询问。
+2. **读顺序**: AGENTS.md → `architecture/architecture.md` → 按任务需要读 `data-model.md` / `runtime.md` → 目标 sprint/docs/ → 目标 specs/。`architecture/adrs/` 只在追溯决策原因、架构改动或历史重建时按需读取，禁止每次全量重读
+3. **不跳 step**: 没有经过 Step 3 评审的 spec，AI 不能进入 Step 4 编码
+4. **不改方案**: AI 编码中发现 spec 有问题 → 停，告诉 Dev 回 Step 2/3，不能边写边改
+5. **人机协作**: 所有文件 AI 都可编辑。修改后展示改动，用户确认后提交
+6. **跨 spec 不读全量**: 下游只读上游在本 spec 中写入的 Context Contract（≤15 行）；依赖必须有向、契约稳定、收口有主
+7. **架构决策变更**: 系统边界、数据归属、一致性/安全模型或核心技术选择变化 → 新增一份 `architecture/adrs/adr-NNNN-*.md`，同步更新 `architecture/` 当前文档并回到 Step 3 评审；普通字段、接口或 Mock 替换不自动视为架构变更
+8. **禁止自动 git commit/push**: 先展示改动，等用户确认
+9. **禁止全局派生状态**: Agent 不得为了自身校验、变更检测、契约维护或其他内部需要，在项目内保存或跨文件复制 hash（哈希）、版本号、时间戳、指纹、摘要等派生信息，也不得因此修改与当前业务任务无关的文件。此类需求只在必要时换用其他方案解决。以避免产生大量没有实际业务价值的 diff，增加人工审核成本。
+10. **AI 工具无关性（Tool Independence）**:
    - SpecRocket 是纯文件约定，不依赖任何 AI 工具的特殊扫描/索引/上下文管理能力
-   - AI 禁止无边界地扫描全项目来"理解项目"——必须按固定读顺序（AGENTS.md → architecture/ 当前文档 → sprints/*/docs/ → 目标 specs/）按需读取
+   - AI 禁止无边界地扫描全项目来"理解项目"——必须按固定读顺序（AGENTS.md → architecture/ 当前文档 → 目标 sprint/docs/ → 目标 specs/）按需读取
    - Step 4 编码时，严格按 `plan.md` 的文件清单实现，不自动搜索或引用项目其他位置的文件
-10. **按需读取（任务粒度分级，控制 token）**: 按任务规模决定读取范围，**禁止任何任务都全量重读 docs/**：
-   - **P0 首次进入 / 架构级改动** → 全量读（规则 1 的标准读顺序）
+11. **按需读取（任务粒度分级，控制 token）**: 按任务规模决定读取范围，**禁止任何任务都全量重读 docs/**：
+   - **P0 首次进入 / 架构级改动** → 全量读（规则 2 的标准读顺序）
    - **P1 局部功能改动** → 只读目标 sprint specs/ + 受影响的 docs 文件 + 相关 architecture 当前章节
    - **P2 文案 / 微小调整** → 只读目标文件本身
    - 拿不准时按低一级处理；发现信息不足再升级读取，而不是一开始就全量读
-11. **增量更新（只改受影响段落）**: 修改文档/代码时**只更新受影响的部分**，禁止整篇重写或顺手"全面刷新"其他文件。普通文档只保留当前有效内容，历史由 Git 提供；`architecture/adrs/` 是不可变架构决策历史的唯一例外。全局粗粒度功能进度只维护在 `README.md`，规格执行状态只维护在 `tasks.md` 与 `check.md`
-12. **图表规范（业务闭环可视化）**:
+12. **增量更新（只改受影响段落）**: 修改文档/代码时**只更新受影响的部分**，禁止整篇重写或顺手"全面刷新"其他文件。普通文档只保留当前有效内容，历史由 Git 提供；`architecture/adrs/` 是不可变架构决策历史的唯一例外。全局粗粒度功能进度只维护在 `README.md`，规格执行状态只维护在 `tasks.md` 与 `check.md`
+13. **图表规范（业务闭环可视化）**:
     - 产品设计文档至少包含 **1 个 Mermaid 流程图**（用户旅程总览或核心业务泳道图），让业务闭环一眼可见；复杂交互配时序图，有状态机配状态图
     - `uml-pack.md` 遵循**最小化数量原则**：按项目实际需要按需绘制，不追求全量；能用一个图说清就不画第二个，极简项目整文件一行占位
     - 工具环境不支持 Mermaid 渲染时，用 ASCII 图替代并标注「ASCII 备选」
-13. **禁止自动浏览器验证原则**: 非代码开发阶段（文档/原型产出）不进行自动浏览器验证，节省时间和 token；交互原型（`prototypes/prototype.html`）交由 PM 人工验证
+14. **禁止自动浏览器验证原则**: 非代码开发阶段（文档/原型产出）不进行自动浏览器验证，节省时间和 token；交互原型（`prototypes/prototype.html`）交由 PM 人工验证
 
 ---
 
@@ -283,7 +284,7 @@ project-root/
 │   │       └── spec-001-功能名/     # 具体规格（编号+描述，cp _template 创建）
 │   │           ├── requirements.md
 │   │           └── ...
-│   └── sp-001-功能名/         # 具体冲刺（每次迭代一个完整容器，cp _template 创建）
+│   └── sp-001-冲刺名/         # 具体冲刺（每次迭代一个完整容器，cp _template 创建）
 │       ├── docs/
 │       └── specs/
 │           ├── _template/
@@ -543,9 +544,9 @@ mkdir -p apps/ businesses/ tools/ architecture/adrs docs/ sprints/
 
 1. 用引导脚本创建骨架
 2. 创建 `docs/` 写全版本通用产品文档
-3. 创建 `sprints/sp-001-名称/docs/` 开始第一个版本设计
+3. 创建 `sprints/sp-001-冲刺名/docs/` 开始第一个版本设计
 4. 创建 `architecture/` 三份当前文档和 `architecture/adrs/` 单文件决策历史
-5. Step 2 时在 `sprints/sp-001-名称/specs/` 中拆解多个规格
+5. Step 2 时在 `sprints/sp-001-冲刺名/specs/` 中拆解多个规格
 6. 用 `AGENTS.md` 作为 AI 协作入口
 
 ---
@@ -579,19 +580,19 @@ cd SpecRocket && ./spec-rocket init "项目名"
 ### 手动操作（无 SpecRocket）
 
 ```bash
-# 创建新 sprint（完整容器：docs/ + specs/）
-cp -r sprints/_template sprints/sp-001-功能名
+# 创建目标 sprint（NNN 为下一编号）
+cp -r sprints/_template sprints/sp-NNN-冲刺名
 
 # 创建新模块（纯代码域，直接用框架脚手架生成项目）
 npx create-next-app@latest apps/my-app   # 前端（Next.js）
 spring init --dependencies=web,data-jpa businesses/my-service  # 后端（Spring Boot）
 
-# 创建新规格（在 sprint 内，编号递增）
-cp -r sprints/sp-001-功能名/specs/_template sprints/sp-001-功能名/specs/spec-001-功能名
+# 创建新规格（在目标 sprint 内，编号递增）
+cp -r sprints/sp-NNN-冲刺名/specs/_template sprints/sp-NNN-冲刺名/specs/spec-XXX-功能名
 
 # 创建新 ADR（仅架构不变量变化时，单文件）
 cp architecture/adrs/_template.md architecture/adrs/adr-0001-决策名.md
 
 # 创建新原型（UI 设计文档 + 交互原型）
-cp -r sprints/_template/docs/prototypes sprints/sp-001-功能名/docs/
+cp -r sprints/_template/docs/prototypes sprints/sp-NNN-冲刺名/docs/
 ```

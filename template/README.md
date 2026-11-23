@@ -34,7 +34,7 @@ pnpm typecheck
 │
 ├── sprints/                      # ★ 迭代层 — 每次迭代的完整容器
 │   ├── _template/                # sprint 模板（docs/ + specs/）
-│   └── sp-001-功能名/            # 具体冲刺：docs/（产品设计）+ specs/（技术规格）
+│   └── sp-001-冲刺名/            # 具体冲刺：docs/（产品设计）+ specs/（技术规格）
 │       ├── docs/
 │       └── specs/
 │           ├── _template/
