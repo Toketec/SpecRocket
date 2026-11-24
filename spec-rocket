@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口 (v4.2.3)
+# 规格驱动开发（SDD）框架的命令入口 (v4.2.5)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 更新当前 Skill checkout（标准安装器兜底）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="4.2.3"
+VERSION="4.2.5"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -142,6 +142,25 @@ cmd_migrate() {
   LEGACY_STATE_DIRS=()  # 旧版框架明确维护的状态目录；不扫描项目源码、依赖或普通业务文档
   ROOT_GUIDE_LEGACY=() # 规则入口同步前保留的旧文件，需 AI 逐项归位有效项目事实
   ROOT_GUIDES_PENDING=0 # 模板根目录规范 Markdown 是否未能同步
+  PROJECT_FRAMEWORK_VERSION="未记录"
+
+  if [ -f README.md ]; then
+    README_FRAMEWORK_VERSION=$(awk '
+      /^> \*\*SpecRocket 框架版本\*\*[：:]/ {
+        line = $0
+        sub(/^> \*\*SpecRocket 框架版本\*\*[：:]/, "", line)
+        gsub(/[[:space:]]/, "", line)
+        print line
+        exit
+      }
+    ' README.md)
+    if printf '%s' "$README_FRAMEWORK_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+      PROJECT_FRAMEWORK_VERSION="$README_FRAMEWORK_VERSION"
+    fi
+  fi
+  if [ "$PROJECT_FRAMEWORK_VERSION" != "$VERSION" ]; then
+    REPORT_NEEDED=1
+  fi
 
   for existing_guide_legacy in AGENTS.legacy.md CLAUDE.legacy.md; do
     if [ -f "$existing_guide_legacy" ]; then
@@ -652,6 +671,7 @@ cmd_migrate() {
       echo "# 迁移报告 — $(date +%Y-%m-%d)"
       echo ""
       echo "> 由 /spec-rocket migrate v$VERSION 生成。重构原则：**转移 → 收敛 → 保留 → 删除**。"
+      echo "> 项目迁移前记录的 SpecRocket 版本：**$PROJECT_FRAMEWORK_VERSION**；目标版本：**$VERSION**。版本号用于选择迁移路径，实际结构与内容仍以项目事实为准。"
       echo "> 请由 AI 按 SKILL.md 流程处理：②理解项目 → ③保持原有设计 → ④重构 → ⑤验收，完成后目录结构完全符合最新规范，零残留。"
       echo "> **阻断规则**：三份当前架构必须能脱离 ADR 独立说明系统；下方证据矩阵或协作边界矩阵存在空项，共享边界缺少生产方、消费方、权威契约或兼容策略，或任一当前有效规则仍只能从 ADR 得知时，不得删除本报告。"
       echo "> **扫描边界**：migrate 只检查 SpecRocket 框架目录、历史规则入口和已知旧结构，不按 hash、版本号、时间戳等关键词扫描项目源码、依赖、配置或普通业务文档。"

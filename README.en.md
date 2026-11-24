@@ -120,6 +120,8 @@ cd my-project
 
 The project skeleton is ready. You can edit `docs/product-overview.md` to start writing product docs.
 
+The generated project's root `README.md` visibly records its adopted SpecRocket version for people, AI agents, and future compatible migrations.
+
 > If you already have a clone, just run `./init.sh project-name` (new dir) or `./init.sh` (current dir).
 
 ---

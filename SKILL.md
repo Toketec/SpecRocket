@@ -3,7 +3,7 @@ name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
 license: MIT
 metadata:
-  version: "4.2.3"
+  version: "4.2.5"
 ---
 
 # `/spec-rocket` — SpecRocket 项目引导命令
@@ -178,6 +178,7 @@ SpecRocket/                      ← 本仓库
 ./spec-rocket migrate [项目路径]     # 默认当前目录
 ```
 脚本扫描并处理结构层：
+- **读取框架版本线索**：读取根目录 `README.md` 顶部的“SpecRocket 框架版本”并写入迁移报告；缺失时仍按实际目录结构识别。完成迁移后更新 README 中的版本号
 - **迁移 sprint 容器**：`docs/sprints/sprint-NNN_xxx/` → `sprints/sp-NNN-xxx/docs/`（重命名 + 改路径；检测旧版文件 `ux-flows.md` / `ui-wireframes.md` / `user-journey-flows.md` 报告由 AI 转移）
 - **迁移模块规格**：`{apps|businesses|tools}/*/specs/SPEC-{APP|BIZ|TOOL}-NNN_xxx/` → 按 spec 头部「基于冲刺」字段归入 `sprints/sp-NNN-xxx/specs/spec-NNN-xxx/`（脚本报告，AI 执行内容转移 + 重新编号）
 - **迁移历代架构结构**：`ADR/ADR-NNN_xxx.md` → `architecture/adrs/adr-YYYYMMDD-xxx.md`；3.x `adrs/adr-*/` 三文件目录 → `architecture/adrs/adr-*.legacy/`，完整保留后由 AI 提炼为单文件 ADR，并把当前有效结果收敛进 `architecture/*.md`

@@ -151,7 +151,7 @@ cd SpecRocket
 cd 我的项目
 ```
 
-完成后项目骨架已就位，可手动编辑 `docs/product-overview.md` 开始写产品文档。
+完成后项目骨架已就位，根目录 `README.md` 会直接显示项目采用的 SpecRocket 框架版本，供人和 AI 查看及后续兼容迁移使用；然后可手动编辑 `docs/product-overview.md` 开始写产品文档。
 
 > 如果已有克隆，直接 `./init.sh 项目名`（新建目录）或 `./init.sh`（当前目录）即可。
 
