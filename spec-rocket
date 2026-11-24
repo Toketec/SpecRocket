@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口 (v4.2.5)
+# 规格驱动开发（SDD）框架的命令入口 (v4.2.6)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 更新当前 Skill checkout（标准安装器兜底）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="4.2.5"
+VERSION="4.2.6"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -140,7 +140,8 @@ cmd_migrate() {
   ARCHITECTURE_SOURCES=() # 当前架构收敛证据：每项都必须在报告中完成分类和去向映射
   LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
   LEGACY_STATE_DIRS=()  # 旧版框架明确维护的状态目录；不扫描项目源码、依赖或普通业务文档
-  ROOT_GUIDE_LEGACY=() # 规则入口同步前保留的旧文件，需 AI 逐项归位有效项目事实
+  ROOT_GUIDE_DIFF_FILES=() # 根目录规则入口替换差异对应的文件
+  ROOT_GUIDE_DIFFS=() # 旧入口中被新模板替换的内容，仅写入临时迁移报告
   ROOT_GUIDES_PENDING=0 # 模板根目录规范 Markdown 是否未能同步
   PROJECT_FRAMEWORK_VERSION="未记录"
 
@@ -162,10 +163,10 @@ cmd_migrate() {
     REPORT_NEEDED=1
   fi
 
+  # 旧版 migrate 可能已生成规则入口副本；新迁移不再创建。
   for existing_guide_legacy in AGENTS.legacy.md CLAUDE.legacy.md; do
     if [ -f "$existing_guide_legacy" ]; then
-      ROOT_GUIDE_LEGACY+=("$existing_guide_legacy")
-      LEGACY_NOTES+=("$existing_guide_legacy → 对照现有 SSOT 逐项去重，仅归位其中唯一且仍有效的项目事实，完成后删除")
+      LEGACY_NOTES+=("$existing_guide_legacy → 核对其中仍有效且未在其他权威文档存在的项目信息，归位后删除")
       REPORT_NEEDED=1
     fi
   done
@@ -439,9 +440,9 @@ cmd_migrate() {
       fi
     fi
   fi
-  # 模板根目录 Markdown 中，README.md 承载项目业务信息；其余规则入口先无损保留旧文件，再按整文件同步。
+  # README.md 承载项目业务信息；其余根目录规则入口按最新模板整文件同步。
   sync_template_root_guides() {
-    local project_name source_file target_file legacy_file tmp_file
+    local project_name source_file target_file tmp_file guide_diff
     if [ -f AGENTS.md ]; then
       project_name=$(sed -n '1s/^# \(.*\) — AGENTS\.md$/\1/p' AGENTS.md)
     fi
@@ -474,23 +475,16 @@ cmd_migrate() {
       if [ -f "$target_file" ] && cmp -s "$target_file" "$tmp_file"; then
         rm -f "$tmp_file"
       else
-        legacy_file="${target_file%.md}.legacy.md"
         if [ -f "$target_file" ]; then
-          if [ -e "$legacy_file" ]; then
-            warn "    $target_file 与最新版模板不同，但 $legacy_file 已存在；请先完成旧内容归位，未覆盖现文件"
-            rm -f "$tmp_file"
-            return 1
-          fi
-          cp "$target_file" "$legacy_file" || {
-            rm -f "$tmp_file"
-            return 1
-          }
-          ROOT_GUIDE_LEGACY+=("$legacy_file")
-          LEGACY_NOTES+=("$legacy_file → 对照现有 SSOT 逐项去重，仅归位其中唯一且仍有效的项目事实，完成后删除")
-          REPORT_NEEDED=1
-          ok "    已保留: $target_file → $legacy_file（待语义归位）"
+          guide_diff=$(diff -U 0 "$target_file" "$tmp_file" 2>/dev/null | awk '
+            /^--- / || /^\+\+\+ / || /^@@ / { next }
+            /^-/ { print }
+          ' || true)
+          ROOT_GUIDE_DIFF_FILES+=("$target_file")
+          ROOT_GUIDE_DIFFS+=("$guide_diff")
         fi
         mv "$tmp_file" "$target_file"
+        REPORT_NEEDED=1
         ok "    已同步: $target_file（模板根目录规范）"
       fi
     done
@@ -501,7 +495,7 @@ cmd_migrate() {
     :
   else
     ROOT_GUIDES_PENDING=1
-    LEGACY_NOTES+=("模板根目录规范 Markdown → 先处理现有 *.legacy.md，再同步最新版内容；README.md 作为项目业务文档保留")
+    LEGACY_NOTES+=("模板根目录规范 Markdown 同步失败；README.md 作为项目业务文档保留")
     REPORT_NEEDED=1
   fi
   # assets/ 骨架（v2.9 沿用）
@@ -730,28 +724,22 @@ cmd_migrate() {
       echo "## 项目级规则入口同步"
       echo ""
       if [ "$ROOT_GUIDES_PENDING" = "1" ]; then
-        echo "- [ ] 已解决旧规则入口保留文件冲突，并同步 template/ 根目录规范 Markdown"
+        echo "- [ ] 已解决规则入口同步失败，并同步 template/ 根目录规范 Markdown"
         echo "- [ ] 已清除允许 \`assets/state/\` 的冲突表述"
       else
         echo "- [x] template/ 根目录规范 Markdown 已同步；项目 \`README.md\` 已保留"
       fi
-      if [ "${#ROOT_GUIDE_LEGACY[@]}" -gt 0 ]; then
-        echo "- [ ] 旧规则入口已完成去重：重复或失效内容不再保留，唯一且仍有效的项目事实已归位"
+      if [ "${#ROOT_GUIDE_DIFF_FILES[@]}" -gt 0 ]; then
+        echo "- [ ] 核对下列规则入口待迁移内容，完成有效项目信息归位"
         echo ""
-        echo "### 旧规则入口中的项目内容迁移结果"
+        echo "> 下方只保留旧文件中被最新模板替换的行，不复制新模板内容。已在其他权威文档存在、已失效或属于旧框架的内容保持删除；仍有效且仅存于旧入口的项目信息，按实际语义合并到对应权威位置。"
         echo ""
-        echo "> 旧文件只是临时保全来源，不是权威事实源。先与代码、配置及现有 SSOT 对照：已有内容只记录其权威位置，不重复写入；冲突或已失效内容按当前事实删除；只有尚未存在于其他位置、且能由当前项目事实确认仍有效的内容才归位。项目概况、技术栈和粗粒度能力状态进入 \`README.md\`；产品事实进入 \`docs/\` 或最新 Sprint；架构/数据/运行事实进入 \`architecture/\`；部署、接口和标准进入 \`assets/\`。"
-        echo "> 对下面每类项目内容都必须写明处理结果：原来就已经存在的，写出现有文件及位置；尚未存在的，先实际迁移或合并，再写出新位置；已失效的，写明判断依据；没有该类内容则写“无”。禁止只写“全部重复”或“无需迁移”后直接清理旧文件。"
-        echo ""
-        for legacy_file in "${ROOT_GUIDE_LEGACY[@]}"; do
-          echo "#### \`$legacy_file\`"
+        for ((guide_index=0; guide_index<${#ROOT_GUIDE_DIFF_FILES[@]}; guide_index++)); do
+          echo "### \`${ROOT_GUIDE_DIFF_FILES[$guide_index]}\` 待迁移内容"
           echo ""
-          echo "- [ ] 项目概况、技术栈、粗粒度功能或进度状态：待填写"
-          echo "- [ ] 产品、需求、当前冲刺信息：待填写"
-          echo "- [ ] 技术架构、数据、运行方式和技术约束：待填写"
-          echo "- [ ] 部署、接口、标准、外部材料及路径：待填写"
-          echo "- [ ] 其他项目专属信息或约束：待填写"
-          echo "- [ ] 框架通用规则、重复或失效内容：待填写（说明现有位置或失效依据）"
+          echo '~~~~diff'
+          printf '%s\n' "${ROOT_GUIDE_DIFFS[$guide_index]}"
+          echo '~~~~'
           echo ""
         done
       fi
@@ -842,8 +830,8 @@ cmd_migrate() {
   info "migrate v$VERSION 介入完成（结构层）。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. AI 读取 MIGRATION-REPORT.md 并先理解项目（②理解）"
-    echo "  2. 逐项填写架构证据、协作边界和项目级规则入口；如存在 assets/state/，完成其内容归位（③保持/④重构）"
-    echo "  3. 当前架构、契约、数据、旧版框架状态目录和项目级规则入口门禁通过后，才删除报告与所有 .legacy 保留项"
+    echo "  2. 逐项填写架构证据和协作边界；核对报告中的规则入口替换差异；如存在 assets/state/，完成其内容归位（③保持/④重构）"
+    echo "  3. 当前架构、契约、数据和旧版框架状态目录门禁通过后，才删除报告与其他 .legacy 保留项"
   else
     echo "  项目结构已是最新。AI 仍须按 SKILL.md 审计协作边界、契约和数据基线；无共享边界或持久化时明确不适用。"
   fi
