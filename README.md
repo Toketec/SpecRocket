@@ -210,7 +210,7 @@ AI：已进入 ~/projects/my-app（空目录）
 | `brainstorm` | 引导式填写产品文档 → 创建 sprint | 💬 5 问 | 🤖 AI 斜杠命令 |
 | `migrate` | 项目重构：介入 → 理解 → 保持 → 重构（不区分是否 SpecRocket 项目，保持原有设计不变，重构到最新模板结构，零残留） | 🔄 不碰代码 | 🤖 AI 斜杠命令 |
 | `preview` | 生成项目全貌预览页 | 👁️ 即时 | 🤖 AI 斜杠命令 |
-| `update` | 一键更新本地 skill（自动检测 AI 工具） | ⚡ 即时 | 📟 手动 / 🤖 斜杠命令 |
+| `update` | 当前 Agent 使用自身标准安装方式重新安装完整 SpecRocket Skill | ⚡ 即时 | 🤖 斜杠命令 |
 
 ---
 
@@ -317,7 +317,7 @@ SpecRocket 设计为 **任何 AI 编码代理均可驱动**。只要你的 AI �
 |:----|:---------|
 | 🆕 **新项目启动** | 📟 手动 `./init.sh` 或 🤖 AI `/spec-rocket init` → 🤖 AI `brainstorm` → 五步流程 |
 | 🔄 **现有项目引入 AI 协作** | 🤖 AI `migrate` → 用证据矩阵收敛当前架构/历史 ADR → 通过脱离 ADR 的独立阅读门禁 → 补齐旧规格阶段语义 → Retrospec |
-| ⬆️ **升级到最新方法论** | 📟 `./spec-rocket update` 更新 skill → 对项目执行 `migrate` 升级结构 |
+| ⬆️ **升级到最新方法论** | 🤖 当前 Agent 通过标准 Skill 安装方式执行 `/spec-rocket update` → 对项目执行 `migrate` 升级结构 |
 | 🏁 **Hackathon 快速验证** | 📟/🤖 `init` → 跳过 Step 1 → 直接 Step 4 AI 编码 |
 | 👥 **团队培训** | 📟 手动 `init` 看骨架 → 读 ssot-convention → PPT |
 | 🤖 **AI-only 项目** | 🤖 `/spec-rocket init` → AI 完成其余步骤。Dev 只做评审 |

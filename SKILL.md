@@ -3,7 +3,7 @@ name: spec-rocket
 description: "斜杠命令 /spec-rocket — 规格驱动开发（SDD）框架。子命令：init, brainstorm, migrate, preview, update。"
 license: MIT
 metadata:
-  version: "4.2.1"
+  version: "4.2.2"
 ---
 
 # `/spec-rocket` — SpecRocket 项目引导命令
@@ -59,7 +59,7 @@ SpecRocket/                      ← 本仓库
 | `brainstorm` | 引导用户描述产品 → 自动生成产品文档 + 创建 sprint |
 | `migrate` | 项目重构：介入 → 理解 → 保持 → 重构（不区分是否 SpecRocket 项目，保持原有设计不变，重构到最新模板结构，零残留） |
 | `preview` | 扫描项目 → 生成 dark-theme 可视化预览页 |
-| `update` | 一键更新本地 skill（自动检测用户使用的 AI 工具，按工具安装位置同步） |
+| `update` | 当前 Agent 使用自身标准安装方式重新安装完整 SpecRocket Skill |
 
 ---
 
@@ -84,36 +84,18 @@ SpecRocket/                      ← 本仓库
 
 ---
 
-## `/spec-rocket update` — 一键更新本地 skill（工具感知）
+## `/spec-rocket update` — 使用当前 Agent 的标准安装方式
 
-**用途：** 把本地 SpecRocket skill 更新到最新版本。**自动检测用户使用的 AI 产品**，按各产品的 skill/规则安装位置同步——不假设用户一定用某个工具。
+**用途：** 由当前 Agent 使用自身提供的标准 Skill 安装或重装机制，把自己的 SpecRocket Skill 更新到最新版本。命令不接收 Agent 标识，不识别各产品安装路径，也不扫描或修改其他 Agent。
 
-**推荐执行（有 CLI）：**
-```bash
-./spec-rocket update
-```
+**AI 斜杠命令执行时：**
+1. 使用当前 Agent 的标准 Skill 安装器，从 SpecRocket 官方仓库或发布源重新安装，并保持当前安装作用域（用户级或项目级）
+2. 安装完整 Skill 目录，至少包含 `SKILL.md`、`spec-rocket`、`init.sh` 和 `template/`，禁止只替换 `SKILL.md`
+3. 安装后校验 `SKILL.md` 与 CLI 版本一致，且 `init.sh`、`template/` 均存在；不一致即报告安装失败
+4. 当前 Agent 没有标准安装器、但现有 Skill 本身是 SpecRocket Git checkout 时，可在该目录执行无参数 `./spec-rocket update`，通过 `git pull --ff-only` 更新当前 checkout
+5. 当前目录不是 Git checkout 或存在未提交修改时，CLI 兜底必须停止，不猜测安装位置、不覆盖本地修改
 
-**各 AI 产品的 skill 安装位置与同步方式：**
-
-| AI 产品 | skill/规则位置 | update 动作 |
-|:-------|:-------------|:-----------|
-| **Hermes Agent** | `~/.hermes/skills/spec-rocket/` | 复制最新 `SKILL.md` |
-| **spec-rocket-light**（若安装） | `~/.hermes/skills/spec-rocket-light/` | 同步 light 版 SKILL.md |
-| **Codex** | 项目级 `AGENTS.md`（全局 `~/.codex/AGENTS.md` 谨慎） | 检测到全局含 SpecRocket 内容 → 提示手动同步；推荐项目级由 init/migrate 注入 |
-| **Claude Code** | 项目级 `AGENTS.md` + `CLAUDE.md` 引用入口 | 无需全局更新；项目升级用 `/spec-rocket migrate` |
-| **Cursor** | 项目级 `.cursor/rules/` 或 `.cursorrules` | 同上 |
-| **Windsurf** | 项目级 `.windsurf/rules/` | 同上 |
-| **Cline** | 项目级 `AGENTS.md` | 同上 |
-
-> **核心原则**：SpecRocket 是纯文件约定。`AGENTS.md` 是项目通用协作入口，`CLAUDE.md` 仅保留 Claude 专属内容并引用 `AGENTS.md`。`update` 保证「本地源」最新（仓库 git pull + 有全局 skill 概念的工具同步），项目级规则文件随各项目执行 `migrate` 更新。
-
-**AI 斜杠命令执行时（无 CLI 环境）：**
-1. `git pull` 本地 SpecRocket 仓库（若为 clone）
-2. 检测用户工具：`command -v hermes claude codex cursor windsurf cline`
-3. 按上表同步对应位置：
-   - Hermes → 复制 `SKILL.md` 到 `~/.hermes/skills/spec-rocket/`
-   - 其他工具 → 告知用户项目级规则文件用 `/spec-rocket migrate` 更新
-4. 输出更新报告（版本号 + 各工具状态）
+`update` 只更新当前 Agent 自己的 Skill。项目级 `AGENTS.md`、`CLAUDE.md`、模板规范及业务文件不由它修改；项目需要采用新版模板时，另在项目内执行 `/spec-rocket migrate`。
 
 ---
 
@@ -247,7 +229,7 @@ AI 在动手前先读项目——**理解是保持的前提，不知道原有设
 | `ADR/ADR-NNN_xxx.md` | → `architecture/adrs/adr-YYYYMMDD-xxx.md`，补齐背景/决策/影响/生效规格；当前有效结果写入 `architecture/*.md` |
 | `adrs/adr-*/` 三文件目录 | → `architecture/adrs/adr-*.legacy/` 完整保留；AI 提炼单文件 ADR、收敛当前架构，确认无遗漏后删除 `.legacy/` |
 | 旧 spec `requirements.md` | 原位补齐架构基线、进入/退出状态、实现程度、临时实现与收口责任；已完成规格只补事实，不改写历史交付边界 |
-| `AGENTS.legacy.md` / `CLAUDE.legacy.md` | 先与代码、配置及现有 SSOT 逐项对照：已有事实不重复写入，冲突或失效内容按当前事实删除；只有唯一且仍有效的项目事实才归位，其中项目概况、技术栈和粗粒度能力状态 → `README.md`，产品事实 → `docs/` 或最新 Sprint，架构/数据/运行事实 → `architecture/`，部署、接口和标准 → `assets/` |
+| `AGENTS.legacy.md` / `CLAUDE.legacy.md` | 先从旧入口中找出误写进去的项目概况、技术栈、功能/进度状态、产品需求、架构/数据/运行约束、部署/接口/标准/外部材料及其他项目专属信息，再与代码、配置及现有 SSOT 对照。已有内容记录实际权威位置，不重复写入；尚未存在且仍有效的内容必须先迁移或合并，项目概况、技术栈和粗粒度能力状态 → `README.md`，产品事实 → `docs/` 或最新 Sprint，架构/数据/运行事实 → `architecture/`，部署、接口、标准和外部材料 → `assets/`；冲突或失效内容记录当前事实依据后删除 |
 | 全局 `spec/` + `_catalog.yaml` | 内容归入对应冲刺 specs/ 或 archive/（AI 判断） |
 | `sprint-000_initial.legacy/` | 基线设计转移至 `sp-001-*/docs/` 后删除 |
 | Agent 自用或无实际用途的 hash、版本号、时间戳、指纹、摘要 | 删除对应字段、文件及跨文件副本；调用方改用其他方案，不在项目内转存 |
@@ -280,7 +262,7 @@ AI 在动手前先读项目——**理解是保持的前提，不知道原有设
 - **工具非门禁**：用户未选择建设契约或模型辅助工具，不构成迁移阻断；一旦选择建设，则按其独立 spec 验收，不混入 migrate 的结构重构。
 - **结构门禁**：确认所有 `.legacy` 内容已核对并处理、当前架构无模板占位、旧规格阶段语义已补齐、没有新的重复事实源。
 - **派生状态门禁**：每项候选都有用途结论；Agent 自用或无实际用途的 hash、版本号、时间戳、指纹、摘要及其副本已删除；必要信息只剩唯一权威来源；项目内不存在 `assets/state/`。
-- **项目级规则入口门禁**：项目根目录规范 Markdown 已与最新版模板一致，项目名正确，`README.md` 未被覆盖；旧规则入口已与代码、配置及现有 SSOT 完成逐项对照，重复或失效内容未被再次写入，唯一且仍有效的项目事实已归入唯一 SSOT。存在未处理的 `AGENTS.legacy.md` / `CLAUDE.legacy.md` 时迁移不得完成。
+- **项目级规则入口门禁**：项目根目录规范 Markdown 已与最新版模板一致，项目名正确，`README.md` 未被覆盖；迁移报告中每份旧入口的各类项目内容都已写明处理结果。原来已经存在的内容已标出实际权威文件及位置；尚未存在且仍有效的内容已实际迁移或合并到合适位置；冲突或失效内容已写明判断依据。仍有“待填写”、只有“全部重复/无需迁移”等笼统结论，或存在未处理的 `AGENTS.legacy.md` / `CLAUDE.legacy.md` 时，迁移不得完成。
 - 上述门禁全部通过后，才删除 `.legacy` 和 `MIGRATION-REPORT.md`；最终报告应列出三份当前架构的主要章节、协作边界结论和仍保留为纯历史的 ADR 数量。
 - 更新 AGENTS.md 目录结构描述（如有手动改动）
 - **最终目录结构完全符合最新规范，零残留**

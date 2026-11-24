@@ -521,6 +521,7 @@ mkdir -p apps/ businesses/ tools/ architecture/adrs docs/ sprints/
 - 先在 `MIGRATION-REPORT.md` 中把每份旧 ADR/架构资料分类为“当前有效、纯历史、混合”，再结合代码、数据迁移、部署配置和公共契约，把全部当前事实收敛到 `architecture.md`、`data-model.md`、`runtime.md`
 - 三份当前架构必须能脱离 ADR 独立说明系统边界、模块链路、数据生命周期、运行拓扑与失败恢复；ADR 只解释为什么决策
 - 把旧 `ADR/*.md` 转成单文件历史决策；把 3.x `adrs/adr-*/` 完整保留为 `.legacy/` 后再提炼。证据矩阵逐项完成且独立阅读门禁通过后，才删除 `.legacy` 与迁移报告
+- 旧 `AGENTS.legacy.md` / `CLAUDE.legacy.md` 中的项目概况、技术栈、功能/进度状态、产品需求、架构/数据/运行约束、部署/接口/标准/外部材料及其他项目专属信息，必须先确认是否已在其他权威文件中完整存在；已存在的写明位置，尚未存在且仍有效的先实际迁移或合并，冲突或失效的写明依据。只写“全部重复”或“无需迁移”不得清理旧入口
 
 ### Phase 2: 为存量功能写 Retrospec（3 文件，无 plan.md）
 

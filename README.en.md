@@ -177,7 +177,7 @@ You: Enter ~/projects/legacy-app
 | `brainstorm` | Guided product doc → sprint creation | 💬 5 questions | 🤖 AI slash command |
 | `migrate` | Project reconstruction: intervene → understand → preserve → rebuild (works on any project, preserves original design, rebuilds to latest template structure, zero residue) | 🔄 Zero code touch | 🤖 AI slash command |
 | `preview` | Generate full project overview page | 👁️ Instant | 🤖 AI slash command |
-| `update` | One-click update local skill (auto-detect AI tools) | ⚡ Instant | 📟 Manual / 🤖 Slash command |
+| `update` | Reinstall the complete SpecRocket Skill through the current Agent's standard installer | ⚡ Instant | 🤖 Slash command |
 
 ---
 
@@ -283,7 +283,7 @@ SpecRocket works with **any AI coding agent**. As long as your AI can read files
 |:----|:---------|
 | 🆕 **New project** | 📟 Manual `./init.sh` or 🤖 AI `/spec-rocket init` → 🤖 `brainstorm` → 5-step flow |
 | 🔄 **Existing project + AI** | 🤖 AI `migrate` → classify architecture evidence → consolidate current architecture and ADR history → pass the ADR-independent reading gate → restore legacy spec stage semantics → Retrospec |
-| ⬆️ **Upgrade to latest methodology** | 📟 `./spec-rocket update` → run `migrate` on project to upgrade structure |
+| ⬆️ **Upgrade to latest methodology** | 🤖 Current Agent runs `/spec-rocket update` through its standard Skill installer → run `migrate` on the project |
 | 🏁 **Hackathon** | 📟/🤖 `init` → skip Step 1 → Step 4 AI coding |
 | 👥 **Team training** | 📟 Manual `init` → read ssot-convention → PPT |
 | 🤖 **AI-only project** | 🤖 `/spec-rocket init` → AI does the rest. Dev only reviews |
