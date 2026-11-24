@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # SpecRocket CLI — init / update / migrate
-# 规格驱动开发（SDD）框架的命令入口 (v4.2.2)
+# 规格驱动开发（SDD）框架的命令入口 (v4.2.3)
 # Usage:
 #   ./spec-rocket init [项目名]    # 初始化新项目（兼容 init.sh）
 #   ./spec-rocket update          # 更新当前 Skill checkout（标准安装器兜底）
@@ -11,7 +11,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="4.2.2"
+VERSION="4.2.3"
 TEMPLATE="$SCRIPT_DIR/template"
 GH_REPO="https://github.com/Toketec/SpecRocket.git"
 
@@ -139,7 +139,7 @@ cmd_migrate() {
   ARCHITECTURE_STRAY=() # architecture/ 根目录除三份当前文档外的内容，需 AI 收敛
   ARCHITECTURE_SOURCES=() # 当前架构收敛证据：每项都必须在报告中完成分类和去向映射
   LEGACY_SPECS=()     # 旧 spec 缺少架构落地边界，由 AI 补齐语义
-  DERIVED_STATE_HITS=() # hash/版本号/时间戳/指纹/摘要候选，由 AI 按真实用途处理
+  LEGACY_STATE_DIRS=()  # 旧版框架明确维护的状态目录；不扫描项目源码、依赖或普通业务文档
   ROOT_GUIDE_LEGACY=() # 规则入口同步前保留的旧文件，需 AI 逐项归位有效项目事实
   ROOT_GUIDES_PENDING=0 # 模板根目录规范 Markdown 是否未能同步
 
@@ -317,7 +317,7 @@ cmd_migrate() {
     [ -d "$dir" ] || continue
     while IFS= read -r sp; do
       MODULE_SPECS+=("$sp")
-    done < <(find "$dir" -type d -name specs 2>/dev/null || true)
+    done < <(find "$dir" -mindepth 2 -maxdepth 2 -type d -name specs 2>/dev/null || true)
   done
   if [ ${#MODULE_SPECS[@]} -gt 0 ]; then
     warn "③ 检测到模块内 specs/（v2.x 结构）——需迁移到迭代容器 sprints/sp-NNN-*/specs/："
@@ -426,9 +426,11 @@ cmd_migrate() {
     if [ -f AGENTS.md ]; then
       project_name=$(sed -n '1s/^# \(.*\) — AGENTS\.md$/\1/p' AGENTS.md)
     fi
+    [ "$project_name" = "{项目名}" ] && project_name=""
     if [ -z "$project_name" ] && [ -f README.md ]; then
       project_name=$(sed -n '1s/^# //p' README.md)
     fi
+    [ "$project_name" = "{项目名}" ] && project_name=""
     [ -n "$project_name" ] || project_name=$(basename "$(pwd)")
 
     for source_file in "$TEMPLATE"/*.md; do
@@ -439,6 +441,7 @@ cmd_migrate() {
       awk -v name="$project_name" '
         function replace_project_name(line, token, pos) {
           token = "{项目名}"
+          if (name == token) return line
           while ((pos = index(line, token)) > 0) {
             line = substr(line, 1, pos - 1) name substr(line, pos + length(token))
           }
@@ -612,28 +615,12 @@ cmd_migrate() {
     echo "    → 确为业务设计时：转移到 sprints/*/docs/prototypes/prototypes.md，visual-design.md 只留审美边界"
   fi
 
-  # 6c. 历史派生状态扫描：只定位候选，由 AI 查明真实用途后清理或收敛。
+  # 6c. 旧版框架状态目录定向检查。migrate 只处理已知框架结构，
+  # 不按 hash、版本号或时间戳等关键词扫描项目源码、依赖、配置和普通业务文档。
   if [ -d assets/state ]; then
-    DERIVED_STATE_HITS+=("assets/state/（旧版 Agent 状态目录，逐项迁出必要业务信息后删除）")
-  fi
-  while IFS= read -r -d '' f; do
-    while IFS= read -r hit; do
-      [ -n "$hit" ] && DERIVED_STATE_HITS+=("$f:$hit")
-    done < <(grep -niE '(hash|checksum|fingerprint|digest|version|timestamp|哈希|指纹|版本号|时间戳|摘要)[^[:alnum:]_]{0,4}[:=]|v?[0-9]+\.[0-9]+\.[0-9]+([.+-][[:alnum:]._-]+)?|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}|(^|[^[:xdigit:]])[[:xdigit:]]{12,64}([^[:xdigit:]]|$)' "$f" 2>/dev/null || true)
-  done < <(find . -type f \
-    ! -path './.git/*' ! -path './node_modules/*' ! -path './vendor/*' \
-    ! -path './dist/*' ! -path './build/*' ! -path './target/*' ! -path './archive/*' \
-    ! -name 'AGENTS.md' ! -name 'CLAUDE.md' ! -name 'MIGRATION-REPORT.md' \
-    ! -name 'package-lock.json' ! -name 'npm-shrinkwrap.json' ! -name 'pnpm-lock.yaml' \
-    \( -name '*.md' -o -name '*.txt' -o -name '*.json' -o -name '*.yaml' -o -name '*.yml' \
-       -o -name '*.toml' -o -name '*.xml' -o -name '*.env' -o -name '*.sh' -o -name '*.py' \
-       -o -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' \
-       -o -name '*.jsx' -o -name '*.go' -o -name '*.rs' -o -name '*.java' -o -name '*.kt' \
-       -o -name '*.swift' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' \) \
-    -print0 2>/dev/null)
-  if [ "${#DERIVED_STATE_HITS[@]}" -gt 0 ]; then
+    LEGACY_STATE_DIRS+=("assets/state/（旧版框架状态目录，逐项迁出必要业务信息后删除）")
     REPORT_NEEDED=1
-    warn "检测到 hash、版本号、时间戳、指纹或摘要候选；AI 必须按真实用途清理历史残留，不能转存为 Agent 状态。"
+    warn "检测到旧版框架状态目录 assets/state/；AI 需逐项归位必要业务信息后删除该目录。"
   fi
   if [ "${#ASSETS_STRAY[@]}" -gt 0 ]; then
     warn "检测到 assets/ 内散落项（规则2：归位到 configs/interfaces/standards/manuals）："
@@ -667,7 +654,7 @@ cmd_migrate() {
       echo "> 由 /spec-rocket migrate v$VERSION 生成。重构原则：**转移 → 收敛 → 保留 → 删除**。"
       echo "> 请由 AI 按 SKILL.md 流程处理：②理解项目 → ③保持原有设计 → ④重构 → ⑤验收，完成后目录结构完全符合最新规范，零残留。"
       echo "> **阻断规则**：三份当前架构必须能脱离 ADR 独立说明系统；下方证据矩阵或协作边界矩阵存在空项，共享边界缺少生产方、消费方、权威契约或兼容策略，或任一当前有效规则仍只能从 ADR 得知时，不得删除本报告。"
-      echo "> **派生状态规则**：Agent 自用或无实际用途的 hash、版本号、时间戳、指纹、摘要及其副本必须删除，不得迁入 \`assets/state/\` 或其他目录；必要信息只保留唯一权威来源。"
+      echo "> **扫描边界**：migrate 只检查 SpecRocket 框架目录、历史规则入口和已知旧结构，不按 hash、版本号、时间戳等关键词扫描项目源码、依赖、配置或普通业务文档。"
       echo ""
       echo "## 迁移映射表（旧 → 新）"
       echo ""
@@ -710,26 +697,21 @@ cmd_migrate() {
       echo ""
       echo "> 契约/模型检查、生成、Mock 或可视化工具不是迁移默认产物。AI 只说明价值、成本和适用边界；用户决定建设后，在 \`tools/\` 中另建正常 spec 推进。"
       echo ""
-      echo "## 历史派生状态处理矩阵（逐项完成）"
-      echo ""
-      echo "> 先查明真实用途。业务、发布、构建、安全或兼容性明确需要的只保留唯一权威位置；仅供 Agent 或没有实际用途的直接删除。不得把候选转存到 \`assets/state/\`。无法判断用途时阻断迁移，禁止批量刷新数值。"
-      echo ""
-      echo "| 候选位置与内容 | 其他副本 | 真实用途/读取方 | 处理动作 | 唯一权威位置 |"
-      echo "|:---------------|:---------|:----------------|:---------|:-------------|"
-      if [ "${#DERIVED_STATE_HITS[@]}" -gt 0 ]; then
-        for hit in "${DERIVED_STATE_HITS[@]}"; do
-          safe_hit=${hit//|/\\|}
-          printf '| `%s` | 待填写 | 待填写 | 待填写 | 待填写 |\n' "$safe_hit"
+      if [ "${#LEGACY_STATE_DIRS[@]}" -gt 0 ]; then
+        echo "## 旧版框架状态目录处理（逐项完成）"
+        echo ""
+        echo "> 仅处理下面明确存在的旧版框架目录。先查明其中内容的真实用途；必要业务信息迁入对应权威位置，其余删除。不得据此扩展为全仓关键词扫描。"
+        echo ""
+        for legacy_state_dir in "${LEGACY_STATE_DIRS[@]}"; do
+          echo "- [ ] $legacy_state_dir"
         done
-      else
-        echo "| 未发现候选 | 不适用 | 不适用 | 不适用 | 不适用 |"
+        echo ""
       fi
-      echo ""
       echo "## 项目级规则入口同步"
       echo ""
       if [ "$ROOT_GUIDES_PENDING" = "1" ]; then
         echo "- [ ] 已解决旧规则入口保留文件冲突，并同步 template/ 根目录规范 Markdown"
-        echo "- [ ] 已清除允许 \`assets/state/\` 或允许 Agent 自用派生状态的冲突表述"
+        echo "- [ ] 已清除允许 \`assets/state/\` 的冲突表述"
       else
         echo "- [x] template/ 根目录规范 Markdown 已同步；项目 \`README.md\` 已保留"
       fi
@@ -840,8 +822,8 @@ cmd_migrate() {
   info "migrate v$VERSION 介入完成（结构层）。"
   if [ "$REPORT_NEEDED" = "1" ]; then
     echo "  1. AI 读取 MIGRATION-REPORT.md 并先理解项目（②理解）"
-    echo "  2. 逐项填写架构证据、协作边界和历史派生状态矩阵，并同步项目级规则入口（③保持/④重构）"
-    echo "  3. 当前架构、契约、数据、派生状态和项目级规则入口门禁通过后，才删除报告与所有 .legacy 保留项"
+    echo "  2. 逐项填写架构证据、协作边界和项目级规则入口；如存在 assets/state/，完成其内容归位（③保持/④重构）"
+    echo "  3. 当前架构、契约、数据、旧版框架状态目录和项目级规则入口门禁通过后，才删除报告与所有 .legacy 保留项"
   else
     echo "  项目结构已是最新。AI 仍须按 SKILL.md 审计协作边界、契约和数据基线；无共享边界或持久化时明确不适用。"
   fi
